@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -28,12 +28,24 @@ const policySchema = z.object({
   expiryDate: z.date().optional(),
   targetIssueDate: z.date().optional(),
 }).superRefine((data, ctx) => {
-  if (data.status === "emessa" && !data.expiryDate) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "La data di scadenza è obbligatoria per le polizze emesse",
-      path: ["expiryDate"],
-    });
+  if (data.status === "emessa") {
+    if (!data.expiryDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "La data di scadenza è obbligatoria per le polizze emesse",
+        path: ["expiryDate"],
+      });
+    } else {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (data.expiryDate < today) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "La data di scadenza non può essere nel passato",
+          path: ["expiryDate"],
+        });
+      }
+    }
   }
 });
 
@@ -56,8 +68,23 @@ export function Polizze() {
     defaultValues: { clientName: "", policyType: "", notes: "", status: "da_emettere" },
   });
 
-  const issueForm = useForm<{ expiryDate: Date }>({
-    defaultValues: { expiryDate: undefined as unknown as Date }
+  const issueSchema = z.object({
+    expiryDate: z.date({ required_error: "La data di scadenza è obbligatoria" }),
+  }).superRefine((data, ctx) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (data.expiryDate < today) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "La data di scadenza non può essere nel passato",
+        path: ["expiryDate"],
+      });
+    }
+  });
+
+  const issueForm = useForm<{ expiryDate?: Date }>({
+    resolver: zodResolver(issueSchema),
+    defaultValues: { expiryDate: undefined }
   });
 
   useEffect(() => {
@@ -101,16 +128,16 @@ export function Polizze() {
         : undefined,
       issuedAt: values.status === "emessa"
         ? (editingPolicy.issuedAt ?? new Date().toISOString())
-        : undefined,
+        : editingPolicy.issuedAt,
     });
     setEditingPolicy(null);
   }
 
-  function onIssueSubmit(values: { expiryDate: Date }) {
+  function onIssueSubmit(values: { expiryDate?: Date }) {
     if (issuingPolicy && values.expiryDate) {
       issuePolicy(issuingPolicy.id, format(values.expiryDate, 'yyyy-MM-dd'));
       setIssuingPolicy(null);
-      issueForm.reset();
+      issueForm.reset({ expiryDate: undefined });
     }
   }
 
@@ -298,6 +325,7 @@ export function Polizze() {
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Aggiungi polizza</DialogTitle>
+              <DialogDescription>Inserisci i dati della nuova polizza.</DialogDescription>
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -315,6 +343,7 @@ export function Polizze() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Modifica polizza</DialogTitle>
+            <DialogDescription>Aggiorna i dati della polizza selezionata.</DialogDescription>
           </DialogHeader>
           <Form {...editForm}>
             <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
@@ -460,6 +489,7 @@ export function Polizze() {
                       <DialogContent>
                         <DialogHeader>
                           <DialogTitle>Emissione Polizza</DialogTitle>
+                          <DialogDescription>Imposta la data di scadenza per emettere la polizza.</DialogDescription>
                         </DialogHeader>
                         <Form {...issueForm}>
                           <form onSubmit={issueForm.handleSubmit(onIssueSubmit)} className="space-y-4">

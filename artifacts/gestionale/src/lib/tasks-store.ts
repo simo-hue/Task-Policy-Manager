@@ -1,4 +1,5 @@
 import { useLocalStorage } from '@/hooks/use-local-storage';
+import { safeUUID } from '@/lib/utils';
 
 export interface Task {
   id: string;
@@ -11,14 +12,14 @@ export interface Task {
 
 const initialTasks: Task[] = [
   {
-    id: crypto.randomUUID(),
+    id: safeUUID(),
     title: 'Richiamare Mario Rossi',
     notes: 'Per rinnovo polizza auto',
     dueDate: new Date().toISOString().split('T')[0],
     createdAt: new Date().toISOString(),
   },
   {
-    id: crypto.randomUUID(),
+    id: safeUUID(),
     title: 'Inviare preventivo Studio Bianchi',
     createdAt: new Date().toISOString(),
   }
@@ -28,7 +29,7 @@ export function useTasks() {
   const [tasks, setTasks] = useLocalStorage<Task[]>('gestionale.tasks.v1', initialTasks);
 
   const addTask = (input: Omit<Task, 'id' | 'createdAt'>) => {
-    setTasks(prev => [...prev, { ...input, id: crypto.randomUUID(), createdAt: new Date().toISOString() }]);
+    setTasks(prev => [...prev, { ...input, id: safeUUID(), createdAt: new Date().toISOString() }]);
   };
 
   const completeTask = (id: string) => {

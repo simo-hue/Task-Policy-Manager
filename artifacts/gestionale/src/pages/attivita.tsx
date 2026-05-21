@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -99,6 +99,7 @@ export function Attivita() {
   }
 
   const activeTasks = tasks.filter(t => !t.completedAt && matchesFilters(t)).sort((a, b) => {
+    if (!a.dueDate && !b.dueDate) return 0;
     if (!a.dueDate) return 1;
     if (!b.dueDate) return -1;
     return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
@@ -130,12 +131,17 @@ export function Attivita() {
   }
 
   const groupedCompleted: { label: string; tasks: typeof completedTasks }[] = [];
+  const groupIndex = new Map<string, number>();
   for (const t of completedTasks) {
     const d = startOfDay(new Date(t.completedAt!));
     const label = groupLabel(d);
-    const last = groupedCompleted[groupedCompleted.length - 1];
-    if (last && last.label === label) last.tasks.push(t);
-    else groupedCompleted.push({ label, tasks: [t] });
+    const idx = groupIndex.get(label);
+    if (idx !== undefined) {
+      groupedCompleted[idx].tasks.push(t);
+    } else {
+      groupIndex.set(label, groupedCompleted.length);
+      groupedCompleted.push({ label, tasks: [t] });
+    }
   }
 
   return (
@@ -156,6 +162,7 @@ export function Attivita() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Aggiungi attività</DialogTitle>
+              <DialogDescription>Crea una nuova attività da gestire.</DialogDescription>
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -236,6 +243,7 @@ export function Attivita() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Modifica attività</DialogTitle>
+            <DialogDescription>Aggiorna i dettagli dell'attività selezionata.</DialogDescription>
           </DialogHeader>
           <Form {...editForm}>
             <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
@@ -377,6 +385,7 @@ export function Attivita() {
                     onClick={() => completeTask(task.id)}
                     className="mt-1 text-muted-foreground hover:text-primary transition-colors"
                     data-testid={`button-complete-task-${task.id}`}
+                    aria-label={`Segna come completata: ${task.title}`}
                   >
                     <Circle className="w-6 h-6" />
                   </button>
@@ -459,6 +468,7 @@ export function Attivita() {
                         onClick={() => reopenTask(task.id)}
                         className="mt-1 text-primary hover:text-primary/80 transition-colors"
                         data-testid={`button-reopen-task-${task.id}`}
+                        aria-label={`Riapri attività: ${task.title}`}
                       >
                         <CheckCircle2 className="w-6 h-6" />
                       </button>

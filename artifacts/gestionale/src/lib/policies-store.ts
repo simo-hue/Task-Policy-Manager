@@ -1,4 +1,5 @@
 import { useLocalStorage } from '@/hooks/use-local-storage';
+import { safeUUID } from '@/lib/utils';
 
 export interface Policy {
   id: string;
@@ -14,7 +15,7 @@ export interface Policy {
 
 const initialPolicies: Policy[] = [
   {
-    id: crypto.randomUUID(),
+    id: safeUUID(),
     clientName: 'Mario Rossi',
     policyType: 'RC Auto',
     status: 'emessa',
@@ -23,7 +24,7 @@ const initialPolicies: Policy[] = [
     issuedAt: new Date().toISOString(),
   },
   {
-    id: crypto.randomUUID(),
+    id: safeUUID(),
     clientName: 'Studio Bianchi SRL',
     policyType: 'RC Professionale',
     status: 'da_emettere',
@@ -36,7 +37,7 @@ export function usePolicies() {
   const [policies, setPolicies] = useLocalStorage<Policy[]>('gestionale.policies.v1', initialPolicies);
 
   const addPolicy = (input: Omit<Policy, 'id' | 'createdAt'>) => {
-    setPolicies(prev => [...prev, { ...input, id: crypto.randomUUID(), createdAt: new Date().toISOString() }]);
+    setPolicies(prev => [...prev, { ...input, id: safeUUID(), createdAt: new Date().toISOString() }]);
   };
 
   const updatePolicy = (id: string, patch: Partial<Omit<Policy, 'id' | 'createdAt'>>) => {
