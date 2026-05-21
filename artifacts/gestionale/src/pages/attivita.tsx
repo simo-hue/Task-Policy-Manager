@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
+import { format, isToday, isYesterday, isThisWeek, isThisMonth, differenceInCalendarDays, differenceInCalendarMonths, startOfDay } from "date-fns";
 import { it } from "date-fns/locale";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -51,6 +51,27 @@ export function Attivita() {
   const completedTasks = tasks.filter(t => t.completedAt).sort((a, b) => {
     return new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime();
   });
+
+  function groupLabel(date: Date): string {
+    if (isToday(date)) return "Oggi";
+    if (isYesterday(date)) return "Ieri";
+    const daysAgo = differenceInCalendarDays(new Date(), date);
+    if (daysAgo < 7 && isThisWeek(date, { weekStartsOn: 1 })) return "Questa settimana";
+    if (daysAgo < 14) return "Settimana scorsa";
+    if (isThisMonth(date)) return "Questo mese";
+    const monthsAgo = differenceInCalendarMonths(new Date(), date);
+    if (monthsAgo === 1) return "Mese scorso";
+    return format(date, "MMMM yyyy", { locale: it }).replace(/^\w/, c => c.toUpperCase());
+  }
+
+  const groupedCompleted: { label: string; tasks: typeof completedTasks }[] = [];
+  for (const t of completedTasks) {
+    const d = startOfDay(new Date(t.completedAt!));
+    const label = groupLabel(d);
+    const last = groupedCompleted[groupedCompleted.length - 1];
+    if (last && last.label === label) last.tasks.push(t);
+    else groupedCompleted.push({ label, tasks: [t] });
+  }
 
   return (
     <div className="space-y-8">
@@ -194,36 +215,47 @@ export function Attivita() {
           )}
         </TabsContent>
 
-        <TabsContent value="completate" className="space-y-4">
-          {completedTasks.length > 0 ? (
-            completedTasks.map(task => (
-              <Card key={task.id} className="overflow-hidden opacity-75">
-                <CardContent className="p-4 flex items-start gap-4">
-                  <button 
-                    onClick={() => reopenTask(task.id)}
-                    className="mt-1 text-primary hover:text-primary/80 transition-colors"
-                    data-testid={`button-reopen-task-${task.id}`}
-                  >
-                    <CheckCircle2 className="w-6 h-6" />
-                  </button>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-lg line-through text-muted-foreground">{task.title}</h3>
-                    {task.completedAt && (
-                      <div className="text-xs text-muted-foreground mt-2">
-                        Completata il {format(new Date(task.completedAt), "d MMM yyyy", { locale: it })}
+        <TabsContent value="completate" className="space-y-6">
+          {groupedCompleted.length > 0 ? (
+            groupedCompleted.map(group => (
+              <div key={group.label} className="space-y-3">
+                <div className="flex items-center gap-3" data-testid={`divider-${group.label}`}>
+                  <div className="flex-1 h-px bg-border" />
+                  <span className="text-xs font-semibold tracking-widest uppercase text-muted-foreground">
+                    {group.label}
+                  </span>
+                  <div className="flex-1 h-px bg-border" />
+                </div>
+                {group.tasks.map(task => (
+                  <Card key={task.id} className="overflow-hidden opacity-75">
+                    <CardContent className="p-4 flex items-start gap-4">
+                      <button
+                        onClick={() => reopenTask(task.id)}
+                        className="mt-1 text-primary hover:text-primary/80 transition-colors"
+                        data-testid={`button-reopen-task-${task.id}`}
+                      >
+                        <CheckCircle2 className="w-6 h-6" />
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-lg line-through text-muted-foreground">{task.title}</h3>
+                        {task.completedAt && (
+                          <div className="text-xs text-muted-foreground mt-2">
+                            Completata il {format(new Date(task.completedAt), "d MMM yyyy", { locale: it })}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="text-muted-foreground hover:text-destructive"
-                    onClick={() => deleteTask(task.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </CardContent>
-              </Card>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-muted-foreground hover:text-destructive"
+                        onClick={() => deleteTask(task.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             ))
           ) : (
             <div className="py-12 text-center bg-card border rounded-lg text-muted-foreground shadow-sm">
