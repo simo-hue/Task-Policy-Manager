@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, CheckSquare, FileText, Sun, Moon } from "lucide-react";
+import { LayoutDashboard, CheckSquare, FileText, Sun, Moon, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { useLocalStorage } from "@/hooks/use-local-storage";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const navItems = [
   { path: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -11,7 +14,7 @@ const navItems = [
   { path: "/polizze", label: "Polizze", icon: FileText },
 ];
 
-function ThemeToggle() {
+function ThemeToggle({ collapsed }: { collapsed: boolean }) {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -20,6 +23,21 @@ function ThemeToggle() {
   }, []);
 
   const isDark = mounted ? resolvedTheme === "dark" : false;
+
+  if (collapsed) {
+    return (
+      <button
+        type="button"
+        onClick={() => setTheme(isDark ? "light" : "dark")}
+        disabled={!mounted}
+        aria-label="Attiva/disattiva dark mode"
+        data-testid="switch-theme"
+        className="flex items-center justify-center w-10 h-10 mx-auto rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+      >
+        {isDark ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+      </button>
+    );
+  }
 
   return (
     <div className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-sidebar-foreground">
@@ -38,44 +56,80 @@ function ThemeToggle() {
 
 export function Shell({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
+  const [collapsed, setCollapsed] = useLocalStorage<boolean>("gestionale.sidebar.collapsed.v1", false);
 
   return (
-    <div className="flex min-h-screen bg-muted/30">
-      <aside className="w-64 border-r bg-card flex flex-col">
-        <div className="h-16 flex items-center px-6 border-b">
-          <h1 className="font-serif text-xl font-bold text-primary">TO Mattioli DO</h1>
-        </div>
-        <nav className="flex-1 px-4 py-6 space-y-2">
-          {navItems.map((item) => {
-            const isActive = location === item.path;
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.path}
-                href={item.path}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                )}
-                data-testid={`nav-${item.label.toLowerCase()}`}
-              >
-                <Icon className="w-5 h-5" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-        <div className="mt-auto px-4 py-4 border-t">
-          <ThemeToggle />
-        </div>
-      </aside>
-      <main className="flex-1 overflow-auto">
-        <div className="max-w-5xl mx-auto p-8">
-          {children}
-        </div>
-      </main>
-    </div>
+    <TooltipProvider delayDuration={200}>
+      <div className="flex min-h-screen bg-muted/30">
+        <aside
+          className={cn(
+            "border-r bg-card flex flex-col transition-[width] duration-200 ease-in-out",
+            collapsed ? "w-16" : "w-64"
+          )}
+        >
+          <div
+            className={cn(
+              "h-16 flex items-center border-b",
+              collapsed ? "justify-center px-2" : "justify-between px-4"
+            )}
+          >
+            {!collapsed && (
+              <h1 className="font-serif text-xl font-bold text-primary truncate">TO Mattioli DO</h1>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setCollapsed(!collapsed)}
+              aria-label={collapsed ? "Espandi sidebar" : "Minimizza sidebar"}
+              data-testid="button-toggle-sidebar"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              {collapsed ? <PanelLeftOpen className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
+            </Button>
+          </div>
+          <nav className={cn("flex-1 py-6 space-y-2", collapsed ? "px-2" : "px-4")}>
+            {navItems.map((item) => {
+              const isActive = location === item.path;
+              const Icon = item.icon;
+              const link = (
+                <Link
+                  key={item.path}
+                  href={item.path}
+                  className={cn(
+                    "flex items-center rounded-md text-sm font-medium transition-colors",
+                    collapsed ? "justify-center w-10 h-10 mx-auto" : "gap-3 px-3 py-2.5",
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
+                  data-testid={`nav-${item.label.toLowerCase()}`}
+                >
+                  <Icon className="w-5 h-5" />
+                  {!collapsed && item.label}
+                </Link>
+              );
+
+              if (collapsed) {
+                return (
+                  <Tooltip key={item.path}>
+                    <TooltipTrigger asChild>{link}</TooltipTrigger>
+                    <TooltipContent side="right">{item.label}</TooltipContent>
+                  </Tooltip>
+                );
+              }
+              return link;
+            })}
+          </nav>
+          <div className={cn("mt-auto py-4 border-t", collapsed ? "px-2" : "px-4")}>
+            <ThemeToggle collapsed={collapsed} />
+          </div>
+        </aside>
+        <main className="flex-1 overflow-auto">
+          <div className="max-w-5xl mx-auto p-8">
+            {children}
+          </div>
+        </main>
+      </div>
+    </TooltipProvider>
   );
 }
