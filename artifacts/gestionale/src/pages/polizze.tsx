@@ -287,23 +287,46 @@ export function Polizze() {
           <p className="text-muted-foreground">Monitora il portafoglio e gestisci le nuove emissioni.</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-sm bg-muted/40 border rounded-md px-3 py-2">
+          <div className="flex items-center gap-2 text-sm bg-muted/40 border rounded-md px-3 py-2 flex-wrap">
             <Settings2 className="w-4 h-4 text-muted-foreground" />
             <label htmlFor="threshold-input" className="text-muted-foreground">In scadenza entro</label>
-            <Input
-              id="threshold-input"
-              type="number"
-              min={1}
-              max={365}
-              value={threshold}
-              onChange={(e) => {
-                const v = parseInt(e.target.value, 10);
-                if (!Number.isNaN(v) && v > 0 && v <= 365) setExpiryThresholdDays(v);
-              }}
-              className="w-16 h-8"
-              data-testid="input-threshold"
-            />
-            <span className="text-muted-foreground">giorni</span>
+            <div className="flex items-center gap-1">
+              {[
+                { label: "7 gg", value: 7 },
+                { label: "14 gg", value: 14 },
+                { label: "30 gg", value: 30 },
+                { label: "60 gg", value: 60 },
+                { label: "90 gg", value: 90 },
+              ].map((preset) => (
+                <Button
+                  key={preset.value}
+                  type="button"
+                  size="sm"
+                  variant={threshold === preset.value ? "default" : "outline"}
+                  className="h-8 px-2 text-xs"
+                  onClick={() => setExpiryThresholdDays(preset.value)}
+                  data-testid={`button-threshold-${preset.value}`}
+                >
+                  {preset.label}
+                </Button>
+              ))}
+            </div>
+            <div className="flex items-center gap-1 pl-2 ml-1 border-l">
+              <Input
+                id="threshold-input"
+                type="number"
+                min={1}
+                max={365}
+                value={threshold}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value, 10);
+                  if (!Number.isNaN(v) && v > 0 && v <= 365) setExpiryThresholdDays(v);
+                }}
+                className="w-16 h-8"
+                data-testid="input-threshold"
+              />
+              <span className="text-muted-foreground">giorni</span>
+            </div>
           </div>
           <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
             <DialogTrigger asChild>
