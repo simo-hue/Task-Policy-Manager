@@ -1,44 +1,58 @@
-# [Project name]
+# Gestionale Personale
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A personal productivity web app in Italian for managing daily tasks and insurance policies. Frontend-only — all data lives in the browser's localStorage, so there are zero hosting/database costs.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/gestionale run dev` — run the web app (workflow `artifacts/gestionale: web`)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+
+No env vars required for the app itself.
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- Frontend: React + Vite + TailwindCSS + shadcn/ui
+- Routing: wouter
+- Forms: react-hook-form + zod
+- Dates: date-fns (Italian locale)
+- Persistence: browser `localStorage` (no backend)
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/gestionale/` — the web app
+  - `src/App.tsx` — router setup (Dashboard, Attività, Polizze)
+  - `src/pages/` — page components
+  - `src/components/` — shared UI (Shell/sidebar, etc.)
+  - `src/hooks/use-local-storage.ts` — generic localStorage hook with cross-tab sync
+  - `src/lib/tasks-store.ts` — `useTasks()` hook, key `gestionale.tasks.v1`
+  - `src/lib/policies-store.ts` — `usePolicies()` hook, key `gestionale.policies.v1`
+  - `src/index.css` — theme palette (HSL space-separated tokens)
+- `artifacts/api-server/` — scaffold only, unused by the gestionale app
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- **No backend, no database.** Personal single-user tool — data is stored in `localStorage` to keep hosting free. The `api-server` artifact ships with the monorepo scaffold but is not wired into the app.
+- **Italian-only UI.** All strings, dates, and validation messages are in Italian; date-fns uses the `it` locale.
+- **Two domain entities.** `Task` (todo) and `Policy` (with `status: 'da_emettere' | 'emessa'`). Policies split visually into "In scadenza" (emessa, sorted by `expiryDate`) and "Da emettere" (sorted by `targetIssueDate`), with urgency badges based on days-to-expiry (<7 = red, 7–30 = amber).
+- **Seed on first run.** Each store seeds 2–3 realistic example items so the app is never empty on first visit.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- **Dashboard (`/`)** — summary cards (attività di oggi, in ritardo, polizze in scadenza a 30gg, da emettere), "Prossime scadenze" and "Attività urgenti" shortlists.
+- **Attività (`/attivita`)** — tabs "Da fare" / "Completate", add/complete/reopen/delete tasks with optional due date.
+- **Polizze (`/polizze`)** — two clearly separated sections (In scadenza / Da emettere); add/edit/delete; "Segna come emessa" converts a draft policy into an issued one with an expiry date.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- App must remain free to maintain — no servers, no databases, no third-party paid services.
+- Minimal, professional, time-saving UI — no emojis.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Data lives in the user's browser only. Clearing browser storage or switching browsers wipes everything. (Export/import is intentionally out of scope for the first build.)
+- `src/index.css` uses HSL space-separated values (e.g. `--primary: 221 83% 53%`). Don't wrap with `hsl()` in the variable definition.
 
 ## Pointers
 
