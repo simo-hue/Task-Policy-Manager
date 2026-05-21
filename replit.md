@@ -1,4 +1,4 @@
-# Gestionale Personale
+# TO Mattioli DO
 
 A personal productivity web app in Italian for managing daily tasks and insurance policies. Frontend-only — all data lives in the browser's localStorage, so there are zero hosting/database costs.
 
