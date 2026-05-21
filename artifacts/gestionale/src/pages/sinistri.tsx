@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -13,8 +13,10 @@ import { it } from "date-fns/locale";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { CalendarIcon, Plus, Trash2, Pencil, AlertOctagon } from "lucide-react";
+import { CalendarIcon, Plus, Trash2, Pencil, AlertOctagon, ArrowRight, Check } from "lucide-react";
 import { cn, parseLocalDate } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 const claimSchema = z.object({
   clientName: z.string().min(1, "Il nome cliente è obbligatorio"),
@@ -23,23 +25,25 @@ const claimSchema = z.object({
     required_error: "La data di apertura è obbligatoria",
   }),
   notes: z.string().optional(),
+  status: z.enum(["liquidato", "incaricato", "non_liquidato", "da_aprire"]).optional(),
 });
 
 type ClaimFormValues = z.infer<typeof claimSchema>;
 
 export function Sinistri() {
   const { claims, addClaim, updateClaim, deleteClaim } = useClaims();
+  const activeClaims = claims.filter(c => c.status !== "liquidato");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingClaim, setEditingClaim] = useState<Claim | null>(null);
 
   const form = useForm<ClaimFormValues>({
     resolver: zodResolver(claimSchema),
-    defaultValues: { clientName: "", ramo: "", notes: "" },
+    defaultValues: { clientName: "", ramo: "", notes: "", status: "incaricato" },
   });
 
   const editForm = useForm<ClaimFormValues>({
     resolver: zodResolver(claimSchema),
-    defaultValues: { clientName: "", ramo: "", notes: "" },
+    defaultValues: { clientName: "", ramo: "", notes: "", status: "incaricato" },
   });
 
   useEffect(() => {
@@ -49,6 +53,7 @@ export function Sinistri() {
         ramo: editingClaim.ramo,
         openDate: parseLocalDate(editingClaim.openDate),
         notes: editingClaim.notes ?? "",
+        status: editingClaim.status ?? "incaricato",
       });
     }
   }, [editingClaim, editForm]);
@@ -59,9 +64,10 @@ export function Sinistri() {
       ramo: values.ramo,
       openDate: format(values.openDate, "yyyy-MM-dd"),
       notes: values.notes || undefined,
+      status: values.status || "incaricato",
     });
     setIsAddOpen(false);
-    form.reset({ clientName: "", ramo: "", notes: "" });
+    form.reset({ clientName: "", ramo: "", notes: "", status: "incaricato" });
   }
 
   function onEditSubmit(values: ClaimFormValues) {
@@ -71,6 +77,7 @@ export function Sinistri() {
       ramo: values.ramo,
       openDate: format(values.openDate, "yyyy-MM-dd"),
       notes: values.notes || undefined,
+      status: values.status || "incaricato",
     });
     setEditingClaim(null);
   }
@@ -128,6 +135,29 @@ export function Sinistri() {
                 <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
               </PopoverContent>
             </Popover>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={f.control}
+        name="status"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Stato Sinistro</FormLabel>
+            <Select onValueChange={field.onChange} value={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona stato" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="da_aprire">Da aprire</SelectItem>
+                <SelectItem value="liquidato">Liquidato</SelectItem>
+                <SelectItem value="incaricato">Incaricato il perito</SelectItem>
+                <SelectItem value="non_liquidato">Non liquidato</SelectItem>
+              </SelectContent>
+            </Select>
             <FormMessage />
           </FormItem>
         )}
@@ -198,16 +228,36 @@ export function Sinistri() {
       </Dialog>
 
       <div className="space-y-4">
-        {claims.length > 0 ? (
+        {activeClaims.length > 0 ? (
           <div className="grid gap-3">
-            {claims.map((claim) => (
+            {activeClaims.map((claim) => (
               <Card key={claim.id} className="overflow-hidden group shadow-soft hover:shadow-card hover:border-primary/30 transition-all">
                 <CardContent className="p-0 flex flex-col sm:flex-row sm:items-center">
                   <div className="p-5 flex-1 min-w-0">
                     <div className="flex justify-between items-start gap-3 mb-2 flex-wrap">
-                      <h3 className="font-semibold text-base sm:text-lg truncate flex items-center gap-2">
+                      <h3 className="font-semibold text-base sm:text-lg truncate flex items-center gap-2 flex-wrap">
                         <AlertOctagon className="w-4 h-4 text-destructive shrink-0" />
-                        {claim.clientName}
+                        <span>{claim.clientName}</span>
+                        {claim.status === 'da_aprire' && (
+                          <Badge variant="outline" className="bg-slate-500/10 text-slate-600 border-slate-500/20 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">
+                            Da aprire
+                          </Badge>
+                        )}
+                        {claim.status === 'liquidato' && (
+                          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">
+                            Liquidato
+                          </Badge>
+                        )}
+                        {claim.status === 'incaricato' && (
+                          <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">
+                            Incaricato il perito
+                          </Badge>
+                        )}
+                        {claim.status === 'non_liquidato' && (
+                          <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">
+                            Non liquidato
+                          </Badge>
+                        )}
                       </h3>
                       <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground ring-1 ring-border whitespace-nowrap">
                         <CalendarIcon className="w-3 h-3 mr-1" />
@@ -221,7 +271,38 @@ export function Sinistri() {
                       {claim.notes && <span className="truncate max-w-xl text-xs sm:text-sm">{claim.notes}</span>}
                     </div>
                   </div>
-                  <div className="px-4 sm:px-5 pb-4 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-1 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity">
+                  <div className="px-4 sm:px-5 pb-4 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-2 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity">
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="secondary" size="sm" className="font-medium text-xs gap-1.5 h-8">
+                          <Check className="w-3.5 h-3.5" />
+                          Segna liquidato
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Conferma liquidazione</DialogTitle>
+                          <DialogDescription>
+                            Sei sicuro di voler segnare il sinistro di <strong>{claim.clientName}</strong> come liquidato? Verrà archiviato e rimosso da questo elenco.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="flex justify-end gap-3 pt-4">
+                          <DialogClose asChild>
+                            <Button variant="outline">Annulla</Button>
+                          </DialogClose>
+                          <DialogClose asChild>
+                            <Button
+                              onClick={() => {
+                                updateClaim(claim.id, { status: "liquidato" });
+                              }}
+                            >
+                              Conferma
+                            </Button>
+                          </DialogClose>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+
                     <Button variant="ghost" size="icon" onClick={() => setEditingClaim(claim)} className="text-muted-foreground hover:text-primary" data-testid={`button-edit-claim-${claim.id}`}>
                       <Pencil className="w-4 h-4" />
                     </Button>
@@ -235,7 +316,7 @@ export function Sinistri() {
           </div>
         ) : (
           <div className="p-10 text-center bg-card/50 border border-dashed rounded-xl text-muted-foreground text-sm">
-            Nessun sinistro inserito a sistema.
+            Nessun sinistro attivo a sistema.
           </div>
         )}
       </div>

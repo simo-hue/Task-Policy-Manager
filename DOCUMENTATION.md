@@ -35,3 +35,35 @@
   - Created `sinistri.tsx` in `src/pages/` featuring interactive dialog creation/edit forms, Zod schema validations, popover date pickers, and claim management cards.
   - Registered route `/sinistri` in `App.tsx` and updated the primary layout/sidebar in `shell.tsx` to display a navigation entry with `AlertOctagon` icon.
 
+### [2026-05-21 21:41]: Abilitazione Piattaforma macOS ed Avvio Server
+* *Details*: Enabled the download of macOS specific binary modules (`darwin-arm64` and `darwin-x64`) for local development, and launched the Vite development server using environment parameters on port `5173`.
+* *Tech Notes*:
+  - Modified `pnpm-workspace.yaml` overrides to comment out the exclusions for `@rollup/rollup-darwin-*`, `@esbuild/darwin-*`, `lightningcss-darwin-*`, `@tailwindcss/oxide-darwin-*`, and `@expo/ngrok-bin-darwin-*`.
+  - Re-installed dependencies with `pnpm install --ignore-scripts` to bypass Replit specific user-agent restrictions.
+  - Started Vite server using `PORT=5173 BASE_PATH=/ npx vite --config vite.config.ts --host 0.0.0.0` in the `artifacts/gestionale` directory.
+  - Created `comandi_avvio.md` detailing these commands.
+
+
+### [2026-05-21 21:46]: Ripristino Etichetta "Da emettere" nelle Polizze
+* *Details*: Restored the "Da emettere" (To be issued) terminology on both "Polizze Personali" and "Polizze Agenzia" pages, replacing "Sinistri" to avoid confusion now that a dedicated "Sinistri" (Claims) module page has been introduced.
+* *Tech Notes*:
+  - Modified `polizze-personali.tsx` to revert the tab trigger label, form dropdown option, and empty state message to "Da emettere" / "Nessuna polizza da emettere."
+  - Modified `polizze-agenzia.tsx` to revert the tab trigger label, form dropdown option, and empty state message to "Da emettere" / "Nessuna polizza da emettere."
+
+### [2026-05-21 21:48]: Stato e Badge per i Sinistri
+* *Details*: Added an interactive state assignment system for client claims, allowing adjusters to mark claims as "Liquidato", "Incaricato il perito", or "Non liquidato" with color-coded badges indicating claim lifecycle status.
+* *Tech Notes*:
+  - Modified `claims-store.ts` to support the new optional `status` attribute and pre-configured initial claims with statuses.
+  - Modified `sinistri.tsx` to integrate Zod enum, default react-hook-form values, Select components from `@/components/ui/select`, and elegant HSL-derived Tailwind color badges for list items.
+
+### [2026-05-21 21:50]: Collegamento e Integrazione Box Sinistri in Dashboard
+* *Details*: Connected the "Sinistri" stat card widget on the main dashboard directly to the dedicated claims management page (`/sinistri`), and modified it to show the count of actual active claims instead of draft policies.
+* *Tech Notes*:
+  - Modified `dashboard.tsx` to import `useClaims` and retrieve the claims count.
+  - Re-mapped the "Sinistri" statistic card (`statCards`) with `href: "/sinistri"`, `value: claims.length`, `icon: AlertOctagon`, and updated description hint to `"sinistri aperti"`.
+
+### [2026-05-21 21:51]: Aggiunta Stato "Da aprire" ai Sinistri
+* *Details*: Added a fourth status option "Da aprire" (To be opened) to the claims module. It displays as a grey slate badge next to the client name, is fully selectable inside creation/edit dialogs, and includes a representative initial mock claim.
+* *Tech Notes*:
+  - Modified `claims-store.ts` to add `'da_aprire'` to the `status` type definition and configured a third initial mock claim.
+  - Modified `sinistri.tsx` to add `"da_aprire"` to the Zod validation schema, insert it as the first SelectItem option, and render a dedicated `<Badge>` with slate tones.

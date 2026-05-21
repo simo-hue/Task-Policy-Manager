@@ -1,10 +1,11 @@
 import { useTasks } from "@/lib/tasks-store";
 import { usePoliciesPersonali, usePoliciesAgenzia } from "@/lib/policies-store";
+import { useClaims } from "@/lib/claims-store";
 import { useSettings } from "@/hooks/use-settings";
 import { Card } from "@/components/ui/card";
 import { format, isBefore, isToday, addDays, isAfter, startOfDay, differenceInCalendarDays } from "date-fns";
 import { it } from "date-fns/locale";
-import { CheckSquare, AlertCircle, FileText, CalendarClock, Plus, ArrowRight } from "lucide-react";
+import { CheckSquare, AlertCircle, FileText, CalendarClock, Plus, ArrowRight, AlertOctagon } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { cn, parseLocalDate } from "@/lib/utils";
@@ -23,6 +24,8 @@ export function Dashboard() {
   const { policies: personali } = usePoliciesPersonali();
   const { policies: agenzia } = usePoliciesAgenzia();
   const { settings } = useSettings();
+  const { claims } = useClaims();
+  const activeClaims = claims.filter(c => c.status !== "liquidato");
 
   const policies = [
     ...personali.map(p => ({ ...p, scope: 'personali' as const })),
@@ -63,43 +66,43 @@ export function Dashboard() {
     tone: Tone;
     hint?: string;
   }[] = [
-    {
-      title: "Da Fare",
-      value: tasksDueToday.length,
-      icon: CheckSquare,
-      href: "/attivita",
-      testId: "card-tasks-today",
-      tone: "neutral",
-      hint: "in scadenza oggi",
-    },
-    {
-      title: "In Sospeso",
-      value: overdueTasks.length,
-      icon: AlertCircle,
-      href: "/attivita",
-      testId: "card-tasks-overdue",
-      tone: overdueTasks.length > 0 ? "danger" : "muted",
-      hint: "da gestire subito",
-    },
-    {
-      title: "Scadenze senza nessun timeframe",
-      value: policiesExpiringSoon.length,
-      icon: CalendarClock,
-      href: "/polizze-personali",
-      testId: "card-policies-expiring",
-      tone: "gold",
-      hint: "polizze in scadenza",
-    },
-    {
-      title: "Sinistri",
-      value: daEmetterePolicies.length,
-      icon: FileText,
-      href: "/polizze-personali",
-      testId: "card-policies-to-issue",
-      tone: "neutral",
-      hint: "sinistri in attesa",
-    },
-  ];
+      {
+        title: "Da Fare",
+        value: tasksDueToday.length,
+        icon: CheckSquare,
+        href: "/attivita",
+        testId: "card-tasks-today",
+        tone: "neutral",
+        hint: "in scadenza oggi",
+      },
+      {
+        title: "In Sospeso",
+        value: overdueTasks.length,
+        icon: AlertCircle,
+        href: "/attivita",
+        testId: "card-tasks-overdue",
+        tone: overdueTasks.length > 0 ? "danger" : "muted",
+        hint: "da gestire subito",
+      },
+      {
+        title: "Scadenze",
+        value: policiesExpiringSoon.length,
+        icon: CalendarClock,
+        href: "/polizze-personali",
+        testId: "card-policies-expiring",
+        tone: "gold",
+        hint: "polizze in scadenza",
+      },
+      {
+        title: "Sinistri",
+        value: activeClaims.length,
+        icon: AlertOctagon,
+        href: "/sinistri",
+        testId: "card-policies-to-issue",
+        tone: "neutral",
+        hint: "sinistri aperti",
+      },
+    ];
 
   const todayFormatted = format(new Date(), "EEEE d MMMM yyyy", { locale: it });
   const todayCapitalized = todayFormatted.charAt(0).toUpperCase() + todayFormatted.slice(1);
@@ -185,9 +188,9 @@ export function Dashboard() {
                 const days = exp ? differenceInCalendarDays(exp, now) : null;
                 const tone =
                   days === null ? "muted" :
-                  days < 0 ? "danger" :
-                  days <= 7 ? "danger" :
-                  days <= 30 ? "gold" : "neutral";
+                    days < 0 ? "danger" :
+                      days <= 7 ? "danger" :
+                        days <= 30 ? "gold" : "neutral";
                 const targetHref = p.scope === 'personali' ? '/polizze-personali' : '/polizze-agenzia';
                 return (
                   <Link key={p.id} href={targetHref} className="block">
@@ -221,8 +224,8 @@ export function Dashboard() {
                 const due = t.dueDate ? parseLocalDate(t.dueDate) : null;
                 const tone =
                   due === null ? "muted" :
-                  isBefore(due, now) ? "danger" :
-                  isToday(due) ? "gold" : "neutral";
+                    isBefore(due, now) ? "danger" :
+                      isToday(due) ? "gold" : "neutral";
                 return (
                   <Link key={t.id} href="/attivita" className="block">
                     <div
@@ -291,10 +294,10 @@ function DatePill({ date, tone }: { date: Date | null; tone: Tone }) {
     tone === "danger"
       ? "bg-destructive/10 text-destructive ring-destructive/20"
       : tone === "gold"
-      ? "bg-gold/10 text-gold ring-gold/20"
-      : tone === "muted"
-      ? "bg-muted text-muted-foreground ring-border"
-      : "bg-secondary text-secondary-foreground ring-border";
+        ? "bg-gold/10 text-gold ring-gold/20"
+        : tone === "muted"
+          ? "bg-muted text-muted-foreground ring-border"
+          : "bg-secondary text-secondary-foreground ring-border";
   return (
     <span
       className={cn(

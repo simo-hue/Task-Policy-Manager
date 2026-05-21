@@ -197,7 +197,7 @@ export function PolizzeAgenzia() {
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="da_emettere">Sinistri</SelectItem>
+                <SelectItem value="da_emettere">Da emettere</SelectItem>
                 <SelectItem value="emessa">Emessa (In Scadenza)</SelectItem>
               </SelectContent>
             </Select>
@@ -341,7 +341,7 @@ export function PolizzeAgenzia() {
           </TabsTrigger>
           <TabsTrigger value="da-emettere" data-testid="tab-da-emettere">
             <FileSignature className="w-4 h-4 mr-2" />
-            Sinistri ({daEmettere.length})
+            Da emettere ({daEmettere.length})
           </TabsTrigger>
         </TabsList>
 
@@ -502,7 +502,7 @@ export function PolizzeAgenzia() {
             </div>
           ) : (
             <div className="p-10 text-center bg-card/50 border border-dashed rounded-xl text-muted-foreground text-sm">
-              Nessun sinistro registrato.
+              Nessuna polizza da emettere.
             </div>
           )}
         </TabsContent>

@@ -7,6 +7,7 @@ export interface Claim {
   openDate: string; // YYYY-MM-DD
   ramo: string;
   notes?: string;
+  status?: 'liquidato' | 'incaricato' | 'non_liquidato' | 'da_aprire';
   createdAt: string;
 }
 
@@ -17,6 +18,7 @@ const initialClaims: Claim[] = [
     openDate: '2026-05-10',
     ramo: 'RC Auto',
     notes: 'Tamponamento a catena in autostrada. CID compilato.',
+    status: 'incaricato',
     createdAt: new Date().toISOString(),
   },
   {
@@ -25,6 +27,16 @@ const initialClaims: Claim[] = [
     openDate: '2026-05-18',
     ramo: 'Infortuni',
     notes: 'Caduta accidentale durante attività sportiva.',
+    status: 'liquidato',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: safeUUID(),
+    clientName: 'Marco Rossi',
+    openDate: '2026-05-21',
+    ramo: 'Incendio',
+    notes: 'Cortocircuito quadro elettrico box auto.',
+    status: 'da_aprire',
     createdAt: new Date().toISOString(),
   }
 ];
