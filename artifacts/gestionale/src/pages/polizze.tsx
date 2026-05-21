@@ -340,31 +340,41 @@ export function Polizze() {
         </TabsList>
 
         <TabsContent value="in-scadenza" className="space-y-4">
-          <div className="flex items-center gap-2 text-sm bg-muted/40 border rounded-md px-3 py-2 flex-wrap w-fit">
-            <Settings2 className="w-4 h-4 text-muted-foreground" />
-            <label htmlFor="threshold-input" className="text-muted-foreground">In scadenza entro</label>
-            <div className="flex items-center gap-1">
-              {[
-                { label: "7 gg", value: 7 },
-                { label: "14 gg", value: 14 },
-                { label: "30 gg", value: 30 },
-                { label: "60 gg", value: 60 },
-                { label: "90 gg", value: 90 },
-              ].map((preset) => (
-                <Button
-                  key={preset.value}
-                  type="button"
-                  size="sm"
-                  variant={threshold === preset.value ? "default" : "outline"}
-                  className="h-8 px-2 text-xs"
-                  onClick={() => setExpiryThresholdDays(preset.value)}
-                  data-testid={`button-threshold-${preset.value}`}
-                >
-                  {preset.label}
-                </Button>
-              ))}
+          <div className="inline-flex items-center gap-3 text-sm bg-card border rounded-full pl-4 pr-1.5 py-1.5 shadow-soft flex-wrap max-w-full">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Settings2 className="w-4 h-4" />
+              <label htmlFor="threshold-input" className="font-medium whitespace-nowrap">In scadenza entro</label>
             </div>
-            <div className="flex items-center gap-1 pl-2 ml-1 border-l">
+            <div className="flex items-center gap-0.5 bg-muted/60 rounded-full p-0.5">
+              {[
+                { label: "7", value: 7 },
+                { label: "14", value: 14 },
+                { label: "30", value: 30 },
+                { label: "60", value: 60 },
+                { label: "90", value: 90 },
+              ].map((preset) => {
+                const active = threshold === preset.value;
+                return (
+                  <button
+                    key={preset.value}
+                    type="button"
+                    onClick={() => setExpiryThresholdDays(preset.value)}
+                    data-testid={`button-threshold-${preset.value}`}
+                    aria-pressed={active}
+                    className={cn(
+                      "h-7 min-w-[2.25rem] px-2.5 rounded-full text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-card",
+                      active
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {preset.label}
+                    <span className="ml-0.5 opacity-60 font-normal">gg</span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex items-center gap-1.5 pl-1 border-l border-border/70">
               <Input
                 id="threshold-input"
                 type="number"
@@ -375,10 +385,10 @@ export function Polizze() {
                   const v = parseInt(e.target.value, 10);
                   if (!Number.isNaN(v) && v > 0 && v <= 365) setExpiryThresholdDays(v);
                 }}
-                className="w-16 h-8"
+                className="w-14 h-7 text-sm text-center font-semibold tabular-nums border-0 bg-transparent shadow-none focus-visible:ring-1 focus-visible:ring-ring px-1"
                 data-testid="input-threshold"
               />
-              <span className="text-muted-foreground">giorni</span>
+              <span className="text-muted-foreground text-xs pr-2">giorni</span>
             </div>
           </div>
 
