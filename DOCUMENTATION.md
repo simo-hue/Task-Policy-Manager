@@ -109,3 +109,12 @@
   - Replaced the checkbox for `daMettereACassa` with a `<Select>` element for `cassaStato` within the creation/edit forms.
   - Integrated a layout-level custom emerald confirmation `<Dialog>` controlled by `payingPolicy` state.
   - Updated `dashboard.tsx` to filter out policies with `cassaStato === 'pagata'` from active aggregated stats to ensure data cohesion.
+
+### [2026-05-21 22:10]: Allineamento Completo Stato Cassa e Badge Interattivi su Polizze Agenzia
+* *Details*: Ported the interactive `cassaStato` dropdown badge and forms mechanism to the agency policies page (`polizze-agenzia.tsx`). This completely mirrors the premium user experience of personal policies, allowing agents to directly change corporate/agency cashier states via click, rendering elegant color-coded badges, and leveraging layout-level Radix confirmation dialogs for quick-archiving of paid records.
+* *Tech Notes*:
+  - Modified `polizze-agenzia.tsx` to import `ChevronDown` and `Badge`, and the full set of `@/components/ui/dropdown-menu` subcomponents.
+  - Extended `policySchema` and default React hook form values to support `daMettereACassa` and `cassaStato` values.
+  - Implemented the `renderCassaBadge` dropdown switcher helper inside the component and rendered it in card headers next to the client's name for both list categories.
+  - Integrated a new `<Select>` dropdown for `cassaStato` in the policy forms, replacing any missing/manual cash state tracking with native validations.
+

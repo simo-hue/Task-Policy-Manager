@@ -16,8 +16,17 @@ import { it } from "date-fns/locale";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { CalendarIcon, Plus, ShieldAlert, FileSignature, Trash2, ArrowRight, Pencil, Settings2, Check } from "lucide-react";
+import { CalendarIcon, Plus, ShieldAlert, FileSignature, Trash2, ArrowRight, Pencil, Settings2, Check, ChevronDown } from "lucide-react";
 import { cn, parseLocalDate } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 const policySchema = z.object({
   clientName: z.string().min(1, "Il nome cliente è obbligatorio"),
@@ -26,6 +35,8 @@ const policySchema = z.object({
   status: z.enum(["da_emettere", "emessa"]),
   expiryDate: z.date().optional(),
   targetIssueDate: z.date().optional(),
+  daMettereACassa: z.boolean().optional(),
+  cassaStato: z.enum(["regolare", "da_mettere", "pagata"]).optional(),
 }).superRefine((data, ctx) => {
   if (data.status === "emessa") {
     if (!data.expiryDate) {
@@ -60,12 +71,12 @@ export function PolizzeAgenzia() {
 
   const form = useForm<PolicyFormValues>({
     resolver: zodResolver(policySchema),
-    defaultValues: { clientName: "", policyType: "", notes: "", status: "da_emettere" },
+    defaultValues: { clientName: "", policyType: "", notes: "", status: "da_emettere", daMettereACassa: false, cassaStato: "regolare" },
   });
 
   const editForm = useForm<PolicyFormValues>({
     resolver: zodResolver(policySchema),
-    defaultValues: { clientName: "", policyType: "", notes: "", status: "da_emettere" },
+    defaultValues: { clientName: "", policyType: "", notes: "", status: "da_emettere", daMettereACassa: false, cassaStato: "regolare" },
   });
 
   useEffect(() => {
@@ -77,6 +88,8 @@ export function PolizzeAgenzia() {
         status: editingPolicy.status,
         expiryDate: editingPolicy.expiryDate ? parseLocalDate(editingPolicy.expiryDate) : undefined,
         targetIssueDate: editingPolicy.targetIssueDate ? parseLocalDate(editingPolicy.targetIssueDate) : undefined,
+        daMettereACassa: editingPolicy.daMettereACassa ?? false,
+        cassaStato: editingPolicy.cassaStato ?? (editingPolicy.daMettereACassa ? "da_mettere" : "regolare"),
       });
     }
   }, [editingPolicy, editForm]);
@@ -89,9 +102,11 @@ export function PolizzeAgenzia() {
       status: values.status,
       expiryDate: values.expiryDate ? format(values.expiryDate, 'yyyy-MM-dd') : undefined,
       targetIssueDate: values.targetIssueDate ? format(values.targetIssueDate, 'yyyy-MM-dd') : undefined,
+      daMettereACassa: values.cassaStato === "da_mettere",
+      cassaStato: values.cassaStato || "regolare",
     });
     setIsAddOpen(false);
-    form.reset({ clientName: "", policyType: "", notes: "", status: "da_emettere" });
+    form.reset({ clientName: "", policyType: "", notes: "", status: "da_emettere", daMettereACassa: false, cassaStato: "regolare" });
   }
 
   function onEditSubmit(values: PolicyFormValues) {
@@ -110,6 +125,8 @@ export function PolizzeAgenzia() {
       issuedAt: values.status === "emessa"
         ? (editingPolicy.issuedAt ?? new Date().toISOString())
         : editingPolicy.issuedAt,
+      daMettereACassa: values.cassaStato === "da_mettere",
+      cassaStato: values.cassaStato || "regolare",
     });
     setEditingPolicy(null);
   }
@@ -152,6 +169,88 @@ export function PolizzeAgenzia() {
     if (level === "danger") return <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-md bg-destructive/10 text-destructive ring-1 ring-destructive/20 whitespace-nowrap"><CalendarIcon className="w-3 h-3 mr-1" />{label}</span>;
     if (level === "warning") return <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-md bg-gold/10 text-gold ring-1 ring-gold/20 whitespace-nowrap"><CalendarIcon className="w-3 h-3 mr-1" />{label}</span>;
     return <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground ring-1 ring-border whitespace-nowrap"><CalendarIcon className="w-3 h-3 mr-1" />{label}</span>;
+  };
+
+  const renderCassaBadge = (policy: Policy) => {
+    const currentCassaStato = policy.cassaStato || (policy.daMettereACassa ? "da_mettere" : "regolare");
+
+    const cassaConfig = {
+      regolare: {
+        label: "Regolare",
+        className: "bg-slate-500/10 text-slate-600 border-slate-500/20 hover:bg-slate-500/20",
+        dotColor: "bg-slate-500"
+      },
+      da_mettere: {
+        label: "Da mettere a cassa",
+        className: "bg-amber-500/10 text-amber-600 border-amber-500/20 hover:bg-amber-500/20",
+        dotColor: "bg-amber-500"
+      },
+      pagata: {
+        label: "Pagata",
+        className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20",
+        dotColor: "bg-emerald-500"
+      }
+    };
+
+    const current = cassaConfig[currentCassaStato] || cassaConfig.regolare;
+
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Badge
+            variant="outline"
+            className={cn(
+              "cursor-pointer text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-all duration-200 select-none flex items-center gap-1 hover:scale-105 active:scale-95 py-0.5 px-2 rounded-full border shadow-sm",
+              current.className
+            )}
+          >
+            <span>{current.label}</span>
+            <ChevronDown className="w-3 h-3 opacity-60" />
+          </Badge>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-56 p-1.5 rounded-lg border shadow-lg bg-popover text-popover-foreground z-50">
+          <DropdownMenuLabel className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground px-2 py-1">
+            Cambia Stato Cassa
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator className="my-1" />
+          
+          <DropdownMenuItem
+            onClick={() => updatePolicy(policy.id, { cassaStato: "regolare", daMettereACassa: false })}
+            className="flex items-center justify-between cursor-pointer rounded-md px-2 py-1.5 text-xs hover:bg-accent focus:bg-accent"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-slate-500 shrink-0" />
+              <span>Regolare</span>
+            </div>
+            {currentCassaStato === "regolare" && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            onClick={() => updatePolicy(policy.id, { cassaStato: "da_mettere", daMettereACassa: true })}
+            className="flex items-center justify-between cursor-pointer rounded-md px-2 py-1.5 text-xs hover:bg-accent focus:bg-accent"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
+              <span>Da mettere a cassa</span>
+            </div>
+            {currentCassaStato === "da_mettere" && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator className="my-1" />
+
+          <DropdownMenuItem
+            onClick={() => setPayingPolicy(policy)}
+            className="flex items-center justify-between cursor-pointer text-emerald-600 dark:text-emerald-400 rounded-md px-2 py-1.5 text-xs hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 focus:bg-emerald-50/50 focus:text-emerald-700"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+              <span className="font-semibold">Pagata (Archivia)</span>
+            </div>
+            {currentCassaStato === "pagata" && <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
   };
 
   const renderPolicyFormFields = (
@@ -282,6 +381,29 @@ export function PolizzeAgenzia() {
           )}
         />
       )}
+
+      <FormField
+        control={f.control}
+        name="cassaStato"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Stato Cassa</FormLabel>
+            <Select onValueChange={field.onChange} value={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona stato cassa" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="regolare">Regolare</SelectItem>
+                <SelectItem value="da_mettere">Da mettere a cassa</SelectItem>
+                <SelectItem value="pagata">Pagata (Archivia)</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
       <FormField
         control={f.control}
@@ -420,7 +542,10 @@ export function PolizzeAgenzia() {
                   <CardContent className="p-0 flex flex-col sm:flex-row sm:items-center">
                     <div className="p-5 flex-1 min-w-0">
                       <div className="flex justify-between items-start gap-3 mb-2 flex-wrap">
-                        <h3 className="font-semibold text-base sm:text-lg truncate">{policy.clientName}</h3>
+                        <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2 min-w-0">
+                          <span className="truncate">{policy.clientName}</span>
+                          {renderCassaBadge(policy)}
+                        </h3>
                         {policy.expiryDate && <UrgencyBadge date={policy.expiryDate} />}
                       </div>
                       <div className="flex items-center gap-3 text-muted-foreground text-sm flex-wrap">
@@ -464,7 +589,10 @@ export function PolizzeAgenzia() {
                   <CardContent className="p-0 flex flex-col sm:flex-row sm:items-center">
                     <div className="p-5 flex-1 min-w-0">
                       <div className="flex justify-between items-start gap-3 mb-2 flex-wrap">
-                        <h3 className="font-semibold text-base sm:text-lg truncate">{policy.clientName}</h3>
+                        <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2 min-w-0">
+                          <span className="truncate">{policy.clientName}</span>
+                          {renderCassaBadge(policy)}
+                        </h3>
                         {policy.targetIssueDate && (
                           <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground ring-1 ring-border whitespace-nowrap">
                             <CalendarIcon className="w-3 h-3 mr-1" />
