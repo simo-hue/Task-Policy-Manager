@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
 import { format, differenceInDays, isPast } from "date-fns";
 import { it } from "date-fns/locale";
@@ -286,8 +287,59 @@ export function Polizze() {
           <h1 className="text-3xl font-serif text-primary mb-2">Polizze</h1>
           <p className="text-muted-foreground">Monitora il portafoglio e gestisci le nuove emissioni.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-sm bg-muted/40 border rounded-md px-3 py-2 flex-wrap">
+        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+          <DialogTrigger asChild>
+            <Button data-testid="button-add-policy">
+              <Plus className="w-4 h-4 mr-2" />
+              Nuova polizza
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Aggiungi polizza</DialogTitle>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                {renderPolicyFormFields(form, statusWatcher)}
+                <div className="flex justify-end pt-4">
+                  <Button type="submit">Salva polizza</Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <Dialog open={!!editingPolicy} onOpenChange={(open) => { if (!open) setEditingPolicy(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Modifica polizza</DialogTitle>
+          </DialogHeader>
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+              {renderPolicyFormFields(editForm, editStatusWatcher)}
+              <div className="flex justify-end pt-4">
+                <Button type="submit" data-testid="button-save-edit-policy">Salva modifiche</Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      <Tabs defaultValue="in-scadenza" className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger value="in-scadenza" data-testid="tab-in-scadenza">
+            <ShieldAlert className="w-4 h-4 mr-2" />
+            In scadenza ({inScadenza.length})
+          </TabsTrigger>
+          <TabsTrigger value="da-emettere" data-testid="tab-da-emettere">
+            <FileSignature className="w-4 h-4 mr-2" />
+            Da emettere ({daEmettere.length})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="in-scadenza" className="space-y-4">
+          <div className="flex items-center gap-2 text-sm bg-muted/40 border rounded-md px-3 py-2 flex-wrap w-fit">
             <Settings2 className="w-4 h-4 text-muted-foreground" />
             <label htmlFor="threshold-input" className="text-muted-foreground">In scadenza entro</label>
             <div className="flex items-center gap-1">
@@ -328,94 +380,43 @@ export function Polizze() {
               <span className="text-muted-foreground">giorni</span>
             </div>
           </div>
-          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-            <DialogTrigger asChild>
-              <Button data-testid="button-add-policy">
-                <Plus className="w-4 h-4 mr-2" />
-                Nuova polizza
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Aggiungi polizza</DialogTitle>
-              </DialogHeader>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  {renderPolicyFormFields(form, statusWatcher)}
-                  <div className="flex justify-end pt-4">
-                    <Button type="submit">Salva polizza</Button>
-                  </div>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
 
-      <Dialog open={!!editingPolicy} onOpenChange={(open) => { if (!open) setEditingPolicy(null); }}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Modifica polizza</DialogTitle>
-          </DialogHeader>
-          <Form {...editForm}>
-            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
-              {renderPolicyFormFields(editForm, editStatusWatcher)}
-              <div className="flex justify-end pt-4">
-                <Button type="submit" data-testid="button-save-edit-policy">Salva modifiche</Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-
-      <div className="space-y-6">
-        <div className="flex items-center gap-2 border-b pb-2">
-          <ShieldAlert className="w-5 h-5 text-primary" />
-          <h2 className="text-xl font-serif font-medium">In Scadenza</h2>
-          <span className="text-xs text-muted-foreground ml-2">(entro {threshold} giorni)</span>
-        </div>
-        
-        {inScadenza.length > 0 ? (
-          <div className="grid gap-4">
-            {inScadenza.map(policy => (
-              <Card key={policy.id} className="overflow-hidden group hover:shadow-md transition-all">
-                <CardContent className="p-0 flex flex-col sm:flex-row sm:items-center">
-                  <div className="p-5 flex-1">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-semibold text-lg">{policy.clientName}</h3>
-                      {policy.expiryDate && <UrgencyBadge date={policy.expiryDate} />}
+          {inScadenza.length > 0 ? (
+            <div className="grid gap-4">
+              {inScadenza.map(policy => (
+                <Card key={policy.id} className="overflow-hidden group hover:shadow-md transition-all">
+                  <CardContent className="p-0 flex flex-col sm:flex-row sm:items-center">
+                    <div className="p-5 flex-1">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-semibold text-lg">{policy.clientName}</h3>
+                        {policy.expiryDate && <UrgencyBadge date={policy.expiryDate} />}
+                      </div>
+                      <div className="flex items-center gap-3 text-muted-foreground text-sm">
+                        <span className="bg-muted px-2 py-1 rounded-md text-foreground font-medium">{policy.policyType}</span>
+                        {policy.notes && <span className="truncate max-w-xs">{policy.notes}</span>}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3 text-muted-foreground text-sm">
-                      <span className="bg-muted px-2 py-1 rounded-md text-foreground font-medium">{policy.policyType}</span>
-                      {policy.notes && <span className="truncate max-w-xs">{policy.notes}</span>}
+                    <div className="bg-muted/30 p-4 sm:p-5 flex items-center justify-end sm:border-l sm:h-full gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button variant="ghost" size="icon" onClick={() => setEditingPolicy(policy)} className="text-muted-foreground hover:text-primary" data-testid={`button-edit-policy-${policy.id}`}>
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => deletePolicy(policy.id)} className="text-muted-foreground hover:text-destructive">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
-                  </div>
-                  <div className="bg-muted/30 p-4 sm:p-5 flex items-center justify-end sm:border-l sm:h-full gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button variant="ghost" size="icon" onClick={() => setEditingPolicy(policy)} className="text-muted-foreground hover:text-primary" data-testid={`button-edit-policy-${policy.id}`}>
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => deletePolicy(policy.id)} className="text-muted-foreground hover:text-destructive">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="p-8 text-center bg-card border rounded-lg text-muted-foreground">
-            Nessuna polizza in scadenza entro {threshold} giorni.
-          </div>
-        )}
-      </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="p-8 text-center bg-card border rounded-lg text-muted-foreground">
+              Nessuna polizza in scadenza entro {threshold} giorni.
+            </div>
+          )}
+        </TabsContent>
 
-      <div className="space-y-6">
-        <div className="flex items-center gap-2 border-b pb-2">
-          <FileSignature className="w-5 h-5 text-primary" />
-          <h2 className="text-xl font-serif font-medium">Da Emettere</h2>
-        </div>
-        
-        {daEmettere.length > 0 ? (
+        <TabsContent value="da-emettere" className="space-y-4">
+          {daEmettere.length > 0 ? (
           <div className="grid gap-4">
             {daEmettere.map(policy => (
               <Card key={policy.id} className="overflow-hidden group hover:shadow-md transition-all border-dashed">
@@ -502,7 +503,8 @@ export function Polizze() {
             Nessuna polizza in attesa di emissione.
           </div>
         )}
-      </div>
+        </TabsContent>
+      </Tabs>
 
     </div>
   );
