@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useTasks } from "@/lib/tasks-store";
+import { useEffect, useState } from "react";
+import { useTasks, type Task } from "@/lib/tasks-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,7 +14,7 @@ import { it } from "date-fns/locale";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { CalendarIcon, Plus, CheckCircle2, Circle, Trash2, Clock, CheckSquare } from "lucide-react";
+import { CalendarIcon, Plus, CheckCircle2, Circle, Trash2, Clock, CheckSquare, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const taskSchema = z.object({
@@ -23,16 +23,34 @@ const taskSchema = z.object({
   dueDate: z.date().optional(),
 });
 
-export function Attivita() {
-  const { tasks, addTask, completeTask, reopenTask, deleteTask } = useTasks();
-  const [isAddOpen, setIsAddOpen] = useState(false);
+type TaskFormValues = z.infer<typeof taskSchema>;
 
-  const form = useForm<z.infer<typeof taskSchema>>({
+export function Attivita() {
+  const { tasks, addTask, completeTask, reopenTask, deleteTask, updateTask } = useTasks();
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+
+  const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
     defaultValues: { title: "", notes: "" },
   });
 
-  function onSubmit(values: z.infer<typeof taskSchema>) {
+  const editForm = useForm<TaskFormValues>({
+    resolver: zodResolver(taskSchema),
+    defaultValues: { title: "", notes: "" },
+  });
+
+  useEffect(() => {
+    if (editingTask) {
+      editForm.reset({
+        title: editingTask.title,
+        notes: editingTask.notes ?? "",
+        dueDate: editingTask.dueDate ? new Date(editingTask.dueDate) : undefined,
+      });
+    }
+  }, [editingTask, editForm]);
+
+  function onSubmit(values: TaskFormValues) {
     addTask({
       title: values.title,
       notes: values.notes || undefined,
@@ -40,6 +58,17 @@ export function Attivita() {
     });
     setIsAddOpen(false);
     form.reset();
+  }
+
+  function onEditSubmit(values: TaskFormValues) {
+    if (!editingTask) return;
+    updateTask(editingTask.id, {
+      title: values.title,
+      notes: values.notes || undefined,
+      dueDate: values.dueDate ? format(values.dueDate, 'yyyy-MM-dd') : undefined,
+    });
+    setEditingTask(null);
+    editForm.reset({ title: "", notes: "" });
   }
 
   const activeTasks = tasks.filter(t => !t.completedAt).sort((a, b) => {
@@ -166,6 +195,86 @@ export function Attivita() {
         </Dialog>
       </div>
 
+      <Dialog open={!!editingTask} onOpenChange={(open) => { if (!open) setEditingTask(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifica attività</DialogTitle>
+          </DialogHeader>
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+              <FormField
+                control={editForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Titolo</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Es. Chiamare il cliente..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Note (opzionale)</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Dettagli aggiuntivi..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="dueDate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Data di scadenza (opzionale)</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP", { locale: it })
+                            ) : (
+                              <span>Seleziona una data</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex justify-end gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={() => setEditingTask(null)}>Annulla</Button>
+                <Button type="submit" data-testid="button-update-task">Salva modifiche</Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
       <Tabs defaultValue="da-fare" className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="da-fare">Da fare ({activeTasks.length})</TabsTrigger>
@@ -194,15 +303,26 @@ export function Attivita() {
                       </div>
                     )}
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
-                    onClick={() => deleteTask(task.id)}
-                    data-testid={`button-delete-task-${task.id}`}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-muted-foreground hover:text-primary"
+                      onClick={() => setEditingTask(task)}
+                      data-testid={`button-edit-task-${task.id}`}
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-muted-foreground hover:text-destructive"
+                      onClick={() => deleteTask(task.id)}
+                      data-testid={`button-delete-task-${task.id}`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))
@@ -244,14 +364,25 @@ export function Attivita() {
                           </div>
                         )}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-muted-foreground hover:text-destructive"
-                        onClick={() => deleteTask(task.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-primary"
+                          onClick={() => setEditingTask(task)}
+                          data-testid={`button-edit-task-${task.id}`}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-destructive"
+                          onClick={() => deleteTask(task.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 ))}

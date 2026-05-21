@@ -43,5 +43,9 @@ export function useTasks() {
     setTasks(prev => prev.filter(t => t.id !== id));
   };
 
-  return { tasks, addTask, completeTask, reopenTask, deleteTask };
+  const updateTask = (id: string, input: Omit<Task, 'id' | 'createdAt' | 'completedAt'>) => {
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, ...input } : t));
+  };
+
+  return { tasks, addTask, completeTask, reopenTask, deleteTask, updateTask };
 }
