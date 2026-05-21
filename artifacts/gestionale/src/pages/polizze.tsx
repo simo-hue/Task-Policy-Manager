@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePolicies, Policy } from "@/lib/policies-store";
+import { useSettings } from "@/hooks/use-settings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,7 +15,7 @@ import { it } from "date-fns/locale";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { CalendarIcon, Plus, ShieldAlert, FileSignature, Trash2, ArrowRight } from "lucide-react";
+import { CalendarIcon, Plus, ShieldAlert, FileSignature, Trash2, ArrowRight, Pencil, Settings2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
@@ -35,21 +36,43 @@ const policySchema = z.object({
   }
 });
 
+type PolicyFormValues = z.infer<typeof policySchema>;
+
 export function Polizze() {
-  const { policies, addPolicy, deletePolicy, issuePolicy } = usePolicies();
+  const { policies, addPolicy, updatePolicy, deletePolicy, issuePolicy } = usePolicies();
+  const { settings, setExpiryThresholdDays } = useSettings();
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [editingPolicy, setEditingPolicy] = useState<Policy | null>(null);
   const [issuingPolicy, setIssuingPolicy] = useState<Policy | null>(null);
 
-  const form = useForm<z.infer<typeof policySchema>>({
+  const form = useForm<PolicyFormValues>({
+    resolver: zodResolver(policySchema),
+    defaultValues: { clientName: "", policyType: "", notes: "", status: "da_emettere" },
+  });
+
+  const editForm = useForm<PolicyFormValues>({
     resolver: zodResolver(policySchema),
     defaultValues: { clientName: "", policyType: "", notes: "", status: "da_emettere" },
   });
 
   const issueForm = useForm<{ expiryDate: Date }>({
-    defaultValues: { expiryDate: undefined }
+    defaultValues: { expiryDate: undefined as unknown as Date }
   });
 
-  function onSubmit(values: z.infer<typeof policySchema>) {
+  useEffect(() => {
+    if (editingPolicy) {
+      editForm.reset({
+        clientName: editingPolicy.clientName,
+        policyType: editingPolicy.policyType,
+        notes: editingPolicy.notes ?? "",
+        status: editingPolicy.status,
+        expiryDate: editingPolicy.expiryDate ? new Date(editingPolicy.expiryDate) : undefined,
+        targetIssueDate: editingPolicy.targetIssueDate ? new Date(editingPolicy.targetIssueDate) : undefined,
+      });
+    }
+  }, [editingPolicy, editForm]);
+
+  function onSubmit(values: PolicyFormValues) {
     addPolicy({
       clientName: values.clientName,
       policyType: values.policyType,
@@ -59,7 +82,27 @@ export function Polizze() {
       targetIssueDate: values.targetIssueDate ? format(values.targetIssueDate, 'yyyy-MM-dd') : undefined,
     });
     setIsAddOpen(false);
-    form.reset();
+    form.reset({ clientName: "", policyType: "", notes: "", status: "da_emettere" });
+  }
+
+  function onEditSubmit(values: PolicyFormValues) {
+    if (!editingPolicy) return;
+    updatePolicy(editingPolicy.id, {
+      clientName: values.clientName,
+      policyType: values.policyType,
+      notes: values.notes || undefined,
+      status: values.status,
+      expiryDate: values.status === "emessa" && values.expiryDate
+        ? format(values.expiryDate, 'yyyy-MM-dd')
+        : undefined,
+      targetIssueDate: values.status === "da_emettere" && values.targetIssueDate
+        ? format(values.targetIssueDate, 'yyyy-MM-dd')
+        : undefined,
+      issuedAt: values.status === "emessa"
+        ? (editingPolicy.issuedAt ?? new Date().toISOString())
+        : undefined,
+    });
+    setEditingPolicy(null);
   }
 
   function onIssueSubmit(values: { expiryDate: Date }) {
@@ -71,10 +114,15 @@ export function Polizze() {
   }
 
   const statusWatcher = form.watch("status");
+  const editStatusWatcher = editForm.watch("status");
 
-  const inScadenza = policies.filter(p => p.status === 'emessa').sort((a, b) => {
-    return new Date(a.expiryDate!).getTime() - new Date(b.expiryDate!).getTime();
-  });
+  const threshold = settings.expiryThresholdDays;
+
+  const emesse = policies.filter(p => p.status === 'emessa' && p.expiryDate);
+
+  const inScadenza = emesse
+    .filter(p => differenceInDays(new Date(p.expiryDate!), new Date()) <= threshold)
+    .sort((a, b) => new Date(a.expiryDate!).getTime() - new Date(b.expiryDate!).getTime());
 
   const daEmettere = policies.filter(p => p.status === 'da_emettere').sort((a, b) => {
     if (!a.targetIssueDate) return 1;
@@ -100,171 +148,208 @@ export function Polizze() {
     return <Badge variant="outline" className="font-medium text-sm px-2 py-1 text-muted-foreground"><CalendarIcon className="w-3 h-3 mr-1"/>{label}</Badge>;
   };
 
+  const renderPolicyFormFields = (
+    f: typeof form,
+    currentStatus: PolicyFormValues["status"],
+  ) => (
+    <>
+      <FormField
+        control={f.control}
+        name="clientName"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Nome Cliente</FormLabel>
+            <FormControl>
+              <Input placeholder="Es. Mario Rossi" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={f.control}
+        name="policyType"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Tipo di Polizza</FormLabel>
+            <FormControl>
+              <Input placeholder="Es. RC Auto, Vita, Infortuni..." {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={f.control}
+        name="status"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Stato</FormLabel>
+            <Select onValueChange={field.onChange} value={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona stato" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="da_emettere">Da Emettere</SelectItem>
+                <SelectItem value="emessa">Emessa (In Scadenza)</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      {currentStatus === "emessa" ? (
+        <FormField
+          control={f.control}
+          name="expiryDate"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Data di Scadenza *</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? format(field.value, "PPP", { locale: it }) : <span>Seleziona una data</span>}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      ) : (
+        <FormField
+          control={f.control}
+          name="targetIssueDate"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Data Prevista Emissione (opzionale)</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? format(field.value, "PPP", { locale: it }) : <span>Seleziona una data</span>}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
+
+      <FormField
+        control={f.control}
+        name="notes"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Note</FormLabel>
+            <FormControl>
+              <Textarea placeholder="Dettagli..." {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </>
+  );
+
   return (
     <div className="space-y-12">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-3xl font-serif text-primary mb-2">Polizze</h1>
           <p className="text-muted-foreground">Monitora il portafoglio e gestisci le nuove emissioni.</p>
         </div>
-        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-          <DialogTrigger asChild>
-            <Button data-testid="button-add-policy">
-              <Plus className="w-4 h-4 mr-2" />
-              Nuova polizza
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Aggiungi polizza</DialogTitle>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="clientName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nome Cliente</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Es. Mario Rossi" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="policyType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tipo di Polizza</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Es. RC Auto, Vita, Infortuni..." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Stato</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleziona stato" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="da_emettere">Da Emettere</SelectItem>
-                          <SelectItem value="emessa">Emessa (In Scadenza)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {statusWatcher === "emessa" ? (
-                  <FormField
-                    control={form.control}
-                    name="expiryDate"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Data di Scadenza *</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant={"outline"}
-                                className={cn(
-                                  "w-full pl-3 text-left font-normal",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                              >
-                                {field.value ? (
-                                  format(field.value, "PPP", { locale: it })
-                                ) : (
-                                  <span>Seleziona una data</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                ) : (
-                  <FormField
-                    control={form.control}
-                    name="targetIssueDate"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Data Prevista Emissione (opzionale)</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant={"outline"}
-                                className={cn(
-                                  "w-full pl-3 text-left font-normal",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                              >
-                                {field.value ? (
-                                  format(field.value, "PPP", { locale: it })
-                                ) : (
-                                  <span>Seleziona una data</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Note</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="Dettagli..." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="flex justify-end pt-4">
-                  <Button type="submit">Salva polizza</Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-sm bg-muted/40 border rounded-md px-3 py-2">
+            <Settings2 className="w-4 h-4 text-muted-foreground" />
+            <label htmlFor="threshold-input" className="text-muted-foreground">In scadenza entro</label>
+            <Input
+              id="threshold-input"
+              type="number"
+              min={1}
+              max={365}
+              value={threshold}
+              onChange={(e) => {
+                const v = parseInt(e.target.value, 10);
+                if (!Number.isNaN(v) && v > 0 && v <= 365) setExpiryThresholdDays(v);
+              }}
+              className="w-16 h-8"
+              data-testid="input-threshold"
+            />
+            <span className="text-muted-foreground">giorni</span>
+          </div>
+          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+            <DialogTrigger asChild>
+              <Button data-testid="button-add-policy">
+                <Plus className="w-4 h-4 mr-2" />
+                Nuova polizza
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Aggiungi polizza</DialogTitle>
+              </DialogHeader>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  {renderPolicyFormFields(form, statusWatcher)}
+                  <div className="flex justify-end pt-4">
+                    <Button type="submit">Salva polizza</Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
+
+      <Dialog open={!!editingPolicy} onOpenChange={(open) => { if (!open) setEditingPolicy(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Modifica polizza</DialogTitle>
+          </DialogHeader>
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+              {renderPolicyFormFields(editForm, editStatusWatcher)}
+              <div className="flex justify-end pt-4">
+                <Button type="submit" data-testid="button-save-edit-policy">Salva modifiche</Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
 
       <div className="space-y-6">
         <div className="flex items-center gap-2 border-b pb-2">
           <ShieldAlert className="w-5 h-5 text-primary" />
           <h2 className="text-xl font-serif font-medium">In Scadenza</h2>
+          <span className="text-xs text-muted-foreground ml-2">(entro {threshold} giorni)</span>
         </div>
         
         {inScadenza.length > 0 ? (
@@ -283,6 +368,9 @@ export function Polizze() {
                     </div>
                   </div>
                   <div className="bg-muted/30 p-4 sm:p-5 flex items-center justify-end sm:border-l sm:h-full gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button variant="ghost" size="icon" onClick={() => setEditingPolicy(policy)} className="text-muted-foreground hover:text-primary" data-testid={`button-edit-policy-${policy.id}`}>
+                      <Pencil className="w-4 h-4" />
+                    </Button>
                     <Button variant="ghost" size="icon" onClick={() => deletePolicy(policy.id)} className="text-muted-foreground hover:text-destructive">
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -293,7 +381,7 @@ export function Polizze() {
           </div>
         ) : (
           <div className="p-8 text-center bg-card border rounded-lg text-muted-foreground">
-            Nessuna polizza in scadenza.
+            Nessuna polizza in scadenza entro {threshold} giorni.
           </div>
         )}
       </div>
@@ -355,11 +443,7 @@ export function Polizze() {
                                             !field.value && "text-muted-foreground"
                                           )}
                                         >
-                                          {field.value ? (
-                                            format(field.value, "PPP", { locale: it })
-                                          ) : (
-                                            <span>Seleziona una data</span>
-                                          )}
+                                          {field.value ? format(field.value, "PPP", { locale: it }) : <span>Seleziona una data</span>}
                                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                         </Button>
                                       </FormControl>
@@ -379,6 +463,9 @@ export function Polizze() {
                         </Form>
                       </DialogContent>
                     </Dialog>
+                    <Button variant="ghost" size="icon" onClick={() => setEditingPolicy(policy)} className="text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity" data-testid={`button-edit-policy-${policy.id}`}>
+                      <Pencil className="w-4 h-4" />
+                    </Button>
                     <Button variant="ghost" size="icon" onClick={() => deletePolicy(policy.id)} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
                       <Trash2 className="w-4 h-4" />
                     </Button>

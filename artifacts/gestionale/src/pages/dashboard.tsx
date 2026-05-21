@@ -1,7 +1,8 @@
 import { useTasks } from "@/lib/tasks-store";
 import { usePolicies } from "@/lib/policies-store";
+import { useSettings } from "@/hooks/use-settings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { format, isBefore, isToday, addDays, isPast, isAfter, startOfDay } from "date-fns";
+import { format, isBefore, isToday, addDays, isAfter, startOfDay } from "date-fns";
 import { it } from "date-fns/locale";
 import { CheckSquare, AlertCircle, FileText, CalendarClock } from "lucide-react";
 import { Link } from "wouter";
@@ -9,8 +10,10 @@ import { Link } from "wouter";
 export function Dashboard() {
   const { tasks } = useTasks();
   const { policies } = usePolicies();
+  const { settings } = useSettings();
 
   const now = startOfDay(new Date());
+  const threshold = settings.expiryThresholdDays;
 
   const activeTasks = tasks.filter(t => !t.completedAt);
   const tasksDueToday = activeTasks.filter(t => t.dueDate && isToday(new Date(t.dueDate)));
@@ -22,7 +25,7 @@ export function Dashboard() {
   const policiesExpiringSoon = inScadenzaPolicies.filter(p => {
     if (!p.expiryDate) return false;
     const exp = new Date(p.expiryDate);
-    return isAfter(exp, now) && isBefore(exp, addDays(now, 30));
+    return isAfter(exp, now) && isBefore(exp, addDays(now, threshold));
   });
 
   const topUrgentTasks = [...activeTasks]
@@ -64,7 +67,7 @@ export function Dashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Scadenze a 30gg</CardTitle>
+            <CardTitle className="text-sm font-medium">Scadenze a {threshold}gg</CardTitle>
             <CalendarClock className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>

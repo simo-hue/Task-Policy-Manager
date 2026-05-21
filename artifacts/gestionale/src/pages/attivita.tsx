@@ -14,7 +14,7 @@ import { it } from "date-fns/locale";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { CalendarIcon, Plus, CheckCircle2, Circle, Trash2, Clock } from "lucide-react";
+import { CalendarIcon, Plus, CheckCircle2, Circle, Trash2, Clock, CheckSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const taskSchema = z.object({
