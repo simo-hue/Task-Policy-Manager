@@ -15,7 +15,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { CalendarIcon, Plus, CheckCircle2, Circle, Trash2, Clock, CheckSquare, Pencil, Search, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, parseLocalDate } from "@/lib/utils";
 
 const taskSchema = z.object({
   title: z.string().min(1, "Il titolo è obbligatorio"),
@@ -48,7 +48,7 @@ export function Attivita() {
       editForm.reset({
         title: editingTask.title,
         notes: editingTask.notes ?? "",
-        dueDate: editingTask.dueDate ? new Date(editingTask.dueDate) : undefined,
+        dueDate: editingTask.dueDate ? parseLocalDate(editingTask.dueDate) : undefined,
       });
     }
   }, [editingTask, editForm]);
@@ -86,11 +86,11 @@ export function Attivita() {
     }
     if (quickFilter === "overdue") {
       if (!t.dueDate) return false;
-      const d = startOfDay(new Date(t.dueDate));
+      const d = startOfDay(parseLocalDate(t.dueDate));
       if (!isBefore(d, today)) return false;
     } else if (quickFilter === "thisWeek") {
       if (!t.dueDate) return false;
-      const d = startOfDay(new Date(t.dueDate));
+      const d = startOfDay(parseLocalDate(t.dueDate));
       if (!isWithinInterval(d, { start: today, end: weekEnd })) return false;
     } else if (quickFilter === "noDate") {
       if (t.dueDate) return false;
@@ -102,7 +102,7 @@ export function Attivita() {
     if (!a.dueDate && !b.dueDate) return 0;
     if (!a.dueDate) return 1;
     if (!b.dueDate) return -1;
-    return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+    return parseLocalDate(a.dueDate).getTime() - parseLocalDate(b.dueDate).getTime();
   });
 
   const completedTasks = tasks.filter(t => t.completedAt && matchesFilters(t)).sort((a, b) => {
@@ -393,7 +393,7 @@ export function Attivita() {
                     <h3 className="font-medium text-lg">{task.title}</h3>
                     {task.notes && <p className="text-muted-foreground text-sm mt-1">{task.notes}</p>}
                     {task.dueDate && (() => {
-                      const d = startOfDay(new Date(task.dueDate));
+                      const d = startOfDay(parseLocalDate(task.dueDate));
                       const overdue = isBefore(d, today);
                       const soon = isWithinInterval(d, { start: today, end: weekEnd });
                       const cls = overdue
@@ -404,7 +404,7 @@ export function Attivita() {
                       return (
                         <span className={cn("inline-flex items-center text-xs font-medium mt-3 px-2.5 py-1 rounded-md ring-1", cls)}>
                           <Clock className="w-3 h-3 mr-1" />
-                          {format(new Date(task.dueDate), "d MMM yyyy", { locale: it })}
+                          {format(parseLocalDate(task.dueDate), "d MMM yyyy", { locale: it })}
                         </span>
                       );
                     })()}

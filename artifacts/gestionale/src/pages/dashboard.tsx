@@ -7,7 +7,7 @@ import { it } from "date-fns/locale";
 import { CheckSquare, AlertCircle, FileText, CalendarClock, Plus, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, parseLocalDate } from "@/lib/utils";
 
 type Tone = "neutral" | "danger" | "gold" | "muted";
 
@@ -27,25 +27,25 @@ export function Dashboard() {
   const threshold = settings.expiryThresholdDays;
 
   const activeTasks = tasks.filter(t => !t.completedAt);
-  const tasksDueToday = activeTasks.filter(t => t.dueDate && isToday(new Date(t.dueDate)));
-  const overdueTasks = activeTasks.filter(t => t.dueDate && isBefore(new Date(t.dueDate), now));
+  const tasksDueToday = activeTasks.filter(t => t.dueDate && isToday(parseLocalDate(t.dueDate)));
+  const overdueTasks = activeTasks.filter(t => t.dueDate && isBefore(parseLocalDate(t.dueDate), now));
 
   const inScadenzaPolicies = policies.filter(p => p.status === 'emessa' && p.expiryDate);
   const daEmetterePolicies = policies.filter(p => p.status === 'da_emettere');
 
   const policiesExpiringSoon = inScadenzaPolicies.filter(p => {
     if (!p.expiryDate) return false;
-    const exp = new Date(p.expiryDate);
-    return isAfter(exp, now) && isBefore(exp, addDays(now, threshold));
+    const days = differenceInCalendarDays(parseLocalDate(p.expiryDate), now);
+    return days >= 0 && days <= threshold;
   });
 
   const topUrgentTasks = [...activeTasks]
     .filter(t => t.dueDate)
-    .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime())
+    .sort((a, b) => parseLocalDate(a.dueDate!).getTime() - parseLocalDate(b.dueDate!).getTime())
     .slice(0, 5);
 
   const topUpcomingPolicies = [...inScadenzaPolicies]
-    .sort((a, b) => new Date(a.expiryDate!).getTime() - new Date(b.expiryDate!).getTime())
+    .sort((a, b) => parseLocalDate(a.expiryDate!).getTime() - parseLocalDate(b.expiryDate!).getTime())
     .slice(0, 5);
 
   const statCards: {
@@ -169,7 +169,7 @@ export function Dashboard() {
           {topUpcomingPolicies.length > 0 && (
             <div className="divide-y divide-border">
               {topUpcomingPolicies.map(p => {
-                const exp = p.expiryDate ? new Date(p.expiryDate) : null;
+                const exp = p.expiryDate ? parseLocalDate(p.expiryDate) : null;
                 const days = exp ? differenceInCalendarDays(exp, now) : null;
                 const tone =
                   days === null ? "muted" :
@@ -203,7 +203,7 @@ export function Dashboard() {
           {topUrgentTasks.length > 0 && (
             <div className="divide-y divide-border">
               {topUrgentTasks.map(t => {
-                const due = t.dueDate ? new Date(t.dueDate) : null;
+                const due = t.dueDate ? parseLocalDate(t.dueDate) : null;
                 const tone =
                   due === null ? "muted" :
                   isBefore(due, now) ? "danger" :

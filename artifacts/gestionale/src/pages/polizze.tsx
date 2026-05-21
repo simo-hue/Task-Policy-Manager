@@ -17,7 +17,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { CalendarIcon, Plus, ShieldAlert, FileSignature, Trash2, ArrowRight, Pencil, Settings2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, parseLocalDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
 const policySchema = z.object({
@@ -94,8 +94,8 @@ export function Polizze() {
         policyType: editingPolicy.policyType,
         notes: editingPolicy.notes ?? "",
         status: editingPolicy.status,
-        expiryDate: editingPolicy.expiryDate ? new Date(editingPolicy.expiryDate) : undefined,
-        targetIssueDate: editingPolicy.targetIssueDate ? new Date(editingPolicy.targetIssueDate) : undefined,
+        expiryDate: editingPolicy.expiryDate ? parseLocalDate(editingPolicy.expiryDate) : undefined,
+        targetIssueDate: editingPolicy.targetIssueDate ? parseLocalDate(editingPolicy.targetIssueDate) : undefined,
       });
     }
   }, [editingPolicy, editForm]);
@@ -148,20 +148,25 @@ export function Polizze() {
 
   const emesse = policies.filter(p => p.status === 'emessa' && p.expiryDate);
 
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
   const inScadenza = emesse
-    .filter(p => differenceInDays(new Date(p.expiryDate!), new Date()) <= threshold)
-    .sort((a, b) => new Date(a.expiryDate!).getTime() - new Date(b.expiryDate!).getTime());
+    .filter(p => differenceInDays(parseLocalDate(p.expiryDate!), todayStart) <= threshold)
+    .sort((a, b) => parseLocalDate(a.expiryDate!).getTime() - parseLocalDate(b.expiryDate!).getTime());
 
   const daEmettere = policies.filter(p => p.status === 'da_emettere').sort((a, b) => {
+    if (!a.targetIssueDate && !b.targetIssueDate) return 0;
     if (!a.targetIssueDate) return 1;
     if (!b.targetIssueDate) return -1;
-    return new Date(a.targetIssueDate).getTime() - new Date(b.targetIssueDate).getTime();
+    return parseLocalDate(a.targetIssueDate).getTime() - parseLocalDate(b.targetIssueDate).getTime();
   });
 
   const getUrgencyLevel = (dateString?: string) => {
     if (!dateString) return "neutral";
-    const days = differenceInDays(new Date(dateString), new Date());
-    if (days < 0 || isPast(new Date(dateString))) return "danger";
+    const d = parseLocalDate(dateString);
+    const days = differenceInDays(d, todayStart);
+    if (days < 0) return "danger";
     if (days < 7) return "danger";
     if (days <= 30) return "warning";
     return "neutral";
@@ -169,7 +174,7 @@ export function Polizze() {
 
   const UrgencyBadge = ({ date }: { date: string }) => {
     const level = getUrgencyLevel(date);
-    const label = format(new Date(date), "d MMM yyyy", { locale: it });
+    const label = format(parseLocalDate(date), "d MMM yyyy", { locale: it });
     
     if (level === "danger") return <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-md bg-destructive/10 text-destructive ring-1 ring-destructive/20 whitespace-nowrap"><CalendarIcon className="w-3 h-3 mr-1"/>{label}</span>;
     if (level === "warning") return <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-md bg-gold/10 text-gold ring-1 ring-gold/20 whitespace-nowrap"><CalendarIcon className="w-3 h-3 mr-1"/>{label}</span>;
@@ -467,7 +472,7 @@ export function Polizze() {
                       {policy.targetIssueDate && (
                         <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground ring-1 ring-border whitespace-nowrap">
                           <CalendarIcon className="w-3 h-3 mr-1" />
-                          {format(new Date(policy.targetIssueDate), "d MMM yyyy", { locale: it })}
+                          {format(parseLocalDate(policy.targetIssueDate), "d MMM yyyy", { locale: it })}
                         </span>
                       )}
                     </div>

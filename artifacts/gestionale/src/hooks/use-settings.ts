@@ -15,7 +15,7 @@ export function useSettings() {
   );
 
   const setExpiryThresholdDays = (days: number) => {
-    setSettings({ ...settings, expiryThresholdDays: days });
+    setSettings(prev => ({ ...prev, expiryThresholdDays: days }));
   };
 
   return { settings, setExpiryThresholdDays };

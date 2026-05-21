@@ -33,7 +33,7 @@ export function useTasks() {
   };
 
   const completeTask = (id: string) => {
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, completedAt: new Date().toISOString() } : t));
+    setTasks(prev => prev.map(t => (t.id === id && !t.completedAt) ? { ...t, completedAt: new Date().toISOString() } : t));
   };
 
   const reopenTask = (id: string) => {
