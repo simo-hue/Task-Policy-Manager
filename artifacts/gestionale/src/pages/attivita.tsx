@@ -9,12 +9,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { format, isToday, isYesterday, isThisWeek, isThisMonth, differenceInCalendarDays, differenceInCalendarMonths, startOfDay } from "date-fns";
+import { format, isToday, isYesterday, isThisWeek, isThisMonth, differenceInCalendarDays, differenceInCalendarMonths, startOfDay, endOfWeek, isBefore, isWithinInterval } from "date-fns";
 import { it } from "date-fns/locale";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { CalendarIcon, Plus, CheckCircle2, Circle, Trash2, Clock, CheckSquare, Pencil } from "lucide-react";
+import { CalendarIcon, Plus, CheckCircle2, Circle, Trash2, Clock, CheckSquare, Pencil, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const taskSchema = z.object({
@@ -29,6 +29,9 @@ export function Attivita() {
   const { tasks, addTask, completeTask, reopenTask, deleteTask, updateTask } = useTasks();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [search, setSearch] = useState("");
+  type QuickFilter = "all" | "overdue" | "thisWeek" | "noDate";
+  const [quickFilter, setQuickFilter] = useState<QuickFilter>("all");
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
@@ -71,15 +74,48 @@ export function Attivita() {
     editForm.reset({ title: "", notes: "" });
   }
 
-  const activeTasks = tasks.filter(t => !t.completedAt).sort((a, b) => {
+  const today = startOfDay(new Date());
+  const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
+
+  function matchesFilters(t: Task): boolean {
+    const q = search.trim().toLowerCase();
+    if (q) {
+      const inTitle = t.title.toLowerCase().includes(q);
+      const inNotes = (t.notes ?? "").toLowerCase().includes(q);
+      if (!inTitle && !inNotes) return false;
+    }
+    if (quickFilter === "overdue") {
+      if (!t.dueDate) return false;
+      const d = startOfDay(new Date(t.dueDate));
+      if (!isBefore(d, today)) return false;
+    } else if (quickFilter === "thisWeek") {
+      if (!t.dueDate) return false;
+      const d = startOfDay(new Date(t.dueDate));
+      if (!isWithinInterval(d, { start: today, end: weekEnd })) return false;
+    } else if (quickFilter === "noDate") {
+      if (t.dueDate) return false;
+    }
+    return true;
+  }
+
+  const activeTasks = tasks.filter(t => !t.completedAt && matchesFilters(t)).sort((a, b) => {
     if (!a.dueDate) return 1;
     if (!b.dueDate) return -1;
     return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
   });
 
-  const completedTasks = tasks.filter(t => t.completedAt).sort((a, b) => {
+  const completedTasks = tasks.filter(t => t.completedAt && matchesFilters(t)).sort((a, b) => {
     return new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime();
   });
+
+  const hasActiveFilters = search.trim() !== "" || quickFilter !== "all";
+
+  const filterButtons: { value: QuickFilter; label: string }[] = [
+    { value: "all", label: "Tutte" },
+    { value: "overdue", label: "Scadute" },
+    { value: "thisWeek", label: "Questa settimana" },
+    { value: "noDate", label: "Senza data" },
+  ];
 
   function groupLabel(date: Date): string {
     if (isToday(date)) return "Oggi";
@@ -275,6 +311,56 @@ export function Attivita() {
         </DialogContent>
       </Dialog>
 
+      <div className="space-y-3">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Cerca per titolo o note..."
+            className="pl-9 pr-9"
+            data-testid="input-search-tasks"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              data-testid="button-clear-search"
+              aria-label="Cancella ricerca"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {filterButtons.map(f => (
+            <Button
+              key={f.value}
+              type="button"
+              size="sm"
+              variant={quickFilter === f.value ? "default" : "outline"}
+              onClick={() => setQuickFilter(f.value)}
+              data-testid={`button-filter-${f.value}`}
+            >
+              {f.label}
+            </Button>
+          ))}
+          {hasActiveFilters && (
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => { setSearch(""); setQuickFilter("all"); }}
+              data-testid="button-reset-filters"
+            >
+              <X className="w-4 h-4 mr-1" />
+              Azzera filtri
+            </Button>
+          )}
+        </div>
+      </div>
+
       <Tabs defaultValue="da-fare" className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="da-fare">Da fare ({activeTasks.length})</TabsTrigger>
@@ -329,8 +415,17 @@ export function Attivita() {
           ) : (
             <div className="py-12 text-center bg-card border rounded-lg text-muted-foreground shadow-sm">
               <CheckSquare className="w-12 h-12 mx-auto mb-4 opacity-20" />
-              <p className="text-lg font-medium">Nessuna attività da fare.</p>
-              <p className="text-sm mt-1">Goditi il meritato riposo.</p>
+              {hasActiveFilters ? (
+                <>
+                  <p className="text-lg font-medium">Nessun risultato.</p>
+                  <p className="text-sm mt-1">Prova a modificare la ricerca o i filtri.</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-lg font-medium">Nessuna attività da fare.</p>
+                  <p className="text-sm mt-1">Goditi il meritato riposo.</p>
+                </>
+              )}
             </div>
           )}
         </TabsContent>
