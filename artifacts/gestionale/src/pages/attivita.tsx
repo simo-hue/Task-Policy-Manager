@@ -75,10 +75,10 @@ export function Attivita() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-serif text-primary mb-2">Attività</h1>
-          <p className="text-muted-foreground">Gestisci le cose da fare e tieni traccia di quanto completato.</p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-serif text-primary mb-2">Attività</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">Gestisci le cose da fare e tieni traccia di quanto completato.</p>
         </div>
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger asChild>

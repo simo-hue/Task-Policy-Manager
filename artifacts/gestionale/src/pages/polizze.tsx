@@ -282,10 +282,10 @@ export function Polizze() {
 
   return (
     <div className="space-y-12">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-3xl font-serif text-primary mb-2">Polizze</h1>
-          <p className="text-muted-foreground">Monitora il portafoglio e gestisci le nuove emissioni.</p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-serif text-primary mb-2">Polizze</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">Monitora il portafoglio e gestisci le nuove emissioni.</p>
         </div>
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger asChild>
