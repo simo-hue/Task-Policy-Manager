@@ -144,9 +144,9 @@ export function Polizze() {
     const level = getUrgencyLevel(date);
     const label = format(new Date(date), "d MMM yyyy", { locale: it });
     
-    if (level === "danger") return <Badge variant="destructive" className="font-semibold text-sm px-2 py-1"><CalendarIcon className="w-3 h-3 mr-1"/>{label}</Badge>;
-    if (level === "warning") return <Badge variant="secondary" className="bg-amber-100 text-amber-800 hover:bg-amber-100 font-semibold text-sm px-2 py-1 border-amber-200"><CalendarIcon className="w-3 h-3 mr-1"/>{label}</Badge>;
-    return <Badge variant="outline" className="font-medium text-sm px-2 py-1 text-muted-foreground"><CalendarIcon className="w-3 h-3 mr-1"/>{label}</Badge>;
+    if (level === "danger") return <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-md bg-destructive/10 text-destructive ring-1 ring-destructive/20 whitespace-nowrap"><CalendarIcon className="w-3 h-3 mr-1"/>{label}</span>;
+    if (level === "warning") return <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-md bg-gold/10 text-gold ring-1 ring-gold/20 whitespace-nowrap"><CalendarIcon className="w-3 h-3 mr-1"/>{label}</span>;
+    return <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground ring-1 ring-border whitespace-nowrap"><CalendarIcon className="w-3 h-3 mr-1"/>{label}</span>;
   };
 
   const renderPolicyFormFields = (
@@ -284,7 +284,8 @@ export function Polizze() {
     <div className="space-y-12">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
-          <h1 className="text-2xl sm:text-3xl font-serif text-primary mb-2">Polizze</h1>
+          <div className="text-xs uppercase tracking-[0.18em] text-gold/90 font-semibold mb-2">Portafoglio</div>
+          <h1 className="text-3xl sm:text-4xl font-serif font-semibold text-primary mb-2 tracking-tight">Polizze</h1>
           <p className="text-muted-foreground text-sm sm:text-base">Monitora il portafoglio e gestisci le nuove emissioni.</p>
         </div>
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
@@ -382,21 +383,21 @@ export function Polizze() {
           </div>
 
           {inScadenza.length > 0 ? (
-            <div className="grid gap-4">
+            <div className="grid gap-3">
               {inScadenza.map(policy => (
-                <Card key={policy.id} className="overflow-hidden group hover:shadow-md transition-all">
+                <Card key={policy.id} className="overflow-hidden group shadow-soft hover:shadow-card hover:border-primary/30 transition-all">
                   <CardContent className="p-0 flex flex-col sm:flex-row sm:items-center">
-                    <div className="p-5 flex-1">
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-semibold text-lg">{policy.clientName}</h3>
+                    <div className="p-5 flex-1 min-w-0">
+                      <div className="flex justify-between items-start gap-3 mb-2 flex-wrap">
+                        <h3 className="font-semibold text-base sm:text-lg truncate">{policy.clientName}</h3>
                         {policy.expiryDate && <UrgencyBadge date={policy.expiryDate} />}
                       </div>
-                      <div className="flex items-center gap-3 text-muted-foreground text-sm">
-                        <span className="bg-muted px-2 py-1 rounded-md text-foreground font-medium">{policy.policyType}</span>
+                      <div className="flex items-center gap-3 text-muted-foreground text-sm flex-wrap">
+                        <span className="bg-secondary px-2 py-0.5 rounded-md text-secondary-foreground font-medium text-xs">{policy.policyType}</span>
                         {policy.notes && <span className="truncate max-w-xs">{policy.notes}</span>}
                       </div>
                     </div>
-                    <div className="bg-muted/30 p-4 sm:p-5 flex items-center justify-end sm:border-l sm:h-full gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="px-4 sm:px-5 pb-4 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-1 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity">
                       <Button variant="ghost" size="icon" onClick={() => setEditingPolicy(policy)} className="text-muted-foreground hover:text-primary" data-testid={`button-edit-policy-${policy.id}`}>
                         <Pencil className="w-4 h-4" />
                       </Button>
@@ -409,7 +410,7 @@ export function Polizze() {
               ))}
             </div>
           ) : (
-            <div className="p-8 text-center bg-card border rounded-lg text-muted-foreground">
+            <div className="p-10 text-center bg-card/50 border border-dashed rounded-xl text-muted-foreground text-sm">
               Nessuna polizza in scadenza entro {threshold} giorni.
             </div>
           )}
@@ -417,25 +418,26 @@ export function Polizze() {
 
         <TabsContent value="da-emettere" className="space-y-4">
           {daEmettere.length > 0 ? (
-          <div className="grid gap-4">
+          <div className="grid gap-3">
             {daEmettere.map(policy => (
-              <Card key={policy.id} className="overflow-hidden group hover:shadow-md transition-all border-dashed">
+              <Card key={policy.id} className="overflow-hidden group shadow-soft hover:shadow-card hover:border-primary/30 transition-all border-dashed">
                 <CardContent className="p-0 flex flex-col sm:flex-row sm:items-center">
-                  <div className="p-5 flex-1">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-semibold text-lg">{policy.clientName}</h3>
+                  <div className="p-5 flex-1 min-w-0">
+                    <div className="flex justify-between items-start gap-3 mb-2 flex-wrap">
+                      <h3 className="font-semibold text-base sm:text-lg truncate">{policy.clientName}</h3>
                       {policy.targetIssueDate && (
-                        <div className="text-sm font-medium text-muted-foreground">
-                          Prevista per: {format(new Date(policy.targetIssueDate), "d MMM yyyy", { locale: it })}
-                        </div>
+                        <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground ring-1 ring-border whitespace-nowrap">
+                          <CalendarIcon className="w-3 h-3 mr-1" />
+                          {format(new Date(policy.targetIssueDate), "d MMM yyyy", { locale: it })}
+                        </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-3 text-muted-foreground text-sm">
-                      <span className="bg-muted px-2 py-1 rounded-md text-foreground font-medium">{policy.policyType}</span>
+                    <div className="flex items-center gap-3 text-muted-foreground text-sm flex-wrap">
+                      <span className="bg-secondary px-2 py-0.5 rounded-md text-secondary-foreground font-medium text-xs">{policy.policyType}</span>
                       {policy.notes && <span className="truncate max-w-xs">{policy.notes}</span>}
                     </div>
                   </div>
-                  <div className="bg-muted/30 p-4 sm:p-5 flex items-center justify-end sm:border-l sm:h-full gap-2">
+                  <div className="px-4 sm:px-5 pb-4 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-2">
                     <Dialog open={issuingPolicy?.id === policy.id} onOpenChange={(open) => {
                       if (!open) setIssuingPolicy(null);
                       else setIssuingPolicy(policy);
@@ -487,10 +489,10 @@ export function Polizze() {
                         </Form>
                       </DialogContent>
                     </Dialog>
-                    <Button variant="ghost" size="icon" onClick={() => setEditingPolicy(policy)} className="text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity" data-testid={`button-edit-policy-${policy.id}`}>
+                    <Button variant="ghost" size="icon" onClick={() => setEditingPolicy(policy)} className="text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity" data-testid={`button-edit-policy-${policy.id}`}>
                       <Pencil className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => deletePolicy(policy.id)} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button variant="ghost" size="icon" onClick={() => deletePolicy(policy.id)} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -499,7 +501,7 @@ export function Polizze() {
             ))}
           </div>
         ) : (
-          <div className="p-8 text-center bg-card border border-dashed rounded-lg text-muted-foreground">
+          <div className="p-10 text-center bg-card/50 border border-dashed rounded-xl text-muted-foreground text-sm">
             Nessuna polizza in attesa di emissione.
           </div>
         )}

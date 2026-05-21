@@ -142,7 +142,8 @@ export function Attivita() {
     <div className="space-y-8">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
-          <h1 className="text-2xl sm:text-3xl font-serif text-primary mb-2">Attività</h1>
+          <div className="text-xs uppercase tracking-[0.18em] text-gold/90 font-semibold mb-2">Da fare</div>
+          <h1 className="text-3xl sm:text-4xl font-serif font-semibold text-primary mb-2 tracking-tight">Attività</h1>
           <p className="text-muted-foreground text-sm sm:text-base">Gestisci le cose da fare e tieni traccia di quanto completato.</p>
         </div>
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
@@ -370,7 +371,7 @@ export function Attivita() {
         <TabsContent value="da-fare" className="space-y-4">
           {activeTasks.length > 0 ? (
             activeTasks.map(task => (
-              <Card key={task.id} className="overflow-hidden hover:shadow-md transition-shadow group">
+              <Card key={task.id} className="overflow-hidden shadow-soft hover:shadow-card hover:border-primary/30 transition-all group">
                 <CardContent className="p-4 flex items-start gap-4">
                   <button 
                     onClick={() => completeTask(task.id)}
@@ -382,14 +383,24 @@ export function Attivita() {
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-lg">{task.title}</h3>
                     {task.notes && <p className="text-muted-foreground text-sm mt-1">{task.notes}</p>}
-                    {task.dueDate && (
-                      <div className="flex items-center text-xs font-medium mt-3 text-amber-600 bg-amber-50 w-max px-2 py-1 rounded-md">
-                        <Clock className="w-3 h-3 mr-1" />
-                        {format(new Date(task.dueDate), "d MMM yyyy", { locale: it })}
-                      </div>
-                    )}
+                    {task.dueDate && (() => {
+                      const d = startOfDay(new Date(task.dueDate));
+                      const overdue = isBefore(d, today);
+                      const soon = isWithinInterval(d, { start: today, end: weekEnd });
+                      const cls = overdue
+                        ? "bg-destructive/10 text-destructive ring-destructive/20"
+                        : soon
+                        ? "bg-gold/10 text-gold ring-gold/20"
+                        : "bg-secondary text-secondary-foreground ring-border";
+                      return (
+                        <span className={cn("inline-flex items-center text-xs font-medium mt-3 px-2.5 py-1 rounded-md ring-1", cls)}>
+                          <Clock className="w-3 h-3 mr-1" />
+                          {format(new Date(task.dueDate), "d MMM yyyy", { locale: it })}
+                        </span>
+                      );
+                    })()}
                   </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -442,7 +453,7 @@ export function Attivita() {
                   <div className="flex-1 h-px bg-border" />
                 </div>
                 {group.tasks.map(task => (
-                  <Card key={task.id} className="overflow-hidden opacity-75">
+                  <Card key={task.id} className="overflow-hidden shadow-soft opacity-80 hover:opacity-100 transition-opacity">
                     <CardContent className="p-4 flex items-start gap-4">
                       <button
                         onClick={() => reopenTask(task.id)}
