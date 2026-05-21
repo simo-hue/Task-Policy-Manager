@@ -16,10 +16,18 @@ import { it } from "date-fns/locale";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { CalendarIcon, Plus, ShieldAlert, FileSignature, Trash2, ArrowRight, Pencil, Settings2 } from "lucide-react";
+import { CalendarIcon, Plus, ShieldAlert, FileSignature, Trash2, ArrowRight, Pencil, Settings2, Check, ChevronDown } from "lucide-react";
 import { cn, parseLocalDate } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 const policySchema = z.object({
   clientName: z.string().min(1, "Il nome cliente è obbligatorio"),
@@ -29,6 +37,7 @@ const policySchema = z.object({
   expiryDate: z.date().optional(),
   targetIssueDate: z.date().optional(),
   daMettereACassa: z.boolean().optional(),
+  cassaStato: z.enum(["regolare", "da_mettere", "pagata"]).optional(),
 }).superRefine((data, ctx) => {
   if (data.status === "emessa") {
     if (!data.expiryDate) {
@@ -59,15 +68,16 @@ export function PolizzePersonali() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingPolicy, setEditingPolicy] = useState<Policy | null>(null);
   const [issuingPolicy, setIssuingPolicy] = useState<Policy | null>(null);
+  const [payingPolicy, setPayingPolicy] = useState<Policy | null>(null);
 
   const form = useForm<PolicyFormValues>({
     resolver: zodResolver(policySchema),
-    defaultValues: { clientName: "", policyType: "", notes: "", status: "da_emettere", daMettereACassa: false },
+    defaultValues: { clientName: "", policyType: "", notes: "", status: "da_emettere", daMettereACassa: false, cassaStato: "regolare" },
   });
 
   const editForm = useForm<PolicyFormValues>({
     resolver: zodResolver(policySchema),
-    defaultValues: { clientName: "", policyType: "", notes: "", status: "da_emettere", daMettereACassa: false },
+    defaultValues: { clientName: "", policyType: "", notes: "", status: "da_emettere", daMettereACassa: false, cassaStato: "regolare" },
   });
 
   useEffect(() => {
@@ -80,6 +90,7 @@ export function PolizzePersonali() {
         expiryDate: editingPolicy.expiryDate ? parseLocalDate(editingPolicy.expiryDate) : undefined,
         targetIssueDate: editingPolicy.targetIssueDate ? parseLocalDate(editingPolicy.targetIssueDate) : undefined,
         daMettereACassa: editingPolicy.daMettereACassa ?? false,
+        cassaStato: editingPolicy.cassaStato ?? (editingPolicy.daMettereACassa ? "da_mettere" : "regolare"),
       });
     }
   }, [editingPolicy, editForm]);
@@ -92,10 +103,11 @@ export function PolizzePersonali() {
       status: values.status,
       expiryDate: values.expiryDate ? format(values.expiryDate, 'yyyy-MM-dd') : undefined,
       targetIssueDate: values.targetIssueDate ? format(values.targetIssueDate, 'yyyy-MM-dd') : undefined,
-      daMettereACassa: !!values.daMettereACassa,
+      daMettereACassa: values.cassaStato === "da_mettere",
+      cassaStato: values.cassaStato || "regolare",
     });
     setIsAddOpen(false);
-    form.reset({ clientName: "", policyType: "", notes: "", status: "da_emettere", daMettereACassa: false });
+    form.reset({ clientName: "", policyType: "", notes: "", status: "da_emettere", daMettereACassa: false, cassaStato: "regolare" });
   }
 
   function onEditSubmit(values: PolicyFormValues) {
@@ -114,7 +126,8 @@ export function PolizzePersonali() {
       issuedAt: values.status === "emessa"
         ? (editingPolicy.issuedAt ?? new Date().toISOString())
         : editingPolicy.issuedAt,
-      daMettereACassa: !!values.daMettereACassa,
+      daMettereACassa: values.cassaStato === "da_mettere",
+      cassaStato: values.cassaStato || "regolare",
     });
     setEditingPolicy(null);
   }
@@ -124,7 +137,7 @@ export function PolizzePersonali() {
 
   const threshold = settings.expiryThresholdDays;
 
-  const emesse = policies.filter(p => p.status === 'emessa' && p.expiryDate);
+  const emesse = policies.filter(p => p.status === 'emessa' && p.expiryDate && p.cassaStato !== 'pagata');
 
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
@@ -133,7 +146,7 @@ export function PolizzePersonali() {
     .filter(p => differenceInDays(parseLocalDate(p.expiryDate!), todayStart) <= threshold)
     .sort((a, b) => parseLocalDate(a.expiryDate!).getTime() - parseLocalDate(b.expiryDate!).getTime());
 
-  const daEmettere = policies.filter(p => p.status === 'da_emettere').sort((a, b) => {
+  const daEmettere = policies.filter(p => p.status === 'da_emettere' && p.cassaStato !== 'pagata').sort((a, b) => {
     if (!a.targetIssueDate && !b.targetIssueDate) return 0;
     if (!a.targetIssueDate) return 1;
     if (!b.targetIssueDate) return -1;
@@ -157,6 +170,88 @@ export function PolizzePersonali() {
     if (level === "danger") return <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-md bg-destructive/10 text-destructive ring-1 ring-destructive/20 whitespace-nowrap"><CalendarIcon className="w-3 h-3 mr-1"/>{label}</span>;
     if (level === "warning") return <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-md bg-gold/10 text-gold ring-1 ring-gold/20 whitespace-nowrap"><CalendarIcon className="w-3 h-3 mr-1"/>{label}</span>;
     return <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground ring-1 ring-border whitespace-nowrap"><CalendarIcon className="w-3 h-3 mr-1"/>{label}</span>;
+  };
+
+  const renderCassaBadge = (policy: Policy) => {
+    const currentCassaStato = policy.cassaStato || (policy.daMettereACassa ? "da_mettere" : "regolare");
+
+    const cassaConfig = {
+      regolare: {
+        label: "Regolare",
+        className: "bg-slate-500/10 text-slate-600 border-slate-500/20 hover:bg-slate-500/20",
+        dotColor: "bg-slate-500"
+      },
+      da_mettere: {
+        label: "Da mettere a cassa",
+        className: "bg-amber-500/10 text-amber-600 border-amber-500/20 hover:bg-amber-500/20",
+        dotColor: "bg-amber-500"
+      },
+      pagata: {
+        label: "Pagata",
+        className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20",
+        dotColor: "bg-emerald-500"
+      }
+    };
+
+    const current = cassaConfig[currentCassaStato] || cassaConfig.regolare;
+
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Badge
+            variant="outline"
+            className={cn(
+              "cursor-pointer text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-all duration-200 select-none flex items-center gap-1 hover:scale-105 active:scale-95 py-0.5 px-2 rounded-full border shadow-sm",
+              current.className
+            )}
+          >
+            <span>{current.label}</span>
+            <ChevronDown className="w-3 h-3 opacity-60" />
+          </Badge>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-56 p-1.5 rounded-lg border shadow-lg bg-popover text-popover-foreground z-50">
+          <DropdownMenuLabel className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground px-2 py-1">
+            Cambia Stato Cassa
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator className="my-1" />
+          
+          <DropdownMenuItem
+            onClick={() => updatePolicy(policy.id, { cassaStato: "regolare", daMettereACassa: false })}
+            className="flex items-center justify-between cursor-pointer rounded-md px-2 py-1.5 text-xs hover:bg-accent focus:bg-accent"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-slate-500 shrink-0" />
+              <span>Regolare</span>
+            </div>
+            {currentCassaStato === "regolare" && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            onClick={() => updatePolicy(policy.id, { cassaStato: "da_mettere", daMettereACassa: true })}
+            className="flex items-center justify-between cursor-pointer rounded-md px-2 py-1.5 text-xs hover:bg-accent focus:bg-accent"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
+              <span>Da mettere a cassa</span>
+            </div>
+            {currentCassaStato === "da_mettere" && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator className="my-1" />
+
+          <DropdownMenuItem
+            onClick={() => setPayingPolicy(policy)}
+            className="flex items-center justify-between cursor-pointer text-emerald-600 dark:text-emerald-400 rounded-md px-2 py-1.5 text-xs hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 focus:bg-emerald-50/50 focus:text-emerald-700"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+              <span className="font-semibold">Pagata (Archivia)</span>
+            </div>
+            {currentCassaStato === "pagata" && <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
   };
 
   const renderPolicyFormFields = (
@@ -184,7 +279,19 @@ export function PolizzePersonali() {
           <FormItem>
             <FormLabel>Tipo di Polizza</FormLabel>
             <FormControl>
-              <Input placeholder="Es. RC Auto, Vita, Infortuni..." {...field} />
+              <div className="relative">
+                <Input placeholder="Es. RC Auto, Vita, Infortuni..." list="personal-policy-types" {...field} />
+                <datalist id="personal-policy-types">
+                  <option value="RC Auto Personale" />
+                  <option value="Infortuni Personale" />
+                  <option value="Casa e Fabbricato" />
+                  <option value="Vita" />
+                  <option value="Salute e Sanitaria" />
+                  <option value="Tutela Legale" />
+                  <option value="Viaggio" />
+                  <option value="Fideiussione" />
+                </datalist>
+              </div>
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -276,18 +383,23 @@ export function PolizzePersonali() {
 
       <FormField
         control={f.control}
-        name="daMettereACassa"
+        name="cassaStato"
         render={({ field }) => (
-          <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3.5 shadow-soft">
-            <FormControl>
-              <Checkbox
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-            </FormControl>
-            <div className="space-y-1 leading-none">
-              <FormLabel className="font-semibold text-sm cursor-pointer">Da Mettere a cassa</FormLabel>
-            </div>
+          <FormItem>
+            <FormLabel>Stato Cassa</FormLabel>
+            <Select onValueChange={field.onChange} value={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona stato cassa" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="regolare">Regolare</SelectItem>
+                <SelectItem value="da_mettere">Da mettere a cassa</SelectItem>
+                <SelectItem value="pagata">Pagata (Archivia)</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage />
           </FormItem>
         )}
       />
@@ -429,13 +541,9 @@ export function PolizzePersonali() {
                   <CardContent className="p-0 flex flex-col sm:flex-row sm:items-center">
                     <div className="p-5 flex-1 min-w-0">
                       <div className="flex justify-between items-start gap-3 mb-2 flex-wrap">
-                        <h3 className="font-semibold text-base sm:text-lg truncate flex items-center gap-2">
-                          {policy.clientName}
-                          {policy.daMettereACassa && (
-                            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">
-                              Da Mettere a cassa
-                            </Badge>
-                          )}
+                        <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2 min-w-0">
+                          <span className="truncate">{policy.clientName}</span>
+                          {renderCassaBadge(policy)}
                         </h3>
                         {policy.expiryDate && <UrgencyBadge date={policy.expiryDate} />}
                       </div>
@@ -444,7 +552,16 @@ export function PolizzePersonali() {
                         {policy.notes && <span className="truncate max-w-xs">{policy.notes}</span>}
                       </div>
                     </div>
-                    <div className="px-4 sm:px-5 pb-4 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-1 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity">
+                    <div className="px-4 sm:px-5 pb-4 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-2 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity">
+                      <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        className="font-medium text-xs gap-1.5 h-8 hover:bg-emerald-500/10 hover:text-emerald-600 hover:border-emerald-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        onClick={() => setPayingPolicy(policy)}
+                      >
+                        <Check className="w-3.5 h-3.5 text-emerald-500" />
+                        Pagato
+                      </Button>
                       <Button variant="ghost" size="icon" onClick={() => setEditingPolicy(policy)} className="text-muted-foreground hover:text-primary" data-testid={`button-edit-policy-${policy.id}`}>
                         <Pencil className="w-4 h-4" />
                       </Button>
@@ -471,13 +588,9 @@ export function PolizzePersonali() {
                   <CardContent className="p-0 flex flex-col sm:flex-row sm:items-center">
                     <div className="p-5 flex-1 min-w-0">
                       <div className="flex justify-between items-start gap-3 mb-2 flex-wrap">
-                        <h3 className="font-semibold text-base sm:text-lg truncate flex items-center gap-2">
-                          {policy.clientName}
-                          {policy.daMettereACassa && (
-                            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">
-                              Da Mettere a cassa
-                            </Badge>
-                          )}
+                        <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2 min-w-0">
+                          <span className="truncate">{policy.clientName}</span>
+                          {renderCassaBadge(policy)}
                         </h3>
                         {policy.targetIssueDate && (
                           <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground ring-1 ring-border whitespace-nowrap">
@@ -491,46 +604,20 @@ export function PolizzePersonali() {
                         {policy.notes && <span className="truncate max-w-xs">{policy.notes}</span>}
                       </div>
                     </div>
-                    <div className="px-4 sm:px-5 pb-4 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-2">
-                      <Dialog open={issuingPolicy?.id === policy.id} onOpenChange={(open) => {
-                        if (!open) setIssuingPolicy(null);
-                        else setIssuingPolicy(policy);
-                      }}>
-                        <DialogTrigger asChild>
-                          <Button variant="secondary" className="font-medium">
-                            Segna emessa <ArrowRight className="w-4 h-4 ml-2" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-md">
-                          <DialogHeader>
-                            <DialogTitle>Conferma emissione</DialogTitle>
-                            <DialogDescription>
-                              Sei sicuro di voler segnare la polizza di <strong>{policy.clientName}</strong> come emessa? Verrà archiviata e non sarà più visibile in questo elenco.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="flex justify-end gap-3 pt-4">
-                            <Button variant="outline" onClick={() => setIssuingPolicy(null)}>
-                              Annulla
-                            </Button>
-                            <Button
-                              onClick={() => {
-                                updatePolicy(policy.id, {
-                                  status: "emessa",
-                                  targetIssueDate: undefined,
-                                  issuedAt: new Date().toISOString(),
-                                });
-                                setIssuingPolicy(null);
-                              }}
-                            >
-                              Conferma
-                            </Button>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                      <Button variant="ghost" size="icon" onClick={() => setEditingPolicy(policy)} className="text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity" data-testid={`button-edit-policy-${policy.id}`}>
+                    <div className="px-4 sm:px-5 pb-4 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-2 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity">
+                      <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        className="font-medium text-xs gap-1.5 h-8 hover:bg-primary/10 hover:text-primary hover:border-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        onClick={() => setIssuingPolicy(policy)}
+                      >
+                        <Check className="w-3.5 h-3.5 text-primary" />
+                        Segna emessa
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => setEditingPolicy(policy)} className="text-muted-foreground hover:text-primary" data-testid={`button-edit-policy-${policy.id}`}>
                         <Pencil className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => deletePolicy(policy.id)} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity">
+                      <Button variant="ghost" size="icon" onClick={() => deletePolicy(policy.id)} className="text-muted-foreground hover:text-destructive">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -545,6 +632,70 @@ export function PolizzePersonali() {
           )}
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!payingPolicy} onOpenChange={(open) => { if (!open) setPayingPolicy(null); }}>
+        <DialogContent className="max-w-md border-border/80 shadow-elevated">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-xl font-semibold text-primary mb-1 flex items-center gap-2">
+              <Check className="w-5 h-5 text-emerald-500" />
+              Conferma Pagamento
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground text-sm leading-relaxed">
+              Sei sicuro di voler contrassegnare la polizza di <strong className="text-foreground">{payingPolicy?.clientName}</strong> come pagata? Verrà archiviata e non sarà più visibile nell'elenco attivo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 pt-5">
+            <Button variant="outline" onClick={() => setPayingPolicy(null)}>
+              Annulla
+            </Button>
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-soft border-0 transition-colors"
+              onClick={() => {
+                if (payingPolicy) {
+                  updatePolicy(payingPolicy.id, { cassaStato: "pagata", daMettereACassa: false });
+                  setPayingPolicy(null);
+                }
+              }}
+            >
+              Conferma
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!issuingPolicy} onOpenChange={(open) => { if (!open) setIssuingPolicy(null); }}>
+        <DialogContent className="max-w-md border-border/80 shadow-elevated">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-xl font-semibold text-primary mb-1 flex items-center gap-2">
+              <Check className="w-5 h-5 text-primary" />
+              Conferma Emissione
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground text-sm leading-relaxed">
+              Sei sicuro di voler segnare la polizza di <strong className="text-foreground">{issuingPolicy?.clientName}</strong> come emessa? Verrà spostata nell'elenco delle polizze in scadenza.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 pt-5">
+            <Button variant="outline" onClick={() => setIssuingPolicy(null)}>
+              Annulla
+            </Button>
+            <Button
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium shadow-soft border-0 transition-colors"
+              onClick={() => {
+                if (issuingPolicy) {
+                  updatePolicy(issuingPolicy.id, {
+                    status: "emessa",
+                    targetIssueDate: undefined,
+                    issuedAt: new Date().toISOString(),
+                  });
+                  setIssuingPolicy(null);
+                }
+              }}
+            >
+              Conferma
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -13,10 +13,18 @@ import { it } from "date-fns/locale";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { CalendarIcon, Plus, Trash2, Pencil, AlertOctagon, ArrowRight, Check } from "lucide-react";
+import { CalendarIcon, Plus, Trash2, Pencil, AlertOctagon, ArrowRight, Check, ChevronDown } from "lucide-react";
 import { cn, parseLocalDate } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 const claimSchema = z.object({
   clientName: z.string().min(1, "Il nome cliente è obbligatorio"),
@@ -33,8 +41,108 @@ type ClaimFormValues = z.infer<typeof claimSchema>;
 export function Sinistri() {
   const { claims, addClaim, updateClaim, deleteClaim } = useClaims();
   const activeClaims = claims.filter(c => c.status !== "liquidato");
+
+  const renderInteractiveBadge = (claim: Claim) => {
+    const currentStatus = claim.status || "incaricato";
+
+    const statusConfig = {
+      da_aprire: {
+        label: "Da aprire",
+        className: "bg-violet-500/10 text-violet-600 border-violet-500/20 hover:bg-violet-500/20",
+        dotColor: "bg-violet-500"
+      },
+      incaricato: {
+        label: "Incaricato il perito",
+        className: "bg-amber-500/10 text-amber-600 border-amber-500/20 hover:bg-amber-500/20",
+        dotColor: "bg-amber-500"
+      },
+      non_liquidato: {
+        label: "Non liquidato",
+        className: "bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20",
+        dotColor: "bg-destructive"
+      },
+      liquidato: {
+        label: "Liquidato",
+        className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20",
+        dotColor: "bg-emerald-500"
+      }
+    };
+
+    const current = statusConfig[currentStatus] || statusConfig.incaricato;
+
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Badge
+            variant="outline"
+            className={cn(
+              "cursor-pointer text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-all duration-200 select-none flex items-center gap-1 hover:scale-105 active:scale-95 py-0.5 px-2 rounded-full border shadow-sm",
+              current.className
+            )}
+          >
+            <span>{current.label}</span>
+            <ChevronDown className="w-3 h-3 opacity-60" />
+          </Badge>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-56 p-1.5 rounded-lg border shadow-lg bg-popover text-popover-foreground z-50">
+          <DropdownMenuLabel className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground px-2 py-1">
+            Cambia Stato Sinistro
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator className="my-1" />
+          
+          <DropdownMenuItem
+            onClick={() => updateClaim(claim.id, { status: "da_aprire" })}
+            className="flex items-center justify-between cursor-pointer rounded-md px-2 py-1.5 text-xs hover:bg-accent focus:bg-accent"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-violet-500 shrink-0" />
+              <span>Da aprire</span>
+            </div>
+            {currentStatus === "da_aprire" && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            onClick={() => updateClaim(claim.id, { status: "incaricato" })}
+            className="flex items-center justify-between cursor-pointer rounded-md px-2 py-1.5 text-xs hover:bg-accent focus:bg-accent"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
+              <span>Incaricato il perito</span>
+            </div>
+            {currentStatus === "incaricato" && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            onClick={() => updateClaim(claim.id, { status: "non_liquidato" })}
+            className="flex items-center justify-between cursor-pointer rounded-md px-2 py-1.5 text-xs hover:bg-accent focus:bg-accent"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-destructive shrink-0" />
+              <span>Non liquidato</span>
+            </div>
+            {currentStatus === "non_liquidato" && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator className="my-1" />
+
+          <DropdownMenuItem
+            onClick={() => setLiquidatingClaim(claim)}
+            className="flex items-center justify-between cursor-pointer text-emerald-600 dark:text-emerald-400 rounded-md px-2 py-1.5 text-xs hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 focus:bg-emerald-50/50 focus:text-emerald-700"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+              <span className="font-semibold">Liquidato (Archivia)</span>
+            </div>
+            {currentStatus === "liquidato" && <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  };
+
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingClaim, setEditingClaim] = useState<Claim | null>(null);
+  const [liquidatingClaim, setLiquidatingClaim] = useState<Claim | null>(null);
 
   const form = useForm<ClaimFormValues>({
     resolver: zodResolver(claimSchema),
@@ -104,7 +212,20 @@ export function Sinistri() {
           <FormItem>
             <FormLabel>Ramo</FormLabel>
             <FormControl>
-              <Input placeholder="Es. RC Auto, Infortuni, Vita..." {...field} />
+              <div className="relative">
+                <Input placeholder="Es. RC Auto, Infortuni, Vita..." list="claim-ramo-types" {...field} />
+                <datalist id="claim-ramo-types">
+                  <option value="RC Auto" />
+                  <option value="Infortuni" />
+                  <option value="Vita" />
+                  <option value="Incendio e Scoppio" />
+                  <option value="Responsabilità Civile" />
+                  <option value="Tutela Legale" />
+                  <option value="Salute e Malattia" />
+                  <option value="Fideiussioni e Cauzioni" />
+                  <option value="Altri Danni ai Beni" />
+                </datalist>
+              </div>
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -235,29 +356,10 @@ export function Sinistri() {
                 <CardContent className="p-0 flex flex-col sm:flex-row sm:items-center">
                   <div className="p-5 flex-1 min-w-0">
                     <div className="flex justify-between items-start gap-3 mb-2 flex-wrap">
-                      <h3 className="font-semibold text-base sm:text-lg truncate flex items-center gap-2 flex-wrap">
+                      <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2 flex-wrap min-w-0">
                         <AlertOctagon className="w-4 h-4 text-destructive shrink-0" />
-                        <span>{claim.clientName}</span>
-                        {claim.status === 'da_aprire' && (
-                          <Badge variant="outline" className="bg-slate-500/10 text-slate-600 border-slate-500/20 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">
-                            Da aprire
-                          </Badge>
-                        )}
-                        {claim.status === 'liquidato' && (
-                          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">
-                            Liquidato
-                          </Badge>
-                        )}
-                        {claim.status === 'incaricato' && (
-                          <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">
-                            Incaricato il perito
-                          </Badge>
-                        )}
-                        {claim.status === 'non_liquidato' && (
-                          <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">
-                            Non liquidato
-                          </Badge>
-                        )}
+                        <span className="truncate">{claim.clientName}</span>
+                        {renderInteractiveBadge(claim)}
                       </h3>
                       <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground ring-1 ring-border whitespace-nowrap">
                         <CalendarIcon className="w-3 h-3 mr-1" />
@@ -272,36 +374,15 @@ export function Sinistri() {
                     </div>
                   </div>
                   <div className="px-4 sm:px-5 pb-4 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-2 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="secondary" size="sm" className="font-medium text-xs gap-1.5 h-8">
-                          <Check className="w-3.5 h-3.5" />
-                          Segna liquidato
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-md">
-                        <DialogHeader>
-                          <DialogTitle>Conferma liquidazione</DialogTitle>
-                          <DialogDescription>
-                            Sei sicuro di voler segnare il sinistro di <strong>{claim.clientName}</strong> come liquidato? Verrà archiviato e rimosso da questo elenco.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="flex justify-end gap-3 pt-4">
-                          <DialogClose asChild>
-                            <Button variant="outline">Annulla</Button>
-                          </DialogClose>
-                          <DialogClose asChild>
-                            <Button
-                              onClick={() => {
-                                updateClaim(claim.id, { status: "liquidato" });
-                              }}
-                            >
-                              Conferma
-                            </Button>
-                          </DialogClose>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                    <Button 
+                      variant="secondary" 
+                      size="sm" 
+                      className="font-medium text-xs gap-1.5 h-8 hover:bg-emerald-500/10 hover:text-emerald-600 hover:border-emerald-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                      onClick={() => setLiquidatingClaim(claim)}
+                    >
+                      <Check className="w-3.5 h-3.5 text-emerald-500" />
+                      Segna liquidato
+                    </Button>
 
                     <Button variant="ghost" size="icon" onClick={() => setEditingClaim(claim)} className="text-muted-foreground hover:text-primary" data-testid={`button-edit-claim-${claim.id}`}>
                       <Pencil className="w-4 h-4" />
@@ -320,6 +401,36 @@ export function Sinistri() {
           </div>
         )}
       </div>
+
+      <Dialog open={!!liquidatingClaim} onOpenChange={(open) => { if (!open) setLiquidatingClaim(null); }}>
+        <DialogContent className="max-w-md border-border/80 shadow-elevated">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-xl font-semibold text-primary mb-1 flex items-center gap-2">
+              <Check className="w-5 h-5 text-emerald-500" />
+              Conferma Liquidazione
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground text-sm leading-relaxed">
+              Sei sicuro di voler segnare il sinistro di <strong className="text-foreground">{liquidatingClaim?.clientName}</strong> come liquidato? Verrà archiviato e rimosso dall'elenco.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 pt-5">
+            <Button variant="outline" onClick={() => setLiquidatingClaim(null)}>
+              Annulla
+            </Button>
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-soft border-0 transition-colors"
+              onClick={() => {
+                if (liquidatingClaim) {
+                  updateClaim(liquidatingClaim.id, { status: "liquidato" });
+                  setLiquidatingClaim(null);
+                }
+              }}
+            >
+              Conferma
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

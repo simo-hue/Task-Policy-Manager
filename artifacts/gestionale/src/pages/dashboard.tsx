@@ -28,8 +28,8 @@ export function Dashboard() {
   const activeClaims = claims.filter(c => c.status !== "liquidato");
 
   const policies = [
-    ...personali.map(p => ({ ...p, scope: 'personali' as const })),
-    ...agenzia.map(p => ({ ...p, scope: 'agenzia' as const }))
+    ...personali.filter(p => p.cassaStato !== "pagata").map(p => ({ ...p, scope: 'personali' as const })),
+    ...agenzia.filter(p => p.cassaStato !== "pagata").map(p => ({ ...p, scope: 'agenzia' as const }))
   ];
 
   const now = startOfDay(new Date());

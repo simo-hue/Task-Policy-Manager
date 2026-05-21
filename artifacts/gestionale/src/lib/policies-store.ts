@@ -12,6 +12,7 @@ export interface Policy {
   createdAt: string;
   issuedAt?: string;
   daMettereACassa?: boolean;
+  cassaStato?: 'regolare' | 'da_mettere' | 'pagata';
 }
 
 const initialPoliciesPersonali: Policy[] = [

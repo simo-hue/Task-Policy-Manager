@@ -16,7 +16,7 @@ import { it } from "date-fns/locale";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { CalendarIcon, Plus, ShieldAlert, FileSignature, Trash2, ArrowRight, Pencil, Settings2 } from "lucide-react";
+import { CalendarIcon, Plus, ShieldAlert, FileSignature, Trash2, ArrowRight, Pencil, Settings2, Check } from "lucide-react";
 import { cn, parseLocalDate } from "@/lib/utils";
 
 const policySchema = z.object({
@@ -56,6 +56,7 @@ export function PolizzeAgenzia() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingPolicy, setEditingPolicy] = useState<Policy | null>(null);
   const [issuingPolicy, setIssuingPolicy] = useState<Policy | null>(null);
+  const [payingPolicy, setPayingPolicy] = useState<Policy | null>(null);
 
   const form = useForm<PolicyFormValues>({
     resolver: zodResolver(policySchema),
@@ -118,7 +119,7 @@ export function PolizzeAgenzia() {
 
   const threshold = settings.expiryThresholdDays;
 
-  const emesse = policies.filter(p => p.status === 'emessa' && p.expiryDate);
+  const emesse = policies.filter(p => p.status === 'emessa' && p.expiryDate && p.cassaStato !== 'pagata');
 
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
@@ -127,7 +128,7 @@ export function PolizzeAgenzia() {
     .filter(p => differenceInDays(parseLocalDate(p.expiryDate!), todayStart) <= threshold)
     .sort((a, b) => parseLocalDate(a.expiryDate!).getTime() - parseLocalDate(b.expiryDate!).getTime());
 
-  const daEmettere = policies.filter(p => p.status === 'da_emettere').sort((a, b) => {
+  const daEmettere = policies.filter(p => p.status === 'da_emettere' && p.cassaStato !== 'pagata').sort((a, b) => {
     if (!a.targetIssueDate && !b.targetIssueDate) return 0;
     if (!a.targetIssueDate) return 1;
     if (!b.targetIssueDate) return -1;
@@ -147,10 +148,10 @@ export function PolizzeAgenzia() {
   const UrgencyBadge = ({ date }: { date: string }) => {
     const level = getUrgencyLevel(date);
     const label = format(parseLocalDate(date), "d MMM yyyy", { locale: it });
-    
-    if (level === "danger") return <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-md bg-destructive/10 text-destructive ring-1 ring-destructive/20 whitespace-nowrap"><CalendarIcon className="w-3 h-3 mr-1"/>{label}</span>;
-    if (level === "warning") return <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-md bg-gold/10 text-gold ring-1 ring-gold/20 whitespace-nowrap"><CalendarIcon className="w-3 h-3 mr-1"/>{label}</span>;
-    return <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground ring-1 ring-border whitespace-nowrap"><CalendarIcon className="w-3 h-3 mr-1"/>{label}</span>;
+
+    if (level === "danger") return <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-md bg-destructive/10 text-destructive ring-1 ring-destructive/20 whitespace-nowrap"><CalendarIcon className="w-3 h-3 mr-1" />{label}</span>;
+    if (level === "warning") return <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-md bg-gold/10 text-gold ring-1 ring-gold/20 whitespace-nowrap"><CalendarIcon className="w-3 h-3 mr-1" />{label}</span>;
+    return <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground ring-1 ring-border whitespace-nowrap"><CalendarIcon className="w-3 h-3 mr-1" />{label}</span>;
   };
 
   const renderPolicyFormFields = (
@@ -178,7 +179,21 @@ export function PolizzeAgenzia() {
           <FormItem>
             <FormLabel>Tipo di Polizza</FormLabel>
             <FormControl>
-              <Input placeholder="Es. RC Auto, Vita, Infortuni..." {...field} />
+              <div className="relative">
+                <Input placeholder="Es. RC Professionale, Fideiussione..." list="agency-policy-types" {...field} />
+                <datalist id="agency-policy-types">
+                  <option value="RC Professionale Agenzia" />
+                  <option value="RC Professionale Medici" />
+                  <option value="RC Professionale Avvocati" />
+                  <option value="Multirischi Impresa" />
+                  <option value="Fideiussione" />
+                  <option value="RC Auto Flotte" />
+                  <option value="Tutela Legale Business" />
+                  <option value="D&O (Directors & Officers)" />
+                  <option value="Cyber Risk" />
+                  <option value="Incendio e Scoppio Capannone" />
+                </datalist>
+              </div>
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -198,7 +213,7 @@ export function PolizzeAgenzia() {
               </FormControl>
               <SelectContent>
                 <SelectItem value="da_emettere">Da emettere</SelectItem>
-                <SelectItem value="emessa">Emessa (In Scadenza)</SelectItem>
+                <SelectItem value="emessa">In Scadenza</SelectItem>
               </SelectContent>
             </Select>
             <FormMessage />
@@ -413,7 +428,16 @@ export function PolizzeAgenzia() {
                         {policy.notes && <span className="truncate max-w-xs">{policy.notes}</span>}
                       </div>
                     </div>
-                    <div className="px-4 sm:px-5 pb-4 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-1 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity">
+                    <div className="px-4 sm:px-5 pb-4 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-2 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity">
+                      <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        className="font-medium text-xs gap-1.5 h-8 hover:bg-emerald-500/10 hover:text-emerald-600 hover:border-emerald-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        onClick={() => setPayingPolicy(policy)}
+                      >
+                        <Check className="w-3.5 h-3.5 text-emerald-500" />
+                        Pagato
+                      </Button>
                       <Button variant="ghost" size="icon" onClick={() => setEditingPolicy(policy)} className="text-muted-foreground hover:text-primary" data-testid={`button-edit-policy-${policy.id}`}>
                         <Pencil className="w-4 h-4" />
                       </Button>
@@ -453,46 +477,20 @@ export function PolizzeAgenzia() {
                         {policy.notes && <span className="truncate max-w-xs">{policy.notes}</span>}
                       </div>
                     </div>
-                    <div className="px-4 sm:px-5 pb-4 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-2">
-                      <Dialog open={issuingPolicy?.id === policy.id} onOpenChange={(open) => {
-                        if (!open) setIssuingPolicy(null);
-                        else setIssuingPolicy(policy);
-                      }}>
-                        <DialogTrigger asChild>
-                          <Button variant="secondary" className="font-medium">
-                            Segna emessa <ArrowRight className="w-4 h-4 ml-2" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-md">
-                          <DialogHeader>
-                            <DialogTitle>Conferma emissione</DialogTitle>
-                            <DialogDescription>
-                              Sei sicuro di voler segnare la polizza di <strong>{policy.clientName}</strong> come emessa? Verrà archiviata e non sarà più visibile in questo elenco.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="flex justify-end gap-3 pt-4">
-                            <Button variant="outline" onClick={() => setIssuingPolicy(null)}>
-                              Annulla
-                            </Button>
-                            <Button
-                              onClick={() => {
-                                updatePolicy(policy.id, {
-                                  status: "emessa",
-                                  targetIssueDate: undefined,
-                                  issuedAt: new Date().toISOString(),
-                                });
-                                setIssuingPolicy(null);
-                              }}
-                            >
-                              Conferma
-                            </Button>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                      <Button variant="ghost" size="icon" onClick={() => setEditingPolicy(policy)} className="text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity" data-testid={`button-edit-policy-${policy.id}`}>
+                    <div className="px-4 sm:px-5 pb-4 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-2 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity">
+                      <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        className="font-medium text-xs gap-1.5 h-8 hover:bg-primary/10 hover:text-primary hover:border-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        onClick={() => setIssuingPolicy(policy)}
+                      >
+                        <Check className="w-3.5 h-3.5 text-primary" />
+                        Segna emessa
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => setEditingPolicy(policy)} className="text-muted-foreground hover:text-primary" data-testid={`button-edit-policy-${policy.id}`}>
                         <Pencil className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => deletePolicy(policy.id)} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity">
+                      <Button variant="ghost" size="icon" onClick={() => deletePolicy(policy.id)} className="text-muted-foreground hover:text-destructive">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -507,6 +505,70 @@ export function PolizzeAgenzia() {
           )}
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!payingPolicy} onOpenChange={(open) => { if (!open) setPayingPolicy(null); }}>
+        <DialogContent className="max-w-md border-border/80 shadow-elevated">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-xl font-semibold text-primary mb-1 flex items-center gap-2">
+              <Check className="w-5 h-5 text-emerald-500" />
+              Conferma Pagamento
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground text-sm leading-relaxed">
+              Sei sicuro di voler contrassegnare la polizza di <strong className="text-foreground">{payingPolicy?.clientName}</strong> come pagata? Verrà archiviata e non sarà più visibile nell'elenco attivo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 pt-5">
+            <Button variant="outline" onClick={() => setPayingPolicy(null)}>
+              Annulla
+            </Button>
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-soft border-0 transition-colors"
+              onClick={() => {
+                if (payingPolicy) {
+                  updatePolicy(payingPolicy.id, { cassaStato: "pagata", daMettereACassa: false });
+                  setPayingPolicy(null);
+                }
+              }}
+            >
+              Conferma
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!issuingPolicy} onOpenChange={(open) => { if (!open) setIssuingPolicy(null); }}>
+        <DialogContent className="max-w-md border-border/80 shadow-elevated">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-xl font-semibold text-primary mb-1 flex items-center gap-2">
+              <Check className="w-5 h-5 text-primary" />
+              Conferma Emissione
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground text-sm leading-relaxed">
+              Sei sicuro di voler segnare la polizza di <strong className="text-foreground">{issuingPolicy?.clientName}</strong> come emessa? Verrà spostata nell'elenco delle polizze in scadenza.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 pt-5">
+            <Button variant="outline" onClick={() => setIssuingPolicy(null)}>
+              Annulla
+            </Button>
+            <Button
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium shadow-soft border-0 transition-colors"
+              onClick={() => {
+                if (issuingPolicy) {
+                  updatePolicy(issuingPolicy.id, {
+                    status: "emessa",
+                    targetIssueDate: undefined,
+                    issuedAt: new Date().toISOString(),
+                  });
+                  setIssuingPolicy(null);
+                }
+              }}
+            >
+              Conferma
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

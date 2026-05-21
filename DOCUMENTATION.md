@@ -67,3 +67,45 @@
 * *Tech Notes*:
   - Modified `claims-store.ts` to add `'da_aprire'` to the `status` type definition and configured a third initial mock claim.
   - Modified `sinistri.tsx` to add `"da_aprire"` to the Zod validation schema, insert it as the first SelectItem option, and render a dedicated `<Badge>` with slate tones.
+
+### [2026-05-21 21:52]: Archiviazione Sinistri tramite Stato "Liquidato"
+* *Details*: Enabled claims to be marked as "Liquidato" directly from their card in the "Sinistri" page. When confirmed, claims are archived/hidden from the active lists to keep the active workspace clean, similar to the tasks workflow. Updated both the claim list rendering and the main dashboard counts to display only active (non-settled) claims.
+* *Tech Notes*:
+  - Modified `sinistri.tsx` to render only active claims (`status !== "liquidato"`). Added a quick-action "Segna liquidato" button inside each claim card with a modal confirmation dialog that updates the claim's status in LocalStorage.
+  - Modified `dashboard.tsx` to filter out settled claims from the dashboard statistical counts, ensuring consistency across all visual metric panels.
+
+### [2026-05-21 21:54]: Assegnazione Rapida e Diretta dei Badge di Stato dei Sinistri
+* *Details*: Replaced static claim status badges in the `sinistri.tsx` list with an elegant, interactive dropdown menu triggering system. Adjusters can now click directly on any claim's status badge to instantly update its status without having to open the edit dialog, maximizing efficiency and providing a fluid, modern user experience. Selecting "Liquidato" from the dropdown opens a confirmation prompt to prevent accidental archiving.
+* *Tech Notes*:
+  - Modified `sinistri.tsx` to import Radix-based `DropdownMenu` components and the Lucide `ChevronDown` icon.
+  - Implemented the `renderInteractiveBadge` helper inside `Sinistri` which wraps the status badge in a `DropdownMenuTrigger` (with pointer cursor, hover effects, scale animations, and a small downward indicator icon).
+  - Wired `DropdownMenuItem` select options for all four claims lifecycle states to directly invoke the `updateClaim` state handler.
+
+### [2026-05-21 21:57]: Risoluzione Taglio Netto del Layout sui Badge (Truncate/Flex Conflict)
+* *Details*: Fixed a layout truncation bug causing interactive status badges to get cut off on the left (e.g. only displaying "TO" instead of "INCARICATO IL PERITO"). The layout issue stemmed from combining the `truncate` class (which enforces `overflow: hidden` and `white-space: nowrap`) directly on the `<h3>` flex container, forcing the entire row to truncate brutally. Fixed this by isolating the `truncate` style onto the client name `<span>` itself and allowing the flex header to calculate dimensions and flex/wrap properly. Applied this exact layout fix to both the Claims page (`sinistri.tsx`) and the Personal Policies page (`polizze-personali.tsx`) list components.
+* *Tech Notes*:
+  - Modified `sinistri.tsx` (removed `truncate` from the list card `<h3>` and applied it to the client name span).
+  - Modified `polizze-personali.tsx` (removed `truncate` from both in-scadenza and da-emettere lists `<h3>` and isolated it onto the respective client name spans).
+
+### [2026-05-21 22:00]: Suggerimenti Rapidi per Tipi di Polizza e Rami dei Sinistri
+* *Details*: Added client-side dropdown suggestions (using native HTML `<datalist>`) for policy types ("tipo di polizza") on both personal and agency policy management screens, and for the claim category/line of business ("Ramo") on the claims management screen. This eliminates the need for manual text-only typing for common categories while maintaining custom text input support.
+* *Tech Notes*:
+  - Modified `polizze-personali.tsx` to bind a datalist containing common personal policy types ("RC Auto Personale", "Infortuni Personale", "Casa e Fabbricato", "Vita", "Salute e Sanitaria", "Tutela Legale", "Viaggio", "Fideiussione") to the policyType input field.
+  - Modified `polizze-agenzia.tsx` to bind a datalist containing common corporate/commercial policy types ("RC Professionale Agenzia", "RC Professionale Medici", "RC Professionale Avvocati", "Multirischi Impresa", "Fideiussione", "RC Auto Flotte", "Tutela Legale Business", "D&O (Directors & Officers)", "Cyber Risk", "Incendio e Scoppio Capannone") to the policyType input field.
+  - Modified `sinistri.tsx` to bind a datalist containing common insurance branches ("RC Auto", "Infortuni", "Vita", "Incendio e Scoppio", "Responsabilità Civile", "Tutela Legale", "Salute e Malattia", "Fideiussioni e Cauzioni", "Altri Danni ai Beni") to the Ramo input field.
+
+### [2026-05-21 22:02]: Personalizzazione Dialog Conferma Liquidazione Sinistro
+* *Details*: Unified and customized the claims liquidation confirmation experience. Replaced the generic browser `window.confirm` alert triggered by clicking the interactive badge in the dropdown menu with a unified, state-driven, beautiful Radix Dialog matching the premium dark/light HSL theme of the application. Also replaced the localized dialogs on the claim cards with simple trigger actions to leverage this same centralized premium overlay.
+* *Tech Notes*:
+  - Modified `sinistri.tsx` to add `liquidatingClaim` react state.
+  - Re-mapped the "Liquidato (Archivia)" dropdown menu item selection to set the `liquidatingClaim` state instead of calling `window.confirm`.
+  - Refactored the "Segna liquidato" secondary action buttons on the claim cards to trigger the state-driven modal directly instead of nesting dialog overlays.
+  - Implemented the central `<Dialog>` confirmation element at the layout level in `sinistri.tsx` styled to match the dark/light premium aesthetic with a green/emerald theme key.
+
+### [2026-05-21 22:08]: Gestione Badge Cassa Interattivi e Archiviazione Polizze Personali
+* *Details*: Ported the interactive claim badge status switcher and archiving mechanism from claims (`sinistri.tsx`) to personal policies (`polizze-personali.tsx`). Users can now change a policy's cashiering/payment status directly from the card using an HSL-themed inline dropdown menu. Setting a policy to "Pagata" triggers a premium, custom Radix confirmation Dialog and archives it (removing it from active views).
+* *Tech Notes*:
+  - Modified `polizze-personali.tsx` to bind `renderCassaBadge` dropdown trigger to policy cards in "In scadenza" and "Da emettere" tabs.
+  - Replaced the checkbox for `daMettereACassa` with a `<Select>` element for `cassaStato` within the creation/edit forms.
+  - Integrated a layout-level custom emerald confirmation `<Dialog>` controlled by `payingPolicy` state.
+  - Updated `dashboard.tsx` to filter out policies with `cassaStato === 'pagata'` from active aggregated stats to ensure data cohesion.
