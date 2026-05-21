@@ -11,30 +11,35 @@ export interface Policy {
   targetIssueDate?: string;
   createdAt: string;
   issuedAt?: string;
+  daMettereACassa?: boolean;
 }
 
-const initialPolicies: Policy[] = [
+const initialPoliciesPersonali: Policy[] = [
   {
     id: safeUUID(),
     clientName: 'Mario Rossi',
-    policyType: 'RC Auto',
+    policyType: 'RC Auto Personale',
     status: 'emessa',
     expiryDate: new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0],
     createdAt: new Date().toISOString(),
     issuedAt: new Date().toISOString(),
-  },
+    daMettereACassa: true,
+  }
+];
+
+const initialPoliciesAgenzia: Policy[] = [
   {
     id: safeUUID(),
     clientName: 'Studio Bianchi SRL',
-    policyType: 'RC Professionale',
+    policyType: 'RC Professionale Agenzia',
     status: 'da_emettere',
     targetIssueDate: new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0],
     createdAt: new Date().toISOString(),
   }
 ];
 
-export function usePolicies() {
-  const [policies, setPolicies] = useLocalStorage<Policy[]>('gestionale.policies.v1', initialPolicies);
+export function usePoliciesPersonali() {
+  const [policies, setPolicies] = useLocalStorage<Policy[]>('gestionale.policies.personali.v1', initialPoliciesPersonali);
 
   const addPolicy = (input: Omit<Policy, 'id' | 'createdAt'>) => {
     setPolicies(prev => [...prev, { ...input, id: safeUUID(), createdAt: new Date().toISOString() }]);
@@ -48,15 +53,23 @@ export function usePolicies() {
     setPolicies(prev => prev.filter(p => p.id !== id));
   };
 
-  const issuePolicy = (id: string, expiryDate: string) => {
-    setPolicies(prev => prev.map(p => p.id === id ? { 
-      ...p, 
-      status: 'emessa', 
-      expiryDate, 
-      targetIssueDate: undefined,
-      issuedAt: new Date().toISOString() 
-    } : p));
+  return { policies, addPolicy, updatePolicy, deletePolicy };
+}
+
+export function usePoliciesAgenzia() {
+  const [policies, setPolicies] = useLocalStorage<Policy[]>('gestionale.policies.agenzia.v1', initialPoliciesAgenzia);
+
+  const addPolicy = (input: Omit<Policy, 'id' | 'createdAt'>) => {
+    setPolicies(prev => [...prev, { ...input, id: safeUUID(), createdAt: new Date().toISOString() }]);
   };
 
-  return { policies, addPolicy, updatePolicy, deletePolicy, issuePolicy };
+  const updatePolicy = (id: string, patch: Partial<Omit<Policy, 'id' | 'createdAt'>>) => {
+    setPolicies(prev => prev.map(p => p.id === id ? { ...p, ...patch } : p));
+  };
+
+  const deletePolicy = (id: string) => {
+    setPolicies(prev => prev.filter(p => p.id !== id));
+  };
+
+  return { policies, addPolicy, updatePolicy, deletePolicy };
 }

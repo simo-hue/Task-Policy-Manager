@@ -149,7 +149,7 @@ export function Attivita() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
           <div className="text-xs uppercase tracking-[0.18em] text-gold/90 font-semibold mb-2">Da fare</div>
-          <h1 className="text-3xl sm:text-4xl font-serif font-semibold text-primary mb-2 tracking-tight">Attività</h1>
+          <h1 className="text-3xl sm:text-4xl font-serif font-semibold text-primary mb-2 tracking-tight">Da Fare</h1>
           <p className="text-muted-foreground text-sm sm:text-base">Gestisci le cose da fare e tieni traccia di quanto completato.</p>
         </div>
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>

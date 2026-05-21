@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, CheckSquare, FileText, Sun, Moon, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { LayoutDashboard, CheckSquare, FileText, Sun, Moon, PanelLeftClose, PanelLeftOpen, AlertOctagon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
@@ -10,8 +10,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 
 const navItems = [
   { path: "/", label: "Dashboard", icon: LayoutDashboard },
-  { path: "/attivita", label: "Attività", icon: CheckSquare },
-  { path: "/polizze", label: "Polizze", icon: FileText },
+  { path: "/attivita", label: "Da Fare", icon: CheckSquare },
+  { path: "/polizze-personali", label: "Polizze Personali", icon: FileText },
+  { path: "/polizze-agenzia", label: "Polizze Agenzia", icon: FileText },
+  { path: "/sinistri", label: "Sinistri", icon: AlertOctagon },
 ];
 
 function ThemeToggle({ collapsed }: { collapsed: boolean }) {

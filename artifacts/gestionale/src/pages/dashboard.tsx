@@ -1,5 +1,5 @@
 import { useTasks } from "@/lib/tasks-store";
-import { usePolicies } from "@/lib/policies-store";
+import { usePoliciesPersonali, usePoliciesAgenzia } from "@/lib/policies-store";
 import { useSettings } from "@/hooks/use-settings";
 import { Card } from "@/components/ui/card";
 import { format, isBefore, isToday, addDays, isAfter, startOfDay, differenceInCalendarDays } from "date-fns";
@@ -20,8 +20,14 @@ const toneStyles: Record<Tone, { chip: string; value: string }> = {
 
 export function Dashboard() {
   const { tasks } = useTasks();
-  const { policies } = usePolicies();
+  const { policies: personali } = usePoliciesPersonali();
+  const { policies: agenzia } = usePoliciesAgenzia();
   const { settings } = useSettings();
+
+  const policies = [
+    ...personali.map(p => ({ ...p, scope: 'personali' as const })),
+    ...agenzia.map(p => ({ ...p, scope: 'agenzia' as const }))
+  ];
 
   const now = startOfDay(new Date());
   const threshold = settings.expiryThresholdDays;
@@ -58,7 +64,7 @@ export function Dashboard() {
     hint?: string;
   }[] = [
     {
-      title: "Attività di oggi",
+      title: "Da Fare",
       value: tasksDueToday.length,
       icon: CheckSquare,
       href: "/attivita",
@@ -67,7 +73,7 @@ export function Dashboard() {
       hint: "in scadenza oggi",
     },
     {
-      title: "Attività in ritardo",
+      title: "In Sospeso",
       value: overdueTasks.length,
       icon: AlertCircle,
       href: "/attivita",
@@ -76,22 +82,22 @@ export function Dashboard() {
       hint: "da gestire subito",
     },
     {
-      title: `Scadenze a ${threshold}gg`,
+      title: "Scadenze senza nessun timeframe",
       value: policiesExpiringSoon.length,
       icon: CalendarClock,
-      href: "/polizze",
+      href: "/polizze-personali",
       testId: "card-policies-expiring",
       tone: "gold",
       hint: "polizze in scadenza",
     },
     {
-      title: "Da emettere",
+      title: "Sinistri",
       value: daEmetterePolicies.length,
       icon: FileText,
-      href: "/polizze",
+      href: "/polizze-personali",
       testId: "card-policies-to-issue",
       tone: "neutral",
-      hint: "polizze in attesa",
+      hint: "sinistri in attesa",
     },
   ];
 
@@ -119,10 +125,16 @@ export function Dashboard() {
               Nuova attività
             </Button>
           </Link>
-          <Link href="/polizze">
-            <Button data-testid="button-quick-new-policy">
+          <Link href="/polizze-personali">
+            <Button variant="outline" data-testid="button-quick-new-policy-personali">
               <Plus className="w-4 h-4 mr-2" />
-              Nuova polizza
+              Nuova p. personale
+            </Button>
+          </Link>
+          <Link href="/polizze-agenzia">
+            <Button data-testid="button-quick-new-policy-agenzia">
+              <Plus className="w-4 h-4 mr-2" />
+              Nuova p. agenzia
             </Button>
           </Link>
         </div>
@@ -163,7 +175,7 @@ export function Dashboard() {
       <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
         <SectionList
           title="Prossime scadenze"
-          href="/polizze"
+          href="/polizze-personali"
           empty="Nessuna polizza in scadenza a breve."
         >
           {topUpcomingPolicies.length > 0 && (
@@ -176,15 +188,18 @@ export function Dashboard() {
                   days < 0 ? "danger" :
                   days <= 7 ? "danger" :
                   days <= 30 ? "gold" : "neutral";
+                const targetHref = p.scope === 'personali' ? '/polizze-personali' : '/polizze-agenzia';
                 return (
-                  <Link key={p.id} href="/polizze" className="block">
+                  <Link key={p.id} href={targetHref} className="block">
                     <div
                       className="flex justify-between items-center gap-4 px-5 py-4 transition-colors hover:bg-muted/40"
                       data-testid={`dashboard-policy-${p.id}`}
                     >
                       <div className="min-w-0">
                         <div className="font-medium truncate">{p.clientName}</div>
-                        <div className="text-sm text-muted-foreground truncate">{p.policyType}</div>
+                        <div className="text-sm text-muted-foreground truncate">
+                          {p.policyType} <span className="text-[10px] uppercase font-bold text-gold bg-gold/10 px-1.5 py-0.5 rounded ml-1.5">{p.scope === 'personali' ? 'Pers.' : 'Agenzia'}</span>
+                        </div>
                       </div>
                       <DatePill date={exp} tone={tone} />
                     </div>

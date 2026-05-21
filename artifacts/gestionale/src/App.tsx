@@ -5,7 +5,9 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import { Dashboard } from "@/pages/dashboard";
 import { Attivita } from "@/pages/attivita";
-import { Polizze } from "@/pages/polizze";
+import { PolizzePersonali } from "@/pages/polizze-personali";
+import { PolizzeAgenzia } from "@/pages/polizze-agenzia";
+import { Sinistri } from "@/pages/sinistri";
 import { Shell } from "@/components/layout/shell";
 
 const queryClient = new QueryClient();
@@ -16,7 +18,9 @@ function Router() {
       <Switch>
         <Route path="/" component={Dashboard} />
         <Route path="/attivita" component={Attivita} />
-        <Route path="/polizze" component={Polizze} />
+        <Route path="/polizze-personali" component={PolizzePersonali} />
+        <Route path="/polizze-agenzia" component={PolizzeAgenzia} />
+        <Route path="/sinistri" component={Sinistri} />
         <Route component={NotFound} />
       </Switch>
     </Shell>
