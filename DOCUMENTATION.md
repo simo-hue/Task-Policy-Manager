@@ -361,3 +361,38 @@
 ### [2026-05-22 11:46]: Fix Layout Mobile Form Inserimento Rapido
 * *Details*: Risolto un problema di overflow orizzontale (ritaglio dell'interfaccia) del form di inserimento rapido sulle polizze in scadenza sui dispositivi mobili.
 * *Tech Notes*: Modificati i file `src/pages/polizze-personali.tsx` e `src/pages/polizze-agenzia.tsx` aggiornando la classe Tailwind del container dei filtri da `flex` a `flex-col sm:flex-row` per permettere un impilamento verticale corretto sugli schermi stretti, evitando così che il bottone "Aggiungi" finisse fuori dai bordi dello schermo.
+
+### [2026-05-22 11:55]: Ottimizzazione Completa Mobile iPhone (Tutte le Pagine)
+* *Details*: Eseguita un'ottimizzazione profonda e completa di ogni singola pagina dell'applicazione per garantire un'esperienza utente professionale e nativa sui dispositivi iPhone (ultimi modelli, Dynamic Island, safe areas). Le modifiche coprono 10 file e risolvono 12 categorie di problemi UX mobile.
+* *Tech Notes*:
+  - **CSS Globale** (`src/index.css`):
+    - Aggiunta prevenzione auto-zoom input iOS (font-size: 16px su schermi < 768px per tutti i tipi di input)
+    - `touch-action: manipulation` globale per eliminare il delay 300ms del double-tap zoom
+    - `-webkit-text-size-adjust: 100%` per prevenire ridimensionamento testo su rotazione
+    - `overscroll-behavior: none` globale (non solo asse Y)
+    - `min-height: 100dvh` con fallback `100vh` per Dynamic Viewport Height
+    - Aggiunta utility `.touch-target-44` per touch target minimi Apple HIG (44px)
+    - **Dialog come Bottom Sheet su mobile**: tutti i `[data-radix-dialog-content]` e `[data-radix-alert-dialog-content]` vengono forzati a posizionarsi in basso con animazione slide-up, bordi arrotondati in alto, drag handle visivo, max-height 85dvh, scroll interno, safe-area padding
+    - Momentum scrolling iOS (`-webkit-overflow-scrolling: touch`) su main
+  - **HTML** (`index.html`): aggiunti meta tag `apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style` (black-translucent) e `mobile-web-app-capable`
+  - **PWA Manifest** (`vite.config.ts`): aggiunti `orientation: "portrait"`, `scope: "/"`, `start_url: "/"`
+  - **Shell** (`src/components/layout/shell.tsx`):
+    - Bottom nav: touch target aumentati (min-w 3rem, py-2, px-3), indicatore dot attivo dorato, `active:scale-90` per feedback tattile, label bold sull'attivo, z-index a 30
+    - Top bar: safe area Dynamic Island-aware con `paddingTop: env(safe-area-inset-top)`, altezza calcolata dinamicamente, backdrop-blur-xl, z-index 30
+    - Main content: padding-top dinamico con inline style, padding orizzontale ridotto a `px-3` su mobile
+    - Bottom padding globale aumentato a `4.5rem` per evitare occlusione dalla nav
+  - **Dashboard** (`src/pages/dashboard.tsx`): H1 ridotto a `text-2xl` su mobile, spacing sezioni `space-y-6 sm:space-y-10`, padding liste `px-3 py-3 sm:px-5 sm:py-4`, link "Vedi tutte" con area touch espansa, `active:bg-muted/60`
+  - **Attività** (`src/pages/attivita.tsx`):
+    - **Bottoni azione sempre visibili su mobile** (rimosso `opacity-0` globale, applicato solo `sm:opacity-0 sm:group-hover:opacity-100`)
+    - Filtri con scroll orizzontale e `shrink-0` per non wrappare
+    - Quick Add: tutti gli input portati a `h-11`, bottone Aggiungi a `h-11`
+    - Card padding `p-3 sm:p-4`
+    - Header `text-2xl sm:text-4xl`, spacing `space-y-5 sm:space-y-8`
+  - **Polizze Personali** (`src/pages/polizze-personali.tsx`):
+    - Bottoni azione visibili su mobile (`sm:opacity-0` anziché `opacity-0`)
+    - Tutti gli input/select Quick Add a `h-11`
+    - Card padding `p-3 sm:p-5`, azioni `px-3 pb-3 sm:px-5 sm:py-5` con `gap-1.5 sm:gap-2` e `flex-wrap`
+    - Header compatto, spacing adattivo
+  - **Polizze Agenzia** (`src/pages/polizze-agenzia.tsx`): stesse identiche modifiche applicate a Personali
+  - **Sinistri** (`src/pages/sinistri.tsx`): stesse modifiche: azioni visibili, touch targets h-11, card compact, header compatto
+  - **Login** (`src/pages/login.tsx`): `min-h-[100dvh]`, input `h-12`, bottone `h-12 text-base font-semibold`, safe-area padding bottom

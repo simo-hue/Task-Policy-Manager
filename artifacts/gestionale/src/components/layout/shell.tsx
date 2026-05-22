@@ -87,7 +87,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="flex min-h-screen bg-app-gradient pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
+      <div className="flex min-h-[100dvh] bg-app-gradient pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
         <aside
           className={cn(
             "hidden md:flex flex-col border-r border-sidebar-border bg-sidebar bg-sidebar-gradient transition-[width] duration-200 ease-in-out z-20",
@@ -169,21 +169,21 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </div>
         </aside>
         
-        {/* Mobile Top Bar */}
-        <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-sidebar/80 backdrop-blur-md border-b border-sidebar-border/60 flex items-center justify-between px-4 z-20 pt-[env(safe-area-inset-top)]">
+        {/* Mobile Top Bar — safe area aware for Dynamic Island */}
+        <div className="md:hidden fixed top-0 left-0 right-0 bg-sidebar/90 backdrop-blur-xl border-b border-sidebar-border/60 flex items-center justify-between px-4 z-30" style={{ paddingTop: 'env(safe-area-inset-top)', height: 'calc(3.5rem + env(safe-area-inset-top))' }}>
           <Logo collapsed={false} />
           <ThemeToggle collapsed={true} />
         </div>
 
-        <main className="flex-1 overflow-auto min-w-0 pt-14 md:pt-0">
-          <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 xl:p-10">
+        <main className="flex-1 overflow-auto min-w-0 md:pt-0" style={{ paddingTop: 'calc(3.5rem + env(safe-area-inset-top))' }}>
+          <div className="max-w-7xl mx-auto px-3 py-4 sm:p-6 lg:p-8 xl:p-10">
             {children}
           </div>
         </main>
 
-        {/* Mobile Bottom Navigation */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-sidebar/90 backdrop-blur-lg border-t border-sidebar-border/60 z-20 pb-[env(safe-area-inset-bottom)]">
-          <div className="flex items-center justify-around px-2 py-2">
+        {/* Mobile Bottom Navigation — enhanced touch targets */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-sidebar/95 backdrop-blur-xl border-t border-sidebar-border/40 z-30 pb-[env(safe-area-inset-bottom)]">
+          <div className="flex items-center justify-around px-1 py-1.5">
             {navItems.map((item) => {
               const isActive = location === item.path;
               const Icon = item.icon;
@@ -192,14 +192,26 @@ export function Shell({ children }: { children: React.ReactNode }) {
                   key={item.path}
                   href={item.path}
                   className={cn(
-                    "flex flex-col items-center justify-center gap-1 w-16 h-12 rounded-lg transition-all",
+                    "relative flex flex-col items-center justify-center gap-0.5 min-w-[3rem] py-2 px-3 rounded-xl transition-all active:scale-90",
                     isActive
                       ? "text-gold"
-                      : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-white/5"
+                      : "text-sidebar-foreground/50 active:text-sidebar-foreground"
                   )}
                 >
-                  <Icon className={cn("w-5 h-5", isActive && "scale-110 transition-transform")} />
-                  <span className="text-[10px] font-medium truncate w-full text-center">{item.label}</span>
+                  <Icon className={cn(
+                    "w-[22px] h-[22px] transition-transform",
+                    isActive && "scale-110"
+                  )} />
+                  <span className={cn(
+                    "text-[10px] leading-tight truncate max-w-[4.5rem] text-center",
+                    isActive ? "font-bold" : "font-medium"
+                  )}>
+                    {item.label}
+                  </span>
+                  {/* Active indicator dot */}
+                  {isActive && (
+                    <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-gold" aria-hidden />
+                  )}
                 </Link>
               );
             })}

@@ -233,7 +233,7 @@ export function Sinistri() {
         <Input 
           name="quickName"
           placeholder="Nome cliente..." 
-          className="pl-9 h-10 border-0 focus-visible:ring-0 shadow-none bg-transparent"
+          className="pl-9 h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent"
           autoComplete="off"
           required
         />
@@ -242,7 +242,7 @@ export function Sinistri() {
       <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
       
       <Select value={quickRamo} onValueChange={setQuickRamo}>
-        <SelectTrigger className="w-full sm:w-[150px] h-10 border-0 shadow-none bg-transparent focus:ring-0 text-sm font-medium">
+        <SelectTrigger className="w-full sm:w-[150px] h-11 border-0 shadow-none bg-transparent focus:ring-0 text-sm font-medium">
           <SelectValue placeholder="Ramo..." />
         </SelectTrigger>
         <SelectContent>
@@ -261,7 +261,7 @@ export function Sinistri() {
       <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
 
       {quickStatus === "da_aprire" ? (
-        <Button disabled variant="outline" className="w-full sm:w-[140px] h-10 justify-start text-left font-normal border-0 shadow-none bg-transparent opacity-50 cursor-not-allowed">
+        <Button disabled variant="outline" className="w-full sm:w-[140px] h-11 justify-start text-left font-normal border-0 shadow-none bg-transparent opacity-50 cursor-not-allowed">
           <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
           <span>Da definire</span>
         </Button>
@@ -271,7 +271,7 @@ export function Sinistri() {
             <Button
               variant={"outline"}
               className={cn(
-                "w-full sm:w-[140px] h-10 justify-start text-left font-normal border-0 shadow-none bg-transparent focus:ring-0",
+                "w-full sm:w-[140px] h-11 justify-start text-left font-normal border-0 shadow-none bg-transparent focus:ring-0",
                 !quickDate && "text-muted-foreground"
               )}
             >
@@ -293,7 +293,7 @@ export function Sinistri() {
       <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
 
       <Select value={quickStatus} onValueChange={(val: any) => setQuickStatus(val)}>
-        <SelectTrigger className="w-full sm:w-[160px] h-10 border-0 shadow-none bg-transparent focus:ring-0 text-sm font-medium">
+        <SelectTrigger className="w-full sm:w-[160px] h-11 border-0 shadow-none bg-transparent focus:ring-0 text-sm font-medium">
           <SelectValue placeholder="Stato" />
         </SelectTrigger>
         <SelectContent>
@@ -309,8 +309,8 @@ export function Sinistri() {
       <div className="flex-1 relative min-w-[150px]">
         <Input 
           name="quickNotes"
-          placeholder="Note (opzionali)..." 
-          className="h-10 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
+          placeholder="Note (opzionali)..."
+          className="h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
           autoComplete="off"
         />
       </div>
@@ -319,7 +319,7 @@ export function Sinistri() {
         type="submit" 
         variant="secondary" 
         size="sm" 
-        className="h-10 px-4 ml-auto font-semibold hover:scale-105 active:scale-95 transition-transform"
+        className="h-11 px-4 ml-auto font-semibold hover:scale-105 active:scale-95 transition-transform"
         disabled={quickStatus === "da_aprire" ? !quickRamo : (!quickDate || !quickRamo)}
       >
         Aggiungi
@@ -468,11 +468,11 @@ export function Sinistri() {
   };
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-6 sm:space-y-12">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
           <div className="text-xs uppercase tracking-[0.18em] text-gold/90 font-semibold mb-2">Sinistri</div>
-          <h1 className="text-3xl sm:text-4xl font-serif font-semibold text-primary mb-2 tracking-tight">Gestione Sinistri</h1>
+          <h1 className="text-2xl sm:text-4xl font-serif font-semibold text-primary mb-1 sm:mb-2 tracking-tight">Gestione Sinistri</h1>
           <p className="text-muted-foreground text-sm sm:text-base">Visualizza ed inserisci i sinistri aperti del portafoglio clienti.</p>
         </div>
       </div>
@@ -502,7 +502,7 @@ export function Sinistri() {
             {activeClaims.map((claim) => (
               <Card key={claim.id} className="overflow-hidden group shadow-soft hover:shadow-card hover:border-primary/30 transition-all">
                 <CardContent className="p-0 flex flex-col sm:flex-row sm:items-center">
-                  <div className="p-5 flex-1 min-w-0">
+                  <div className="p-3 sm:p-5 flex-1 min-w-0">
                     <div className="flex justify-between items-start gap-3 mb-2 flex-wrap">
                       <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2 flex-wrap min-w-0">
                         <AlertOctagon className="w-4 h-4 text-destructive shrink-0" />
@@ -521,7 +521,7 @@ export function Sinistri() {
                       {claim.notes && <span className="truncate max-w-xl text-xs sm:text-sm">{claim.notes}</span>}
                     </div>
                   </div>
-                  <div className="px-4 sm:px-5 pb-4 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-2 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity">
+                  <div className="px-3 sm:px-5 pb-3 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-1.5 sm:gap-2 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity flex-wrap">
                     <Button 
                       variant="secondary" 
                       size="sm" 

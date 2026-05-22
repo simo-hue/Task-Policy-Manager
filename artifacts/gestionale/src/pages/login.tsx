@@ -28,7 +28,7 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-muted/30 p-4">
+    <div className="min-h-[100dvh] w-full flex items-center justify-center bg-muted/30 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
@@ -52,6 +52,7 @@ export function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="h-12"
               />
             </div>
             <div className="space-y-2">
@@ -62,11 +63,12 @@ export function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="h-12"
               />
             </div>
           </CardContent>
           <CardFooter>
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full h-12 text-base font-semibold" disabled={isLoading}>
               {isLoading ? "Accesso in corso..." : "Accedi"}
             </Button>
           </CardFooter>

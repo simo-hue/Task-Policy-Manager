@@ -270,7 +270,7 @@ export function PolizzePersonali() {
         <Input 
           name="quickName"
           placeholder="Nome cliente..." 
-          className="pl-9 h-10 border-0 focus-visible:ring-0 shadow-none bg-transparent"
+          className="pl-9 h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent"
           autoComplete="off"
           required
         />
@@ -284,7 +284,7 @@ export function PolizzePersonali() {
               <Button
                 variant={"outline"}
                 className={cn(
-                  "w-full sm:w-[140px] h-10 justify-start text-left font-normal border-0 shadow-none bg-transparent focus:ring-0",
+                  "w-full sm:w-[140px] h-11 justify-start text-left font-normal border-0 shadow-none bg-transparent focus:ring-0",
                   !quickDate && "text-muted-foreground"
                 )}
               >
@@ -307,7 +307,7 @@ export function PolizzePersonali() {
       <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
       <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
         <Select value={quickType} onValueChange={setQuickType}>
-          <SelectTrigger className="h-10 border-0 bg-transparent shadow-none w-full sm:w-[140px] focus:ring-0 font-medium">
+          <SelectTrigger className="h-11 border-0 bg-transparent shadow-none w-full sm:w-[140px] focus:ring-0 font-medium">
             <SelectValue placeholder="Tipo polizza" />
           </SelectTrigger>
           <SelectContent>
@@ -331,7 +331,7 @@ export function PolizzePersonali() {
           <>
             <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
             <Select value={quickCassa} onValueChange={setQuickCassa}>
-              <SelectTrigger className="h-10 border-0 bg-transparent shadow-none w-full sm:w-[150px] focus:ring-0 font-medium">
+              <SelectTrigger className="h-11 border-0 bg-transparent shadow-none w-full sm:w-[150px] focus:ring-0 font-medium">
                 <SelectValue placeholder="Stato cassa" />
               </SelectTrigger>
               <SelectContent>
@@ -346,14 +346,14 @@ export function PolizzePersonali() {
           <Input 
             name="quickNotes"
             placeholder="Note (opzionali)..." 
-            className="h-10 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
+            className="h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
             autoComplete="off"
           />
         </div>
         <Button 
           type="submit" 
           size="sm" 
-          className="font-medium shrink-0 h-10 px-4"
+          className="font-medium shrink-0 h-11 px-4"
           disabled={defaultStatus === "emessa" && !quickDate}
         >
           Aggiungi
@@ -529,11 +529,11 @@ export function PolizzePersonali() {
   );
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-6 sm:space-y-12">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
           <div className="text-xs uppercase tracking-[0.18em] text-gold/90 font-semibold mb-2">Personale</div>
-          <h1 className="text-3xl sm:text-4xl font-serif font-semibold text-primary mb-2 tracking-tight">Polizze Personali</h1>
+          <h1 className="text-2xl sm:text-4xl font-serif font-semibold text-primary mb-1 sm:mb-2 tracking-tight">Polizze Personali</h1>
           <p className="text-muted-foreground text-sm sm:text-base">Monitora il portafoglio personale e gestisci i sinistri.</p>
         </div>
       </div>
@@ -577,7 +577,7 @@ export function PolizzePersonali() {
               {inScadenza.map(policy => (
                 <Card key={policy.id} className="overflow-hidden group shadow-soft hover:shadow-card hover:border-primary/30 transition-all">
                   <CardContent className="p-0 flex flex-col sm:flex-row sm:items-center">
-                    <div className="p-5 flex-1 min-w-0">
+                    <div className="p-3 sm:p-5 flex-1 min-w-0">
                       <div className="flex justify-between items-start gap-3 mb-2 flex-wrap">
                         <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2 min-w-0">
                           <span className="truncate">{policy.clientName}</span>
@@ -590,7 +590,7 @@ export function PolizzePersonali() {
                         {policy.notes && <span className="truncate max-w-xs">{policy.notes}</span>}
                       </div>
                     </div>
-                    <div className="px-4 sm:px-5 pb-4 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-2 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity">
+                    <div className="px-3 sm:px-5 pb-3 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-1.5 sm:gap-2 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity flex-wrap">
                       <Button 
                         variant="secondary" 
                         size="sm" 
@@ -635,7 +635,7 @@ export function PolizzePersonali() {
               {daEmettere.map(policy => (
                 <Card key={policy.id} className="overflow-hidden group shadow-soft hover:shadow-card hover:border-primary/30 transition-all border-dashed">
                   <CardContent className="p-0 flex flex-col sm:flex-row sm:items-center">
-                    <div className="p-5 flex-1 min-w-0">
+                    <div className="p-3 sm:p-5 flex-1 min-w-0">
                       <div className="flex justify-between items-start gap-3 mb-2 flex-wrap">
                         <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2 min-w-0">
                           <span className="truncate">{policy.clientName}</span>
@@ -652,7 +652,7 @@ export function PolizzePersonali() {
                         {policy.notes && <span className="truncate max-w-xs">{policy.notes}</span>}
                       </div>
                     </div>
-                    <div className="px-4 sm:px-5 pb-4 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-2 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity">
+                    <div className="px-3 sm:px-5 pb-3 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-1.5 sm:gap-2 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity flex-wrap">
                       <Button 
                         variant="secondary" 
                         size="sm" 

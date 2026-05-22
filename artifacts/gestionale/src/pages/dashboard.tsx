@@ -108,13 +108,13 @@ export function Dashboard() {
   const todayCapitalized = todayFormatted.charAt(0).toUpperCase() + todayFormatted.slice(1);
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-6 sm:space-y-10">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
           <div className="text-xs uppercase tracking-[0.18em] text-gold/90 font-semibold mb-2">
             Dashboard
           </div>
-          <h1 className="text-3xl sm:text-4xl font-serif font-semibold text-primary mb-2 tracking-tight">
+          <h1 className="text-2xl sm:text-4xl font-serif font-semibold text-primary mb-1 sm:mb-2 tracking-tight">
             Buongiorno
           </h1>
           <p className="text-muted-foreground text-sm sm:text-base">
@@ -155,7 +155,7 @@ export function Dashboard() {
         })}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
+      <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
         <SectionList
           title="Prossime scadenze"
           href="/polizze-personali"
@@ -175,7 +175,7 @@ export function Dashboard() {
                 return (
                   <Link key={p.id} href={targetHref} className="block">
                     <div
-                      className="flex justify-between items-center gap-4 px-5 py-4 transition-colors hover:bg-muted/40"
+                      className="flex justify-between items-center gap-3 px-3 py-3 sm:px-5 sm:py-4 transition-colors hover:bg-muted/40 active:bg-muted/60"
                       data-testid={`dashboard-policy-${p.id}`}
                     >
                       <div className="min-w-0">
@@ -217,7 +217,7 @@ export function Dashboard() {
                 return (
                   <Link key={t.id} href="/attivita" className="block">
                     <div
-                      className="flex justify-between items-center gap-4 px-5 py-4 transition-colors hover:bg-muted/40"
+                      className="flex justify-between items-center gap-3 px-3 py-3 sm:px-5 sm:py-4 transition-colors hover:bg-muted/40 active:bg-muted/60"
                       data-testid={`dashboard-task-${t.id}`}
                     >
                       <div className="min-w-0 pr-2">
@@ -255,7 +255,7 @@ function SectionList({
         <h2 className="text-lg font-serif font-semibold text-primary">{title}</h2>
         <Link
           href={href}
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors py-2 px-2 -my-2 -mr-2 rounded-lg active:bg-muted/40"
         >
           Vedi tutte
           <ArrowRight className="w-3.5 h-3.5" />

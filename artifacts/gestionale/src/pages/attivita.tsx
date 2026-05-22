@@ -103,11 +103,11 @@ export function Attivita() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5 sm:space-y-8">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
           <div className="text-xs uppercase tracking-[0.18em] text-gold/90 font-semibold mb-2">Da fare</div>
-          <h1 className="text-3xl sm:text-4xl font-serif font-semibold text-primary mb-2 tracking-tight">Da Fare</h1>
+          <h1 className="text-2xl sm:text-4xl font-serif font-semibold text-primary mb-1 sm:mb-2 tracking-tight">Da Fare</h1>
           <p className="text-muted-foreground text-sm sm:text-base">Gestisci le cose da fare e tieni traccia di quanto completato.</p>
         </div>
       </div>
@@ -215,7 +215,7 @@ export function Attivita() {
             </button>
           )}
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
           {filterButtons.map(f => (
             <Button
               key={f.value}
@@ -224,6 +224,7 @@ export function Attivita() {
               variant={quickFilter === f.value ? "default" : "outline"}
               onClick={() => setQuickFilter(f.value)}
               data-testid={`button-filter-${f.value}`}
+              className="shrink-0 active:scale-95 transition-transform"
             >
               {f.label}
             </Button>
@@ -269,7 +270,7 @@ export function Attivita() {
           <Input 
             name="quickTitle"
             placeholder="Scrivi qui una nuova attività veloce..." 
-            className="pl-9 h-10 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
+            className="pl-9 h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
             autoComplete="off"
             required
           />
@@ -281,7 +282,7 @@ export function Attivita() {
           <Input 
             name="quickNotes"
             placeholder="Note (opzionali)..." 
-            className="h-10 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
+            className="h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
             autoComplete="off"
           />
         </div>
@@ -294,7 +295,7 @@ export function Attivita() {
               type="button"
               variant={"outline"}
               className={cn(
-                "w-full sm:w-[160px] h-10 justify-start text-left font-normal border-0 shadow-none bg-transparent focus:ring-0",
+                "w-full sm:w-[160px] h-11 justify-start text-left font-normal border-0 shadow-none bg-transparent focus:ring-0",
                 !quickDate && "text-muted-foreground"
               )}
             >
@@ -316,7 +317,7 @@ export function Attivita() {
           type="submit" 
           variant="secondary" 
           size="sm" 
-          className="h-10 px-6 sm:ml-auto font-semibold hover:scale-105 active:scale-95 transition-transform"
+          className="h-11 px-6 sm:ml-auto font-semibold hover:scale-105 active:scale-95 transition-transform"
         >
           Aggiungi
         </Button>
@@ -326,7 +327,7 @@ export function Attivita() {
           {activeTasks.length > 0 ? (
             activeTasks.map(task => (
               <Card key={task.id} className="overflow-hidden shadow-soft hover:shadow-card hover:border-primary/30 transition-all group">
-                <CardContent className="p-4 flex items-start gap-4">
+                <CardContent className="p-3 sm:p-4 flex items-start gap-3 sm:gap-4">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <button 
@@ -370,7 +371,7 @@ export function Attivita() {
                       );
                     })()}
                   </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity shrink-0">
                     <Button
                       variant="ghost"
                       size="icon"
