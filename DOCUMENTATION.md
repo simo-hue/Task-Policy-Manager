@@ -396,3 +396,14 @@
   - **Polizze Agenzia** (`src/pages/polizze-agenzia.tsx`): stesse identiche modifiche applicate a Personali
   - **Sinistri** (`src/pages/sinistri.tsx`): stesse modifiche: azioni visibili, touch targets h-11, card compact, header compatto
   - **Login** (`src/pages/login.tsx`): `min-h-[100dvh]`, input `h-12`, bottone `h-12 text-base font-semibold`, safe-area padding bottom
+
+### [2026-05-22 12:28]: Aggiornamento Logo Ufficiale PWA e Icone Multi-Risoluzione
+* *Details*: È stato configurato ed aggiornato il logo ufficiale e definitivo dell'applicazione in tutti i formati richiesti per la Progressive Web App (PWA) e la visualizzazione web. È stata generata una suite completa di icone ad alta risoluzione (192x192, 512x512, 180x180 per Apple) partendo dall'immagine ad alta definizione fornita dall'utente, garantendo un'interfaccia estremamente premium su tutti i dispositivi e sistemi operativi.
+* *Tech Notes*:
+  - Utilizzato lo strumento macOS `sips` per convertire ed effettuare il resizing perfetto del file sorgente a 1024x1024 pixel.
+  - Generato `pwa-192x192.png` (192x192) in `artifacts/gestionale/public/`.
+  - Generato `pwa-512x512.png` (512x512) in `artifacts/gestionale/public/`.
+  - Generato `apple-touch-icon.png` (180x180 per iOS) in `artifacts/gestionale/public/`.
+  - Aggiornato `favicon.svg` per includere un rendering embedded ad alta densità (base64) dell'immagine a 128x128 pixel, garantendo supporto vettoriale nativo senza perdere fedeltà visiva.
+  - Eseguita compilazione di test con `PORT=5173 BASE_PATH=/ pnpm --filter @workspace/gestionale build` per verificare che la configurazione del manifest della PWA includa e compili correttamente i nuovi asset statici.
+
