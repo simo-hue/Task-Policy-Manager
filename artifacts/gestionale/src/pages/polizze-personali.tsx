@@ -108,7 +108,7 @@ export function PolizzePersonali() {
       updatePolicy(editingPolicy.id, {
         clientName: values.clientName,
         policyType: values.policyType,
-        notes: values.notes || undefined,
+        notes: values.notes ?? "",
         status: values.status,
         expiryDate: values.status === "emessa" && values.expiryDate
           ? format(values.expiryDate, 'yyyy-MM-dd')
@@ -266,7 +266,7 @@ export function PolizzePersonali() {
             targetIssueDate: defaultStatus === "da_emettere" && quickDate ? format(quickDate, 'yyyy-MM-dd') : undefined,
             daMettereACassa: quickCassa === "da_mettere", 
             cassaStato: quickCassa as any,
-            notes: notes || undefined,
+            notes: notes || "",
             premio
           });
           nameInput.value = "";
@@ -586,7 +586,7 @@ export function PolizzePersonali() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
           <div className="text-xs uppercase tracking-[0.18em] text-gold/90 font-semibold mb-2">Personale</div>
-          <h1 className="text-2xl sm:text-4xl font-serif font-semibold text-primary mb-1 sm:mb-2 tracking-tight">Polizze Personali</h1>
+          <h1 className="text-2xl sm:text-4xl font-serif font-semibold text-primary mb-1 sm:mb-2 tracking-tight">Personali</h1>
           <p className="text-muted-foreground text-sm sm:text-base">Monitora il portafoglio personale e gestisci i sinistri.</p>
         </div>
       </div>
@@ -861,7 +861,7 @@ export function PolizzePersonali() {
             if (editingNotePolicy) {
               const formData = new FormData(e.currentTarget);
               const notes = formData.get("notes") as string;
-              updatePolicy(editingNotePolicy.id, { notes: notes || undefined });
+              updatePolicy(editingNotePolicy.id, { notes: notes || "" });
               setEditingNotePolicy(null);
             }
           }}>

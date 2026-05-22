@@ -219,7 +219,7 @@ export function Sinistri() {
             ramo: quickRamo,
             status: quickStatus || "da_aprire",
             openDate: isDaAprire ? undefined : (quickDate ? format(quickDate, 'yyyy-MM-dd') : undefined),
-            notes: notes || undefined
+            notes: notes || ""
           });
           nameInput.value = "";
           notesInput.value = "";
@@ -353,7 +353,7 @@ export function Sinistri() {
       clientName: values.clientName,
       ramo: values.ramo,
       openDate: newOpenDate,
-      notes: values.notes || undefined,
+      notes: values.notes ?? "",
       status: values.status || "da_aprire",
     });
     setEditingClaim(null);
@@ -650,7 +650,7 @@ export function Sinistri() {
             if (editingNoteClaim) {
               const formData = new FormData(e.currentTarget);
               const notes = formData.get("notes") as string;
-              updateClaim(editingNoteClaim.id, { notes: notes || undefined });
+              updateClaim(editingNoteClaim.id, { notes: notes || "" });
               setEditingNoteClaim(null);
             }
           }}>

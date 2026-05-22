@@ -539,4 +539,15 @@
 * *Tech Notes*:
   - Modificato `src/pages/preventivi.tsx` per sostituire le classi del badge del premio (`bg-primary/10 text-primary`) con lo stile verde emerald borderato (`bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20`).
 
+### [2026-05-22 16:50]: Risoluzione Problema Salvataggio e Cancellazione Note
+* *Details*: Risolto un bug critico in cui le modifiche apportate al campo Note non venivano salvate o cancellate correttamente su Firestore. Il problema derivava dal fatto che, lasciando il campo vuoto o cancellandolo, veniva passato il valore `undefined`. L'utility di pulizia `cleanFirestoreData` rimuoveva quindi la chiave dal payload di aggiornamento inviato a `updateDoc`, con il risultato che Firestore non modificava il valore preesistente nel database. Impostando il fallback a stringa vuota `""` invece di `undefined`, il valore viene ora correttamente aggiornato e azzerato nel database.
+* *Tech Notes*:
+  - Modificato `src/pages/attivita.tsx` per passare `notes: values.notes ?? ""` in modifica e `notes: notes || ""` nei flussi di aggiunta rapida e aggiornamento mirato note.
+  - Modificato `src/pages/preventivi.tsx` per passare `notes: values.notes ?? ""` in modifica e `notes: notes || ""` / `notesInput.value.trim() || ""` nei flussi di aggiunta rapida e popup note.
+  - Modificato `src/pages/polizze-personali.tsx` per passare `notes: values.notes ?? ""` in modifica e `notes: notes || ""` nei flussi di aggiunta rapida e popup note.
+  - Modificato `src/pages/sinistri.tsx` per passare `notes: values.notes ?? ""` in modifica e `notes: notes || ""` nei flussi di aggiunta rapida e popup note.
 
+### [2026-05-22 16:52]: Semplificazione Nome Pagina Polizze Personali in Personali
+* *Details*: Sostituita la stringa dell'intestazione principale "Polizze Personali" con "Personali" all'interno della pagina delle polizze personali per renderla coerente con le restanti etichette dell'applicazione (es. sidebar e dashboard).
+* *Tech Notes*:
+  - Modificato `src/pages/polizze-personali.tsx` per cambiare `<h1>Polizze Personali</h1>` in `<h1>Personali</h1>`.

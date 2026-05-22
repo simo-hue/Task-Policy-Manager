@@ -57,7 +57,7 @@ export function Attivita() {
     if (!editingTask) return;
     updateTask(editingTask.id, {
       title: values.title,
-      notes: values.notes || undefined,
+      notes: values.notes ?? "",
       dueDate: values.dueDate ? format(values.dueDate, 'yyyy-MM-dd') : undefined,
     });
     setEditingTask(null);
@@ -261,7 +261,7 @@ export function Attivita() {
           if (title) {
             addTask({ 
               title,
-              notes: notes || undefined,
+              notes: notes || "",
               dueDate: quickDate ? format(quickDate, 'yyyy-MM-dd') : undefined
             });
             titleInput.value = "";
@@ -474,7 +474,7 @@ export function Attivita() {
             if (editingNoteTask) {
               const formData = new FormData(e.currentTarget);
               const notes = formData.get("notes") as string;
-              updateTask(editingNoteTask.id, { notes: notes || undefined });
+              updateTask(editingNoteTask.id, { notes: notes || "" });
               setEditingNoteTask(null);
             }
           }}>

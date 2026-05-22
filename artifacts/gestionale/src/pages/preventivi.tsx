@@ -74,7 +74,7 @@ export function Preventivi() {
       updatePreventivo(editingPreventivo.id, {
         clientName: values.clientName,
         policyType: values.policyType,
-        notes: values.notes || undefined,
+        notes: values.notes ?? "",
         status: values.status,
         premio: values.premio,
         createdAt: values.createdAt ? values.createdAt.toISOString() : undefined,
@@ -181,7 +181,7 @@ export function Preventivi() {
             clientName,
             policyType: quickType,
             status: defaultStatus,
-            notes: notes || undefined,
+            notes: notes || "",
             premio,
             createdAt: quickDate ? quickDate.toISOString() : undefined
           });
@@ -582,7 +582,7 @@ export function Preventivi() {
               if (!editingNotePreventivo) return;
               const target = e.target as HTMLFormElement;
               const notesInput = target.elements.namedItem("notes") as HTMLTextAreaElement;
-              updatePreventivo(editingNotePreventivo.id, { notes: notesInput.value.trim() || undefined });
+              updatePreventivo(editingNotePreventivo.id, { notes: notesInput.value.trim() || "" });
               setEditingNotePreventivo(null);
             }}
             className="space-y-4"
