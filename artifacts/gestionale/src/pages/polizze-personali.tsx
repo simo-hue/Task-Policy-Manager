@@ -263,6 +263,7 @@ export function PolizzePersonali() {
             policyType: quickType, 
             status: defaultStatus, 
             expiryDate: defaultStatus === "emessa" && quickDate ? format(quickDate, 'yyyy-MM-dd') : undefined,
+            targetIssueDate: defaultStatus === "da_emettere" && quickDate ? format(quickDate, 'yyyy-MM-dd') : undefined,
             daMettereACassa: quickCassa === "da_mettere", 
             cassaStato: quickCassa as any,
             notes: notes || undefined,
@@ -287,36 +288,34 @@ export function PolizzePersonali() {
         />
       </div>
       
-      {defaultStatus === "emessa" && (
-        <>
-          <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
-          <Popover open={quickDatePopoverOpen} onOpenChange={setQuickDatePopoverOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className={cn(
-                  "w-full sm:w-[140px] h-11 justify-start text-left font-normal border-0 shadow-none bg-transparent focus:ring-0",
-                  !quickDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4 opacity-50 shrink-0" />
-                {quickDate ? format(quickDate, "P", { locale: it }) : <span>Scadenza...</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={quickDate}
-                onSelect={(date) => {
-                  setQuickDate(date);
-                  setQuickDatePopoverOpen(false);
-                }}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </>
-      )}
+      <>
+        <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
+        <Popover open={quickDatePopoverOpen} onOpenChange={setQuickDatePopoverOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant={"outline"}
+              className={cn(
+                "w-full sm:w-[140px] h-11 justify-start text-left font-normal border-0 shadow-none bg-transparent focus:ring-0",
+                !quickDate && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4 opacity-50 shrink-0" />
+              {quickDate ? format(quickDate, "P", { locale: it }) : <span>{defaultStatus === "emessa" ? "Scadenza..." : "Data..."}</span>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={quickDate}
+              onSelect={(date) => {
+                setQuickDate(date);
+                setQuickDatePopoverOpen(false);
+              }}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+      </>
 
       <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
       <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">

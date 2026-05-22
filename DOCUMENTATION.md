@@ -509,3 +509,10 @@
     - Modificato `preventivi.tsx` per rimuovere la logica che manteneva attivi i preventivi in stato "Fatto".
     - Aggiunti i popup di conferma (`Dialog`) per lo stato "Fatto" (`completingPreventivo`) e l'aggiunta rapida di note (`editingNotePreventivo`).
     - L'interfaccia UI dei preventivi condivide ora il layout a riga singola con `polizze-personali.tsx`.
+
+### [2026-05-22 15:50]: Inserimento Data Prevista nelle Polizze Da Emettere
+* *Details*: Aggiunta la possibilità di inserire la data prevista di emissione direttamente dalla barra di inserimento rapido ("Quick Add") anche per le polizze nel tab "Da emettere".
+* *Tech Notes*:
+  - Modificato `src/pages/polizze-personali.tsx` per mostrare il calendario nel Popover anche quando `defaultStatus === "da_emettere"`.
+  - Associata la data selezionata al campo `targetIssueDate` se lo stato è "da_emettere", mantenendo `expiryDate` per le polizze "emessa".
+  - Il pulsante "Aggiungi" ora richiede obbligatoriamente la data solo per le polizze in scadenza, mantenendola opzionale per quelle da emettere.
