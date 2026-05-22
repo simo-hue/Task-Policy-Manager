@@ -325,3 +325,9 @@
   - Importata l'icona `MessageSquare` da lucide-react. Il bottone si illumina del colore primario se la nota è già presente.
   - Inserito in calce ad ogni pagina un componente `<Dialog>` compatto con un `<Textarea>` pre-popolato con le note correnti (`defaultValue`).
   - L'invio del form chiama la rispettiva funzione di aggiornamento (`updatePolicy`, `updateClaim`, `updateTask`) limitandosi ad aggiornare esclusivamente il campo `notes`.
+
+### [2026-05-22 11:30]: Riscrittura Completa README
+* *Details*: Riscritto e modernizzato il file `README.md` principale del progetto. Il nuovo documento ora riflette accuratamente le capacità attuali del gestionale, focalizzandosi sull'utilizzo per agenti assicurativi e spiegando dettagliatamente le novità (Firebase, Sinistri, Polizze divise, Quick Add).
+* *Tech Notes*:
+  - Aggiornate le istruzioni di configurazione ambientale (`.env.local` e Firebase).
+  - Rimossi i vecchi riferimenti all'utilizzo esclusivo del `localStorage`.
