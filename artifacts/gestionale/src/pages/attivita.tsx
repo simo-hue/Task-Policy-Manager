@@ -14,7 +14,7 @@ import { it } from "date-fns/locale";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { CalendarIcon, Plus, Circle, Trash2, Clock, CheckSquare, Pencil, Search, X } from "lucide-react";
+import { CalendarIcon, Plus, Circle, Trash2, Clock, CheckSquare, Pencil, Search, X, MessageSquare } from "lucide-react";
 import { cn, parseLocalDate } from "@/lib/utils";
 
 const taskSchema = z.object({
@@ -29,6 +29,7 @@ export function Attivita() {
   const { tasks, addTask, completeTask, reopenTask, deleteTask, updateTask } = useTasks();
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [deletingTask, setDeletingTask] = useState<Task | null>(null);
+  const [editingNoteTask, setEditingNoteTask] = useState<Task | null>(null);
   const [search, setSearch] = useState("");
   type QuickFilter = "all" | "overdue" | "thisWeek" | "noDate";
   const [quickFilter, setQuickFilter] = useState<QuickFilter>("all");
@@ -246,14 +247,18 @@ export function Attivita() {
         onSubmit={(e) => {
           e.preventDefault();
           const target = e.target as HTMLFormElement;
-          const input = target.elements.namedItem("quickTitle") as HTMLInputElement;
-          const title = input.value.trim();
+          const titleInput = target.elements.namedItem("quickTitle") as HTMLInputElement;
+          const title = titleInput.value.trim();
+          const notesInput = target.elements.namedItem("quickNotes") as HTMLInputElement;
+          const notes = notesInput.value.trim();
           if (title) {
             addTask({ 
               title,
+              notes: notes || undefined,
               dueDate: quickDate ? format(quickDate, 'yyyy-MM-dd') : undefined
             });
-            input.value = "";
+            titleInput.value = "";
+            notesInput.value = "";
             setQuickDate(undefined);
           }
         }}
@@ -263,10 +268,21 @@ export function Attivita() {
           <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
             name="quickTitle"
-            placeholder="Scrivi qui una nuova attività veloce e premi Invio..." 
+            placeholder="Scrivi qui una nuova attività veloce..." 
             className="pl-9 h-10 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
             autoComplete="off"
             required
+          />
+        </div>
+
+        <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
+
+        <div className="flex-1 relative min-w-[150px]">
+          <Input 
+            name="quickNotes"
+            placeholder="Note (opzionali)..." 
+            className="h-10 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
+            autoComplete="off"
           />
         </div>
         
@@ -358,6 +374,15 @@ export function Attivita() {
                     <Button
                       variant="ghost"
                       size="icon"
+                      className={cn("hover:text-primary", task.notes ? "text-primary" : "text-muted-foreground")}
+                      onClick={() => setEditingNoteTask(task)}
+                      title="Aggiungi o modifica nota"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       className="text-muted-foreground hover:text-primary"
                       onClick={() => setEditingTask(task)}
                       data-testid={`button-edit-task-${task.id}`}
@@ -423,6 +448,44 @@ export function Attivita() {
               Elimina
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!editingNoteTask} onOpenChange={(open) => { if (!open) setEditingNoteTask(null); }}>
+        <DialogContent className="max-w-md border-border/80 shadow-elevated">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-xl font-semibold text-primary mb-1 flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-primary" />
+              Note Attività
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            if (editingNoteTask) {
+              const formData = new FormData(e.currentTarget);
+              const notes = formData.get("notes") as string;
+              updateTask(editingNoteTask.id, { notes: notes || undefined });
+              setEditingNoteTask(null);
+            }
+          }}>
+            <div className="pt-4 pb-6">
+              <Textarea 
+                name="notes"
+                defaultValue={editingNoteTask?.notes || ""}
+                placeholder="Scrivi qui i tuoi appunti, dettagli o numeri di telefono..."
+                className="min-h-[120px] resize-y"
+                autoFocus
+              />
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button type="button" variant="outline" onClick={() => setEditingNoteTask(null)}>
+                Annulla
+              </Button>
+              <Button type="submit" className="font-medium shadow-soft">
+                Salva Nota
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

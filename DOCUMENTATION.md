@@ -310,3 +310,18 @@
   - Modificato il componente `<Dialog>` legato allo stato `issuingPolicy` in `src/pages/polizze-personali.tsx` e `src/pages/polizze-agenzia.tsx`.
   - Aggiornato il testo esplicativo del Dialog (`DialogDescription`) per avvertire l'utente che l'azione eliminerà il record dal database.
   - Sostituita la funzione `updatePolicy(..., { status: "emessa" })` con `deletePolicy(...)` nell'handler di conferma.
+
+### [2026-05-22 11:23]: Campo Note Rapido nella Barra di Inserimento
+* *Details*: Aggiunta la possibilità di inserire immediatamente delle "Note" opzionali direttamente dalla barra di aggiunta rapida, senza dover più creare l'elemento e poi usare il pulsante di modifica. La funzionalità è stata estesa a tutte le sezioni principali del gestionale.
+* *Tech Notes*:
+  - Modificata la barra form (`renderQuickAdd` / inline form) nei file `src/pages/polizze-personali.tsx`, `src/pages/polizze-agenzia.tsx`, `src/pages/sinistri.tsx` e `src/pages/attivita.tsx`.
+  - Inserito un nuovo campo di input testuale (nome: `quickNotes`) prima del bottone di submit in tutti i form.
+  - Aggiornati gli handler di submit per estrarre il valore di `quickNotes`, aggiungerlo al payload (`notes: notes || undefined`) e resettare il campo a fine operazione.
+
+### [2026-05-22 11:28]: Aggiunta / Modifica Rapida Note sulle Card
+* *Details*: Aggiunto un nuovo pulsante specifico ("Aggiungi/Modifica nota") su ciascuna card esistente nelle sezioni Polizze Personali, Polizze Agenzia, Sinistri e Attività. Cliccando su di esso si apre un piccolo popup mirato esclusivamente alla modifica delle note per quell'elemento, senza dover aprire l'intero modulo di modifica generale.
+* *Tech Notes*:
+  - Aggiunti stati locali per gestire l'apertura del dialog (es. `editingNotePolicy`, `editingNoteClaim`, `editingNoteTask`).
+  - Importata l'icona `MessageSquare` da lucide-react. Il bottone si illumina del colore primario se la nota è già presente.
+  - Inserito in calce ad ogni pagina un componente `<Dialog>` compatto con un `<Textarea>` pre-popolato con le note correnti (`defaultValue`).
+  - L'invio del form chiama la rispettiva funzione di aggiornamento (`updatePolicy`, `updateClaim`, `updateTask`) limitandosi ad aggiornare esclusivamente il campo `notes`.

@@ -13,7 +13,7 @@ import { it } from "date-fns/locale";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { CalendarIcon, Plus, Trash2, Pencil, AlertOctagon, ArrowRight, Check, ChevronDown } from "lucide-react";
+import { CalendarIcon, Plus, Trash2, Pencil, AlertOctagon, ArrowRight, Check, ChevronDown, MessageSquare } from "lucide-react";
 import { cn, parseLocalDate } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -178,6 +178,7 @@ export function Sinistri() {
   const [editingClaim, setEditingClaim] = useState<Claim | null>(null);
   const [liquidatingClaim, setLiquidatingClaim] = useState<Claim | null>(null);
   const [deletingClaim, setDeletingClaim] = useState<Claim | null>(null);
+  const [editingNoteClaim, setEditingNoteClaim] = useState<Claim | null>(null);
   const [quickDate, setQuickDate] = useState<Date | undefined>(new Date());
   const [quickRamo, setQuickRamo] = useState<string>("");
   const [quickStatus, setQuickStatus] = useState<Claim["status"]>("da_aprire");
@@ -206,6 +207,8 @@ export function Sinistri() {
         const target = e.target as HTMLFormElement;
         const nameInput = target.elements.namedItem("quickName") as HTMLInputElement;
         const clientName = nameInput.value.trim();
+        const notesInput = target.elements.namedItem("quickNotes") as HTMLInputElement;
+        const notes = notesInput.value.trim();
         
         const isDaAprire = quickStatus === "da_aprire";
         if (clientName && quickRamo && (isDaAprire || quickDate)) {
@@ -213,9 +216,11 @@ export function Sinistri() {
             clientName, 
             ramo: quickRamo, 
             status: quickStatus || "da_aprire", 
-            openDate: isDaAprire ? undefined : (quickDate ? format(quickDate, 'yyyy-MM-dd') : undefined)
+            openDate: isDaAprire ? undefined : (quickDate ? format(quickDate, 'yyyy-MM-dd') : undefined),
+            notes: notes || undefined
           });
           nameInput.value = "";
+          notesInput.value = "";
           setQuickRamo("");
           setQuickDate(new Date());
           setQuickStatus("da_aprire");
@@ -298,6 +303,17 @@ export function Sinistri() {
           <SelectItem value="non_liquidato">Non liquidato</SelectItem>
         </SelectContent>
       </Select>
+
+      <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
+      
+      <div className="flex-1 relative min-w-[150px]">
+        <Input 
+          name="quickNotes"
+          placeholder="Note (opzionali)..." 
+          className="h-10 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
+          autoComplete="off"
+        />
+      </div>
 
       <Button 
         type="submit" 
@@ -516,6 +532,15 @@ export function Sinistri() {
                       Segna liquidato
                     </Button>
 
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={cn("hover:text-primary", claim.notes ? "text-primary" : "text-muted-foreground")}
+                      onClick={() => setEditingNoteClaim(claim)}
+                      title="Aggiungi o modifica nota"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                    </Button>
                     <Button variant="ghost" size="icon" onClick={() => setEditingClaim(claim)} className="text-muted-foreground hover:text-primary" data-testid={`button-edit-claim-${claim.id}`}>
                       <Pencil className="w-4 h-4" />
                     </Button>
@@ -592,6 +617,44 @@ export function Sinistri() {
               Elimina
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!editingNoteClaim} onOpenChange={(open) => { if (!open) setEditingNoteClaim(null); }}>
+        <DialogContent className="max-w-md border-border/80 shadow-elevated">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-xl font-semibold text-primary mb-1 flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-primary" />
+              Note Sinistro
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            if (editingNoteClaim) {
+              const formData = new FormData(e.currentTarget);
+              const notes = formData.get("notes") as string;
+              updateClaim(editingNoteClaim.id, { notes: notes || undefined });
+              setEditingNoteClaim(null);
+            }
+          }}>
+            <div className="pt-4 pb-6">
+              <Textarea 
+                name="notes"
+                defaultValue={editingNoteClaim?.notes || ""}
+                placeholder="Scrivi qui i tuoi appunti, dettagli o numeri di telefono..."
+                className="min-h-[120px] resize-y"
+                autoFocus
+              />
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button type="button" variant="outline" onClick={() => setEditingNoteClaim(null)}>
+                Annulla
+              </Button>
+              <Button type="submit" className="font-medium shadow-soft">
+                Salva Nota
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

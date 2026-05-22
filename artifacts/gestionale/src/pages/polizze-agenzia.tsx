@@ -16,7 +16,7 @@ import { it } from "date-fns/locale";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { CalendarIcon, Plus, ShieldAlert, FileSignature, Trash2, ArrowRight, Pencil, Settings2, Check, ChevronDown } from "lucide-react";
+import { CalendarIcon, Plus, ShieldAlert, FileSignature, Trash2, ArrowRight, Pencil, Settings2, Check, ChevronDown, MessageSquare } from "lucide-react";
 import { cn, parseLocalDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -68,6 +68,7 @@ export function PolizzeAgenzia() {
   const [issuingPolicy, setIssuingPolicy] = useState<Policy | null>(null);
   const [payingPolicy, setPayingPolicy] = useState<Policy | null>(null);
   const [deletingPolicy, setDeletingPolicy] = useState<Policy | null>(null);
+  const [editingNotePolicy, setEditingNotePolicy] = useState<Policy | null>(null);
   const [quickType, setQuickType] = useState("Auto");
   const [quickCassa, setQuickCassa] = useState("regolare");
   const [quickDate, setQuickDate] = useState<Date | undefined>(undefined);
@@ -244,6 +245,8 @@ export function PolizzeAgenzia() {
         const target = e.target as HTMLFormElement;
         const nameInput = target.elements.namedItem("quickName") as HTMLInputElement;
         const clientName = nameInput.value.trim();
+        const notesInput = target.elements.namedItem("quickNotes") as HTMLInputElement;
+        const notes = notesInput.value.trim();
         if (clientName) {
           addPolicy({ 
             clientName, 
@@ -251,9 +254,11 @@ export function PolizzeAgenzia() {
             status: defaultStatus, 
             expiryDate: defaultStatus === "emessa" && quickDate ? format(quickDate, 'yyyy-MM-dd') : undefined,
             daMettereACassa: quickCassa === "da_mettere", 
-            cassaStato: quickCassa as any 
+            cassaStato: quickCassa as any,
+            notes: notes || undefined
           });
           nameInput.value = "";
+          notesInput.value = "";
           setQuickDate(undefined);
         }
       }}
@@ -335,6 +340,15 @@ export function PolizzeAgenzia() {
             </Select>
           </>
         )}
+        <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
+        <div className="flex-1 relative min-w-[150px]">
+          <Input 
+            name="quickNotes"
+            placeholder="Note (opzionali)..." 
+            className="h-10 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
+            autoComplete="off"
+          />
+        </div>
         <Button 
           type="submit" 
           size="sm" 
@@ -587,6 +601,15 @@ export function PolizzeAgenzia() {
                         <Check className="w-3.5 h-3.5 text-emerald-500" />
                         Pagato
                       </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn("hover:text-primary", policy.notes ? "text-primary" : "text-muted-foreground")}
+                        onClick={() => setEditingNotePolicy(policy)}
+                        title="Aggiungi o modifica nota"
+                      >
+                        <MessageSquare className="w-4 h-4" />
+                      </Button>
                       <Button variant="ghost" size="icon" onClick={() => setEditingPolicy(policy)} className="text-muted-foreground hover:text-primary" data-testid={`button-edit-policy-${policy.id}`}>
                         <Pencil className="w-4 h-4" />
                       </Button>
@@ -639,6 +662,15 @@ export function PolizzeAgenzia() {
                       >
                         <Check className="w-3.5 h-3.5 text-primary" />
                         Segna emessa
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn("hover:text-primary", policy.notes ? "text-primary" : "text-muted-foreground")}
+                        onClick={() => setEditingNotePolicy(policy)}
+                        title="Aggiungi o modifica nota"
+                      >
+                        <MessageSquare className="w-4 h-4" />
                       </Button>
                       <Button variant="ghost" size="icon" onClick={() => setEditingPolicy(policy)} className="text-muted-foreground hover:text-primary" data-testid={`button-edit-policy-${policy.id}`}>
                         <Pencil className="w-4 h-4" />
@@ -747,6 +779,44 @@ export function PolizzeAgenzia() {
               Elimina
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!editingNotePolicy} onOpenChange={(open) => { if (!open) setEditingNotePolicy(null); }}>
+        <DialogContent className="max-w-md border-border/80 shadow-elevated">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-xl font-semibold text-primary mb-1 flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-primary" />
+              Note Polizza
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            if (editingNotePolicy) {
+              const formData = new FormData(e.currentTarget);
+              const notes = formData.get("notes") as string;
+              updatePolicy(editingNotePolicy.id, { notes: notes || undefined });
+              setEditingNotePolicy(null);
+            }
+          }}>
+            <div className="pt-4 pb-6">
+              <Textarea 
+                name="notes"
+                defaultValue={editingNotePolicy?.notes || ""}
+                placeholder="Scrivi qui i tuoi appunti, dettagli o numeri di telefono..."
+                className="min-h-[120px] resize-y"
+                autoFocus
+              />
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button type="button" variant="outline" onClick={() => setEditingNotePolicy(null)}>
+                Annulla
+              </Button>
+              <Button type="submit" className="font-medium shadow-soft">
+                Salva Nota
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
