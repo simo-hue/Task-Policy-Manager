@@ -407,3 +407,9 @@
   - Aggiornato `favicon.svg` per includere un rendering embedded ad alta densità (base64) dell'immagine a 128x128 pixel, garantendo supporto vettoriale nativo senza perdere fedeltà visiva.
   - Eseguita compilazione di test con `PORT=5173 BASE_PATH=/ pnpm --filter @workspace/gestionale build` per verificare che la configurazione del manifest della PWA includa e compili correttamente i nuovi asset statici.
 
+### [2026-05-22 12:34]: Fallback Resilienti per Variabili d'Ambiente Port/BasePath
+* *Details*: Risolto un blocco di compilazione su piattaforme serverless/statiche (come Vercel) rendendo le variabili d'ambiente `PORT` e `BASE_PATH` opzionali durante la fase di build. Ora l'applicazione fall-backa automaticamente su valori standard (`5173` e `/`) se queste chiavi non sono passate nel runtime del compiler, consentendo deploy rapidi senza configurazioni complesse.
+* *Tech Notes*:
+  - Modificato `artifacts/gestionale/vite.config.ts` per impostare `process.env.PORT || "5173"` e `process.env.BASE_PATH || "/"`, eliminando le eccezioni bloccanti sollevate in precedenza in assenza di variabili d'ambiente.
+
+
