@@ -26,7 +26,7 @@ export default defineConfig({
       includeAssets: ["favicon.svg", "apple-touch-icon.png"],
       manifest: {
         name: "TO Mattioli DO",
-        short_name: "MattioliDO",
+        short_name: "TO Mattioli DO",
         description: "Gestisci attività e polizze in modo semplice e professionale.",
         theme_color: "#18181b",
         background_color: "#18181b",
@@ -49,17 +49,17 @@ export default defineConfig({
       }
     }),
     ...(process.env.NODE_ENV !== "production" &&
-    process.env.REPL_ID !== undefined
+      process.env.REPL_ID !== undefined
       ? [
-          await import("@replit/vite-plugin-cartographer").then((m) =>
-            m.cartographer({
-              root: path.resolve(import.meta.dirname, ".."),
-            }),
-          ),
-          await import("@replit/vite-plugin-dev-banner").then((m) =>
-            m.devBanner(),
-          ),
-        ]
+        await import("@replit/vite-plugin-cartographer").then((m) =>
+          m.cartographer({
+            root: path.resolve(import.meta.dirname, ".."),
+          }),
+        ),
+        await import("@replit/vite-plugin-dev-banner").then((m) =>
+          m.devBanner(),
+        ),
+      ]
       : []),
   ],
   resolve: {
