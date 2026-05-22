@@ -31,7 +31,7 @@ const claimSchema = z.object({
   ramo: z.string().min(1, "Il ramo è obbligatorio"),
   openDate: z.date().optional(),
   notes: z.string().optional(),
-  status: z.enum(["liquidato", "incaricato", "non_liquidato", "da_aprire", "aperto"]).optional(),
+  status: z.enum(["liquidato", "incaricato", "visita_medico_legale", "da_aprire", "aperto"]).optional(),
 });
 
 type ClaimFormValues = z.infer<typeof claimSchema>;
@@ -59,10 +59,10 @@ export function Sinistri() {
         className: "bg-amber-500/10 text-amber-600 border-amber-500/20 hover:bg-amber-500/20",
         dotColor: "bg-amber-500"
       },
-      non_liquidato: {
-        label: "Non liquidato",
-        className: "bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20",
-        dotColor: "bg-destructive"
+      visita_medico_legale: {
+        label: "Visita Medico Legale",
+        className: "bg-rose-500/10 text-rose-600 border-rose-500/20 hover:bg-rose-500/20",
+        dotColor: "bg-rose-500"
       },
       liquidato: {
         label: "Liquidato",
@@ -143,7 +143,7 @@ export function Sinistri() {
 
           <DropdownMenuItem
             onClick={() => {
-              const patch: any = { status: "non_liquidato" };
+              const patch: any = { status: "visita_medico_legale" };
               if (currentStatus === "da_aprire" && !claim.openDate) {
                 patch.openDate = format(new Date(), "yyyy-MM-dd");
               }
@@ -152,10 +152,10 @@ export function Sinistri() {
             className="flex items-center justify-between cursor-pointer rounded-md px-2 py-1.5 text-xs hover:bg-accent focus:bg-accent"
           >
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-destructive shrink-0" />
-              <span>Non liquidato</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0" />
+              <span>Visita Medico Legale</span>
             </div>
-            {currentStatus === "non_liquidato" && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
+            {currentStatus === "visita_medico_legale" && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
           </DropdownMenuItem>
 
           <DropdownMenuSeparator className="my-1" />
@@ -308,7 +308,7 @@ export function Sinistri() {
           <SelectItem value="da_aprire">Da aprire</SelectItem>
           <SelectItem value="aperto">Aperto</SelectItem>
           <SelectItem value="incaricato">Incaricato perito</SelectItem>
-          <SelectItem value="non_liquidato">Non liquidato</SelectItem>
+          <SelectItem value="visita_medico_legale">Visita Medico Legale</SelectItem>
         </SelectContent>
       </Select>
 
@@ -460,7 +460,7 @@ export function Sinistri() {
                   <SelectItem value="da_aprire">Da aprire</SelectItem>
                   <SelectItem value="aperto">Aperto</SelectItem>
                   <SelectItem value="incaricato">Incaricato perito</SelectItem>
-                  <SelectItem value="non_liquidato">Non liquidato</SelectItem>
+                  <SelectItem value="visita_medico_legale">Visita Medico Legale</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />

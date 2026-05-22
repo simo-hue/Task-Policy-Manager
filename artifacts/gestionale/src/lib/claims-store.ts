@@ -10,7 +10,7 @@ export interface Claim {
   openDate?: string; // YYYY-MM-DD (null/undefined se da aprire)
   ramo: string;
   notes?: string;
-  status?: 'liquidato' | 'incaricato' | 'non_liquidato' | 'da_aprire' | 'aperto';
+  status?: 'liquidato' | 'incaricato' | 'visita_medico_legale' | 'da_aprire' | 'aperto';
   createdAt: string;
   userId: string;
 }

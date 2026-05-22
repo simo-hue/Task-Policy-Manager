@@ -521,3 +521,9 @@
 * *Details*: Modificato il colore del badge del premio (prezzo) nella pagina delle polizze personali per essere visualizzato in un verde brillante (emerald), rendendo l'interfaccia più coordinata ed elegante.
 * *Tech Notes*:
   - Modificato `src/pages/polizze-personali.tsx` sostituendo le classi `bg-primary/10 text-primary` con `bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20` all'interno dei cicli di visualizzazione delle card per entrambi i tab ("In scadenza" e "Da emettere").
+
+### [2026-05-22 16:37]: Sostituzione Stato "Non liquidato" con "Visita Medico Legale"
+* *Details*: Sostituito lo stato dei sinistri "Non liquidato" con lo stato "Visita Medico Legale" sia a livello grafico (etichette, badge, selettori) sia nella tipizzazione dello store (Firebase). Per il nuovo stato è stato adottato un badge con sfumature di rosa (`rose-500`) elegante e coordinato.
+* *Tech Notes*:
+  - Modificato `src/lib/claims-store.ts` per rimuovere `'non_liquidato'` e inserire `'visita_medico_legale'` nella definizione di tipo dello stato del `Claim`.
+  - Modificato `src/pages/sinistri.tsx` per aggiornare lo schema Zod (`claimSchema`), il dizionario delle classi/colori (`statusConfig`), gli event handler del badge interattivo dropdown, e la Select del modulo di inserimento/modifica sinistro.

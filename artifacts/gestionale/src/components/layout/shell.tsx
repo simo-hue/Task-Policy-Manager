@@ -11,7 +11,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 const navItems = [
   { path: "/", label: "Dashboard", icon: LayoutDashboard },
   { path: "/attivita", label: "Da Fare", icon: CheckSquare },
-  { path: "/polizze-personali", label: "Polizze Personali", icon: FileText },
+  { path: "/polizze-personali", label: "Personali", icon: FileText },
   { path: "/preventivi", label: "Preventivi", icon: Briefcase },
   { path: "/sinistri", label: "Sinistri", icon: AlertOctagon },
 ];
@@ -168,7 +168,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <ThemeToggle collapsed={collapsed} />
           </div>
         </aside>
-        
+
         {/* Mobile Top Bar — safe area aware for Dynamic Island */}
         <div className="md:hidden fixed top-0 left-0 right-0 bg-sidebar/90 backdrop-blur-xl border-b border-sidebar-border/60 flex items-center justify-between px-4 z-30" style={{ paddingTop: 'env(safe-area-inset-top)', height: 'calc(3.5rem + env(safe-area-inset-top))' }}>
           <Logo collapsed={false} />

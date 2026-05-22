@@ -76,7 +76,7 @@ export function Dashboard() {
         hint: "totale da fare",
       },
       {
-        title: "Polizze Personali",
+        title: "Personali",
         value: personali.filter(p => p.cassaStato !== "pagata").length,
         icon: FileText,
         href: "/polizze-personali",
