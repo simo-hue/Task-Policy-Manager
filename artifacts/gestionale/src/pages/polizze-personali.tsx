@@ -637,7 +637,7 @@ export function PolizzePersonali() {
                           {renderCassaBadge(policy)}
                           <span className="bg-secondary px-2 py-0.5 rounded-md text-secondary-foreground font-medium text-xs">{policy.policyType}</span>
                           {policy.premio !== undefined && (
-                            <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-md font-medium text-xs whitespace-nowrap">
+                            <span className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md font-medium text-xs whitespace-nowrap">
                               € {policy.premio.toFixed(2)}
                             </span>
                           )}
@@ -701,7 +701,7 @@ export function PolizzePersonali() {
                           <span className="truncate max-w-[180px] sm:max-w-xs">{policy.clientName}</span>
                           <span className="bg-secondary px-2 py-0.5 rounded-md text-secondary-foreground font-medium text-xs">{policy.policyType}</span>
                           {policy.premio !== undefined && (
-                            <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-md font-medium text-xs whitespace-nowrap">
+                            <span className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md font-medium text-xs whitespace-nowrap">
                               € {policy.premio.toFixed(2)}
                             </span>
                           )}

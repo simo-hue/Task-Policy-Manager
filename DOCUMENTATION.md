@@ -516,3 +516,8 @@
   - Modificato `src/pages/polizze-personali.tsx` per mostrare il calendario nel Popover anche quando `defaultStatus === "da_emettere"`.
   - Associata la data selezionata al campo `targetIssueDate` se lo stato è "da_emettere", mantenendo `expiryDate` per le polizze "emessa".
   - Il pulsante "Aggiungi" ora richiede obbligatoriamente la data solo per le polizze in scadenza, mantenendola opzionale per quelle da emettere.
+
+### [2026-05-22 16:32]: Aggiornamento Colore Badge Premio in Verde
+* *Details*: Modificato il colore del badge del premio (prezzo) nella pagina delle polizze personali per essere visualizzato in un verde brillante (emerald), rendendo l'interfaccia più coordinata ed elegante.
+* *Tech Notes*:
+  - Modificato `src/pages/polizze-personali.tsx` sostituendo le classi `bg-primary/10 text-primary` con `bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20` all'interno dei cicli di visualizzazione delle card per entrambi i tab ("In scadenza" e "Da emettere").
