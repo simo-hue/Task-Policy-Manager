@@ -303,8 +303,8 @@ export function Preventivi() {
                     {renderStatusBadge(preventivo)}
                     <span className="bg-secondary px-2 py-0.5 rounded-md text-secondary-foreground font-medium text-xs">{preventivo.policyType}</span>
                     {preventivo.premio !== undefined && (
-                      <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-md font-medium text-xs whitespace-nowrap">
-                        € {preventivo.premio.toFixed(2)}
+                      <span className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md font-medium text-xs whitespace-nowrap">
+                        € {preventivo.premio.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     )}
                   </h3>

@@ -527,3 +527,16 @@
 * *Tech Notes*:
   - Modificato `src/lib/claims-store.ts` per rimuovere `'non_liquidato'` e inserire `'visita_medico_legale'` nella definizione di tipo dello stato del `Claim`.
   - Modificato `src/pages/sinistri.tsx` per aggiornare lo schema Zod (`claimSchema`), il dizionario delle classi/colori (`statusConfig`), gli event handler del badge interattivo dropdown, e la Select del modulo di inserimento/modifica sinistro.
+
+### [2026-05-22 16:42]: Formattazione Prezzi con Locale Italiano (Badge Premio)
+* *Details*: Aggiornata la visualizzazione del badge del premio (prezzo) in tutte le occorrenze della web app per utilizzare la formattazione numerica italiana (separatore delle migliaia come punto e decimali come virgola, es. "15.000,00" invece di "15000.00").
+* *Tech Notes*:
+  - Modificato `src/pages/preventivi.tsx` per sostituire `.toFixed(2)` con `.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })` sul display del premio.
+  - Modificato `src/pages/polizze-personali.tsx` per sostituire `.toFixed(2)` con `.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })` sul display del premio in entrambi i tab ("In scadenza" e "Da emettere").
+
+### [2026-05-22 16:44]: Aggiornamento Globale Colore Badge Premio in Verde
+* *Details*: Uniformato il colore dei badge del premio in tutte le viste del gestionale (compresi i Preventivi) impostando ovunque la tonalità verde brillante (emerald), garantendo consistenza estetica nell'intera web app.
+* *Tech Notes*:
+  - Modificato `src/pages/preventivi.tsx` per sostituire le classi del badge del premio (`bg-primary/10 text-primary`) con lo stile verde emerald borderato (`bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20`).
+
+
