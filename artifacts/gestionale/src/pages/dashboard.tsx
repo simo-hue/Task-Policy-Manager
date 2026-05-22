@@ -1,11 +1,12 @@
 import { useTasks } from "@/lib/tasks-store";
-import { usePoliciesPersonali, usePoliciesAgenzia } from "@/lib/policies-store";
+import { usePoliciesPersonali } from "@/lib/policies-store";
 import { useClaims } from "@/lib/claims-store";
+import { usePreventivi } from "@/lib/preventivi-store";
 import { useSettings } from "@/hooks/use-settings";
 import { Card } from "@/components/ui/card";
 import { format, isBefore, isToday, addDays, isAfter, startOfDay, differenceInCalendarDays } from "date-fns";
 import { it } from "date-fns/locale";
-import { CheckSquare, AlertCircle, FileText, CalendarClock, Plus, ArrowRight, AlertOctagon } from "lucide-react";
+import { CheckSquare, AlertCircle, FileText, CalendarClock, Plus, ArrowRight, AlertOctagon, Briefcase } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { cn, parseLocalDate } from "@/lib/utils";
@@ -22,14 +23,13 @@ const toneStyles: Record<Tone, { chip: string; value: string }> = {
 export function Dashboard() {
   const { tasks } = useTasks();
   const { policies: personali } = usePoliciesPersonali();
-  const { policies: agenzia } = usePoliciesAgenzia();
+  const { preventivi } = usePreventivi();
   const { settings } = useSettings();
   const { claims } = useClaims();
   const activeClaims = claims.filter(c => c.status !== "liquidato");
 
   const policies = [
-    ...personali.filter(p => p.cassaStato !== "pagata").map(p => ({ ...p, scope: 'personali' as const })),
-    ...agenzia.filter(p => p.cassaStato !== "pagata").map(p => ({ ...p, scope: 'agenzia' as const }))
+    ...personali.filter(p => p.cassaStato !== "pagata").map(p => ({ ...p, scope: 'personali' as const }))
   ];
 
   const now = startOfDay(new Date());
@@ -85,13 +85,13 @@ export function Dashboard() {
         hint: "totale da gestire",
       },
       {
-        title: "Polizze Agenzia",
-        value: agenzia.filter(p => p.cassaStato !== "pagata").length,
-        icon: FileText,
-        href: "/polizze-agenzia",
-        testId: "card-policies-agenzia",
+        title: "Preventivi",
+        value: preventivi.filter(p => p.status !== "fatto").length,
+        icon: Briefcase,
+        href: "/preventivi",
+        testId: "card-preventivi",
         tone: "gold",
-        hint: "totale da gestire",
+        hint: "da gestire",
       },
       {
         title: "Sinistri",
@@ -181,15 +181,7 @@ export function Dashboard() {
                       <div className="min-w-0">
                         <div className="font-medium truncate">{p.clientName}</div>
                         <div className="text-sm text-muted-foreground truncate">
-                          {p.policyType} 
-                          <span className={cn(
-                            "text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ml-1.5",
-                            p.scope === 'personali' 
-                              ? "text-sky-600 bg-sky-500/10 dark:text-sky-400" 
-                              : "text-violet-600 bg-violet-500/10 dark:text-violet-400"
-                          )}>
-                            {p.scope === 'personali' ? 'PERSONALI' : 'AGENZIA'}
-                          </span>
+                          {p.policyType}
                         </div>
                       </div>
                       <DatePill date={exp} tone={tone} />

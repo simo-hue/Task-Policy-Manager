@@ -31,9 +31,11 @@ export function Attivita() {
   const [deletingTask, setDeletingTask] = useState<Task | null>(null);
   const [editingNoteTask, setEditingNoteTask] = useState<Task | null>(null);
   const [search, setSearch] = useState("");
-  type QuickFilter = "all" | "overdue" | "thisWeek" | "noDate";
+  type QuickFilter = "all" | "today" | "thisWeek" | "overdue";
   const [quickFilter, setQuickFilter] = useState<QuickFilter>("all");
   const [quickDate, setQuickDate] = useState<Date | undefined>(undefined);
+  const [quickDatePopoverOpen, setQuickDatePopoverOpen] = useState(false);
+  const [editDatePopoverOpen, setEditDatePopoverOpen] = useState(false);
 
   const editForm = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
@@ -80,8 +82,10 @@ export function Attivita() {
       if (!t.dueDate) return false;
       const d = startOfDay(parseLocalDate(t.dueDate));
       if (!isWithinInterval(d, { start: today, end: weekEnd })) return false;
-    } else if (quickFilter === "noDate") {
-      if (t.dueDate) return false;
+    } else if (quickFilter === "today") {
+      if (!t.dueDate) return false;
+      const d = startOfDay(parseLocalDate(t.dueDate));
+      if (!isToday(d)) return false;
     }
     return true;
   }
@@ -96,10 +100,9 @@ export function Attivita() {
   const hasActiveFilters = search.trim() !== "" || quickFilter !== "all";
 
   const filterButtons: { value: QuickFilter; label: string }[] = [
-    { value: "all", label: "Tutte" },
-    { value: "overdue", label: "Scadute" },
+    { value: "today", label: "Oggi" },
     { value: "thisWeek", label: "Questa settimana" },
-    { value: "noDate", label: "Senza data" },
+    { value: "overdue", label: "Scadute" },
   ];
 
   return (
@@ -152,7 +155,7 @@ export function Attivita() {
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Data di scadenza (opzionale)</FormLabel>
-                    <Popover>
+                    <Popover open={editDatePopoverOpen} onOpenChange={setEditDatePopoverOpen}>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
@@ -175,7 +178,10 @@ export function Attivita() {
                         <Calendar
                           mode="single"
                           selected={field.value}
-                          onSelect={field.onChange}
+                          onSelect={(date) => {
+                            field.onChange(date);
+                            setEditDatePopoverOpen(false);
+                          }}
                           initialFocus
                         />
                       </PopoverContent>
@@ -222,7 +228,7 @@ export function Attivita() {
               type="button"
               size="sm"
               variant={quickFilter === f.value ? "default" : "outline"}
-              onClick={() => setQuickFilter(f.value)}
+              onClick={() => setQuickFilter(quickFilter === f.value ? "all" : f.value)}
               data-testid={`button-filter-${f.value}`}
               className="shrink-0 active:scale-95 transition-transform"
             >
@@ -281,7 +287,7 @@ export function Attivita() {
         <div className="flex-1 relative min-w-[150px]">
           <Input 
             name="quickNotes"
-            placeholder="Note (opzionali)..." 
+            placeholder="Note" 
             className="h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
             autoComplete="off"
           />
@@ -289,7 +295,7 @@ export function Attivita() {
         
         <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
         
-        <Popover>
+        <Popover open={quickDatePopoverOpen} onOpenChange={setQuickDatePopoverOpen}>
           <PopoverTrigger asChild>
             <Button
               type="button"
@@ -307,7 +313,10 @@ export function Attivita() {
             <Calendar
               mode="single"
               selected={quickDate}
-              onSelect={setQuickDate}
+              onSelect={(date) => {
+                setQuickDate(date);
+                setQuickDatePopoverOpen(false);
+              }}
               initialFocus
             />
           </PopoverContent>

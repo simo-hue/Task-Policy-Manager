@@ -1,0 +1,521 @@
+import { useState, useEffect } from "react";
+import { usePreventivi, Preventivo } from "@/lib/preventivi-store";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { it } from "date-fns/locale";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Plus, Trash2, Pencil, Check, MessageSquare, ClipboardList, Briefcase, CheckCircle2, CalendarIcon } from "lucide-react";
+import { cn, parseLocalDate } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+
+const preventivoSchema = z.object({
+  clientName: z.string().min(1, "Il nome cliente è obbligatorio"),
+  policyType: z.string().min(1, "Il tipo di polizza è obbligatorio"),
+  premio: z.coerce.number().optional(),
+  notes: z.string().optional(),
+  status: z.enum(["da_fare", "fatto", "trattativa_in_corso"]),
+  createdAt: z.date().optional(),
+});
+
+type PreventivoFormValues = z.infer<typeof preventivoSchema>;
+
+export function Preventivi() {
+  const { preventivi, addPreventivo, updatePreventivo, deletePreventivo } = usePreventivi();
+  const [editingPreventivo, setEditingPreventivo] = useState<Preventivo | null>(null);
+  const [deletingPreventivo, setDeletingPreventivo] = useState<Preventivo | null>(null);
+  const [quickType, setQuickType] = useState("Auto");
+  const [quickDate, setQuickDate] = useState<Date | undefined>(undefined);
+  const [quickDatePopoverOpen, setQuickDatePopoverOpen] = useState(false);
+  const [editDatePopoverOpen, setEditDatePopoverOpen] = useState(false);
+
+  const editForm = useForm<PreventivoFormValues>({
+    resolver: zodResolver(preventivoSchema),
+    defaultValues: { clientName: "", policyType: "", notes: "", status: "da_fare", premio: undefined },
+  });
+
+  useEffect(() => {
+    if (editingPreventivo) {
+      editForm.reset({
+        clientName: editingPreventivo.clientName,
+        policyType: editingPreventivo.policyType,
+        notes: editingPreventivo.notes ?? "",
+        status: editingPreventivo.status,
+        premio: editingPreventivo.premio,
+        createdAt: editingPreventivo.createdAt ? new Date(editingPreventivo.createdAt) : undefined,
+      });
+    }
+  }, [editingPreventivo, editForm]);
+
+  function onEditSubmit(values: PreventivoFormValues) {
+    if (!editingPreventivo) return;
+    updatePreventivo(editingPreventivo.id, {
+      clientName: values.clientName,
+      policyType: values.policyType,
+      notes: values.notes || undefined,
+      status: values.status,
+      premio: values.premio,
+      createdAt: values.createdAt ? values.createdAt.toISOString() : undefined,
+    });
+    setEditingPreventivo(null);
+  }
+
+  const renderStatusBadge = (preventivo: Preventivo) => {
+    const statusConfig = {
+      da_fare: {
+        label: "Da Fare",
+        className: "bg-rose-500/10 text-rose-600 border-rose-500/20 hover:bg-rose-500/20",
+        dotColor: "bg-rose-500",
+        icon: ClipboardList
+      },
+      trattativa_in_corso: {
+        label: "In Trattativa",
+        className: "bg-amber-500/10 text-amber-600 border-amber-500/20 hover:bg-amber-500/20",
+        dotColor: "bg-amber-500",
+        icon: Briefcase
+      },
+      fatto: {
+        label: "Fatto",
+        className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20",
+        dotColor: "bg-emerald-500",
+        icon: CheckCircle2
+      }
+    };
+
+    const current = statusConfig[preventivo.status] || statusConfig.da_fare;
+
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Badge
+            variant="outline"
+            className={cn(
+              "cursor-pointer text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-all duration-200 select-none flex items-center gap-1 hover:scale-105 active:scale-95 py-0.5 px-2 rounded-full border shadow-sm",
+              current.className
+            )}
+          >
+            <span>{current.label}</span>
+          </Badge>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-56 p-1.5 rounded-lg border shadow-lg bg-popover text-popover-foreground z-50">
+          <DropdownMenuLabel className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground px-2 py-1">
+            Cambia Stato
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator className="my-1" />
+          
+          <DropdownMenuItem
+            onClick={() => updatePreventivo(preventivo.id, { status: "da_fare" })}
+            className="flex items-center justify-between cursor-pointer rounded-md px-2 py-1.5 text-xs hover:bg-accent focus:bg-accent"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0" />
+              <span>Da Fare</span>
+            </div>
+            {preventivo.status === "da_fare" && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            onClick={() => updatePreventivo(preventivo.id, { status: "trattativa_in_corso" })}
+            className="flex items-center justify-between cursor-pointer rounded-md px-2 py-1.5 text-xs hover:bg-accent focus:bg-accent"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
+              <span>In Trattativa</span>
+            </div>
+            {preventivo.status === "trattativa_in_corso" && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
+          </DropdownMenuItem>
+          
+          <DropdownMenuItem
+            onClick={() => updatePreventivo(preventivo.id, { status: "fatto" })}
+            className="flex items-center justify-between cursor-pointer rounded-md px-2 py-1.5 text-xs hover:bg-accent focus:bg-accent"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+              <span>Fatto</span>
+            </div>
+            {preventivo.status === "fatto" && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  };
+
+  const renderQuickAdd = (defaultStatus: "da_fare" | "trattativa_in_corso" | "fatto") => (
+    <form 
+      onSubmit={(e) => {
+        e.preventDefault();
+        const target = e.target as HTMLFormElement;
+        const nameInput = target.elements.namedItem("quickName") as HTMLInputElement;
+        const clientName = nameInput.value.trim();
+        const notesInput = target.elements.namedItem("quickNotes") as HTMLInputElement;
+        const notes = notesInput.value.trim();
+        const premioInput = target.elements.namedItem("quickPremio") as HTMLInputElement;
+        const premioVal = premioInput?.value.trim();
+        const premio = premioVal ? Number(premioVal) : undefined;
+        
+        if (clientName) {
+          addPreventivo({ 
+            clientName, 
+            policyType: quickType, 
+            status: defaultStatus, 
+            notes: notes || undefined,
+            premio,
+            createdAt: quickDate ? quickDate.toISOString() : undefined
+          });
+          nameInput.value = "";
+          notesInput.value = "";
+          if (premioInput) premioInput.value = "";
+          setQuickDate(undefined);
+        }
+      }}
+      className="flex flex-col sm:flex-row sm:items-center gap-2 mb-6 bg-card p-2 rounded-xl border border-border/60 shadow-sm focus-within:ring-2 focus-within:ring-primary/30 transition-all"
+    >
+      <div className="flex-1 relative">
+        <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input 
+          name="quickName"
+          placeholder="Nome cliente..." 
+          className="pl-9 h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent"
+          autoComplete="off"
+          required
+        />
+      </div>
+      
+      <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
+
+      <Popover open={quickDatePopoverOpen} onOpenChange={setQuickDatePopoverOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant={"outline"}
+            className={cn(
+              "w-full sm:w-[140px] h-11 justify-start text-left font-normal border-0 shadow-none bg-transparent focus:ring-0",
+              !quickDate && "text-muted-foreground"
+            )}
+          >
+            <CalendarIcon className="mr-2 h-4 w-4 opacity-50 shrink-0" />
+            {quickDate ? format(quickDate, "P", { locale: it }) : <span>Data...</span>}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={quickDate}
+            onSelect={(date) => {
+              setQuickDate(date);
+              setQuickDatePopoverOpen(false);
+            }}
+            initialFocus
+          />
+        </PopoverContent>
+      </Popover>
+      
+      <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
+      
+      <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+        <Select value={quickType} onValueChange={setQuickType}>
+          <SelectTrigger className="h-11 border-0 bg-transparent shadow-none w-full sm:w-[140px] focus:ring-0 font-medium">
+            <SelectValue placeholder="Tipo polizza" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Auto">Auto</SelectItem>
+            <SelectItem value="Moto">Moto</SelectItem>
+            <SelectItem value="Furgone">Furgone</SelectItem>
+            <SelectItem value="Abitazione">Abitazione</SelectItem>
+            <SelectItem value="Infortuni">Infortuni</SelectItem>
+            <SelectItem value="Malattia">Malattia</SelectItem>
+            <SelectItem value="Vita">Vita</SelectItem>
+            <SelectItem value="TCM">TCM</SelectItem>
+            <SelectItem value="Commercio">Commercio</SelectItem>
+            <SelectItem value="RC Professionale">RC Professionale</SelectItem>
+            <SelectItem value="RC Terzi">RC Terzi</SelectItem>
+            <SelectItem value="RC Capofamiglia">RC Capofamiglia</SelectItem>
+            <SelectItem value="Animali">Animali</SelectItem>
+            <SelectItem value="Non specificata">Altro...</SelectItem>
+          </SelectContent>
+        </Select>
+        
+        <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
+        <div className="relative w-full sm:w-[110px]">
+          <Input 
+            name="quickPremio"
+            type="number"
+            step="0.01"
+            placeholder="Premio stim. (€)" 
+            className="h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
+            autoComplete="off"
+          />
+        </div>
+        
+        <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
+        <div className="flex-1 relative min-w-[150px]">
+          <Input 
+            name="quickNotes"
+            placeholder="Note" 
+            className="h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
+            autoComplete="off"
+          />
+        </div>
+        
+        <Button 
+          type="submit" 
+          size="sm" 
+          className="font-medium shrink-0 h-11 px-4"
+        >
+          Aggiungi
+        </Button>
+      </div>
+    </form>
+  );
+
+  const renderPreventivoList = (list: Preventivo[], emptyMessage: string) => (
+    list.length > 0 ? (
+      <div className="grid gap-3">
+        {list.map(preventivo => (
+          <Card key={preventivo.id} className="overflow-hidden group shadow-soft hover:shadow-card hover:border-primary/30 transition-all border-dashed">
+            <CardContent className="p-0 flex flex-col sm:flex-row sm:items-center">
+              <div className="p-3 sm:p-5 flex-1 min-w-0">
+                <div className="flex justify-between items-start gap-3 mb-2 flex-wrap">
+                  <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2 min-w-0 flex-wrap">
+                    <span className="truncate max-w-[180px] sm:max-w-xs">{preventivo.clientName}</span>
+                    {renderStatusBadge(preventivo)}
+                    <span className="bg-secondary px-2 py-0.5 rounded-md text-secondary-foreground font-medium text-xs">{preventivo.policyType}</span>
+                    {preventivo.premio !== undefined && (
+                      <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-md font-medium text-xs whitespace-nowrap">
+                        € {preventivo.premio.toFixed(2)}
+                      </span>
+                    )}
+                  </h3>
+                  <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground ring-1 ring-border whitespace-nowrap">
+                    {format(new Date(preventivo.createdAt), "d MMM yyyy", { locale: it })}
+                  </span>
+                </div>
+                {preventivo.notes && (
+                  <div className="flex items-center gap-3 text-muted-foreground text-sm flex-wrap mt-2">
+                    <MessageSquare className="w-3.5 h-3.5 opacity-70" />
+                    <span className="truncate max-w-xs">{preventivo.notes}</span>
+                  </div>
+                )}
+              </div>
+              <div className="px-3 sm:px-5 pb-3 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-1.5 sm:gap-2 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity flex-wrap">
+                <Button variant="ghost" size="icon" onClick={() => setEditingPreventivo(preventivo)} className="text-muted-foreground hover:text-primary">
+                  <Pencil className="w-4 h-4" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => setDeletingPreventivo(preventivo)} className="text-muted-foreground hover:text-destructive">
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    ) : (
+      <div className="p-10 text-center bg-card/50 border border-dashed rounded-xl text-muted-foreground text-sm">
+        {emptyMessage}
+      </div>
+    )
+  );
+
+  return (
+    <div className="space-y-6 sm:space-y-12">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="min-w-0">
+          <div className="text-xs uppercase tracking-[0.18em] text-gold/90 font-semibold mb-2">Vendite</div>
+          <h1 className="text-2xl sm:text-4xl font-serif font-semibold text-primary mb-1 sm:mb-2 tracking-tight">Preventivi</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">Gestisci le richieste di preventivo e le trattative in corso.</p>
+        </div>
+      </div>
+
+      <Dialog open={!!editingPreventivo} onOpenChange={(open) => { if (!open) setEditingPreventivo(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Modifica preventivo</DialogTitle>
+            <DialogDescription>Aggiorna i dati del preventivo selezionato.</DialogDescription>
+          </DialogHeader>
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+              <FormField
+                control={editForm.control}
+                name="clientName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome Cliente</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Es. Mario Rossi" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="policyType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo di Polizza</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Input placeholder="Es. RC Auto, Vita, Infortuni..." list="preventivi-policy-types" {...field} />
+                        <datalist id="preventivi-policy-types">
+                          <option value="RC Auto Personale" />
+                          <option value="Infortuni Personale" />
+                          <option value="Casa e Fabbricato" />
+                          <option value="Vita" />
+                          <option value="Salute e Sanitaria" />
+                          <option value="Tutela Legale" />
+                          <option value="Viaggio" />
+                          <option value="Fideiussione" />
+                        </datalist>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="premio"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Premio Stimato (€) (opzionale)</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.01" placeholder="Es. 250.50" {...field} value={field.value ?? ""} onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Stato</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleziona stato" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="da_fare">Da Fare</SelectItem>
+                        <SelectItem value="trattativa_in_corso">In Trattativa</SelectItem>
+                        <SelectItem value="fatto">Fatto</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="createdAt"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Data (opzionale)</FormLabel>
+                    <Popover open={editDatePopoverOpen} onOpenChange={setEditDatePopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? format(field.value, "PPP", { locale: it }) : <span>Seleziona data</span>}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={(date) => {
+                            field.onChange(date);
+                            setEditDatePopoverOpen(false);
+                          }}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Note</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Dettagli..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex justify-end pt-4">
+                <Button type="submit">Salva modifiche</Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!deletingPreventivo} onOpenChange={(open) => { if (!open) setDeletingPreventivo(null); }}>
+        <DialogContent className="max-w-md border-border/80 shadow-elevated">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-xl font-semibold text-destructive mb-1 flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-destructive" />
+              Conferma Eliminazione
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground text-sm leading-relaxed">
+              Sei sicuro di voler eliminare il preventivo di <strong className="text-foreground">{deletingPreventivo?.clientName}</strong>? Questa azione è irreversibile.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 pt-5">
+            <Button variant="outline" onClick={() => setDeletingPreventivo(null)}>
+              Annulla
+            </Button>
+            <Button
+              variant="destructive"
+              className="shadow-soft border-0 transition-colors"
+              onClick={() => {
+                if (deletingPreventivo) {
+                  deletePreventivo(deletingPreventivo.id);
+                  setDeletingPreventivo(null);
+                }
+              }}
+            >
+              Elimina
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <div className="space-y-4">
+        {renderQuickAdd("da_fare")}
+        {renderPreventivoList(preventivi, "Nessun preventivo presente al momento.")}
+      </div>
+    </div>
+  );
+}

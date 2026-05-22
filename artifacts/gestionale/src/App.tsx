@@ -6,8 +6,8 @@ import NotFound from "@/pages/not-found";
 import { Dashboard } from "@/pages/dashboard";
 import { Attivita } from "@/pages/attivita";
 import { PolizzePersonali } from "@/pages/polizze-personali";
-import { PolizzeAgenzia } from "@/pages/polizze-agenzia";
 import { Sinistri } from "@/pages/sinistri";
+import { Preventivi } from "@/pages/preventivi";
 import { Shell } from "@/components/layout/shell";
 import { Login } from "@/pages/login";
 import { useAuth } from "@/hooks/use-auth";
@@ -50,8 +50,8 @@ function Router() {
       <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/attivita" component={() => <ProtectedRoute component={Attivita} />} />
       <Route path="/polizze-personali" component={() => <ProtectedRoute component={PolizzePersonali} />} />
-      <Route path="/polizze-agenzia" component={() => <ProtectedRoute component={PolizzeAgenzia} />} />
       <Route path="/sinistri" component={() => <ProtectedRoute component={Sinistri} />} />
+      <Route path="/preventivi" component={() => <ProtectedRoute component={Preventivi} />} />
       <Route component={() => <ProtectedRoute component={NotFound} />} />
     </Switch>
   );

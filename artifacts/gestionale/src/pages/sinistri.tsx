@@ -182,6 +182,8 @@ export function Sinistri() {
   const [quickDate, setQuickDate] = useState<Date | undefined>(new Date());
   const [quickRamo, setQuickRamo] = useState<string>("");
   const [quickStatus, setQuickStatus] = useState<Claim["status"]>("da_aprire");
+  const [quickDatePopoverOpen, setQuickDatePopoverOpen] = useState(false);
+  const [editDatePopoverOpen, setEditDatePopoverOpen] = useState(false);
 
   const editForm = useForm<ClaimFormValues>({
     resolver: zodResolver(claimSchema),
@@ -241,26 +243,23 @@ export function Sinistri() {
       
       <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
       
-      <div className="relative w-full sm:w-[150px]">
-        <Input
-          placeholder="Ramo..."
-          value={quickRamo}
-          onChange={(e) => setQuickRamo(e.target.value)}
-          list="quick-rami-list"
-          className="h-11 border-0 shadow-none bg-transparent focus-visible:ring-0 text-sm font-medium"
-          required
-        />
-        <datalist id="quick-rami-list">
-          <option value="RC Auto" />
-          <option value="Infortuni" />
-          <option value="Vita" />
-          <option value="Incendio e Scoppio" />
-          <option value="Responsabilità Civile" />
-          <option value="Tutela Legale" />
-          <option value="Salute e Malattia" />
-          <option value="Fideiussioni e Cauzioni" />
-          <option value="Altri Danni ai Beni" />
-        </datalist>
+      <div className="w-full sm:w-[170px]">
+        <Select value={quickRamo} onValueChange={setQuickRamo}>
+          <SelectTrigger className="h-11 border-0 shadow-none bg-transparent focus:ring-0 text-sm font-medium w-full">
+            <SelectValue placeholder="Ramo..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="RC Auto">RC Auto</SelectItem>
+            <SelectItem value="Infortuni">Infortuni</SelectItem>
+            <SelectItem value="Vita">Vita</SelectItem>
+            <SelectItem value="Incendio e Scoppio">Incendio e Scoppio</SelectItem>
+            <SelectItem value="Responsabilità Civile">Responsabilità Civile</SelectItem>
+            <SelectItem value="Tutela Legale">Tutela Legale</SelectItem>
+            <SelectItem value="Salute e Malattia">Salute e Malattia</SelectItem>
+            <SelectItem value="Fideiussioni e Cauzioni">Fideiussioni e Cauzioni</SelectItem>
+            <SelectItem value="Altri Danni ai Beni">Altri Danni ai Beni</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
@@ -271,7 +270,7 @@ export function Sinistri() {
           <span>Da definire</span>
         </Button>
       ) : (
-        <Popover>
+        <Popover open={quickDatePopoverOpen} onOpenChange={setQuickDatePopoverOpen}>
           <PopoverTrigger asChild>
             <Button
               variant={"outline"}
@@ -288,7 +287,10 @@ export function Sinistri() {
             <Calendar
               mode="single"
               selected={quickDate}
-              onSelect={setQuickDate}
+              onSelect={(date) => {
+                setQuickDate(date);
+                setQuickDatePopoverOpen(false);
+              }}
               disabled={() => false}
               initialFocus
             />
@@ -315,7 +317,7 @@ export function Sinistri() {
       <div className="flex-1 relative min-w-[150px]">
         <Input 
           name="quickNotes"
-          placeholder="Note (opzionali)..."
+          placeholder="Note"
           className="h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
           autoComplete="off"
         />
@@ -380,22 +382,24 @@ export function Sinistri() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Ramo</FormLabel>
-            <FormControl>
-              <div className="relative">
-                <Input placeholder="Es. RC Auto, Vita, Infortuni..." list="edit-rami-list" {...field} />
-                <datalist id="edit-rami-list">
-                  <option value="RC Auto" />
-                  <option value="Infortuni" />
-                  <option value="Vita" />
-                  <option value="Incendio e Scoppio" />
-                  <option value="Responsabilità Civile" />
-                  <option value="Tutela Legale" />
-                  <option value="Salute e Malattia" />
-                  <option value="Fideiussioni e Cauzioni" />
-                  <option value="Altri Danni ai Beni" />
-                </datalist>
-              </div>
-            </FormControl>
+            <Select onValueChange={field.onChange} value={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona ramo" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="RC Auto">RC Auto</SelectItem>
+                <SelectItem value="Infortuni">Infortuni</SelectItem>
+                <SelectItem value="Vita">Vita</SelectItem>
+                <SelectItem value="Incendio e Scoppio">Incendio e Scoppio</SelectItem>
+                <SelectItem value="Responsabilità Civile">Responsabilità Civile</SelectItem>
+                <SelectItem value="Tutela Legale">Tutela Legale</SelectItem>
+                <SelectItem value="Salute e Malattia">Salute e Malattia</SelectItem>
+                <SelectItem value="Fideiussioni e Cauzioni">Fideiussioni e Cauzioni</SelectItem>
+                <SelectItem value="Altri Danni ai Beni">Altri Danni ai Beni</SelectItem>
+              </SelectContent>
+            </Select>
             <FormMessage />
           </FormItem>
         )}
@@ -407,7 +411,7 @@ export function Sinistri() {
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Data di Apertura *</FormLabel>
-              <Popover>
+              <Popover open={editDatePopoverOpen} onOpenChange={setEditDatePopoverOpen}>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
@@ -423,7 +427,16 @@ export function Sinistri() {
                   </FormControl>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={() => false} initialFocus />
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={(date) => {
+                      field.onChange(date);
+                      setEditDatePopoverOpen(false);
+                    }}
+                    disabled={() => false}
+                    initialFocus
+                  />
                 </PopoverContent>
               </Popover>
               <FormMessage />
@@ -510,20 +523,20 @@ export function Sinistri() {
                     <div className="flex justify-between items-start gap-3 mb-2 flex-wrap">
                       <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2 flex-wrap min-w-0">
                         <AlertOctagon className="w-4 h-4 text-destructive shrink-0" />
-                        <span className="truncate">{claim.clientName}</span>
+                        <span className="truncate max-w-[180px] sm:max-w-xs">{claim.clientName}</span>
                         {renderInteractiveBadge(claim)}
+                        <span className="bg-secondary px-2 py-0.5 rounded-md text-secondary-foreground font-medium text-xs">{claim.ramo}</span>
                       </h3>
                       <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground ring-1 ring-border whitespace-nowrap">
                         <CalendarIcon className="w-3 h-3 mr-1" />
                         Apertura: {claim.openDate ? format(parseLocalDate(claim.openDate), "d MMM yyyy", { locale: it }) : "Da definire"}
                       </span>
                     </div>
-                    <div className="flex items-center gap-3 text-muted-foreground text-sm flex-wrap">
-                      <span className="bg-secondary px-2 py-0.5 rounded-md text-secondary-foreground font-medium text-xs">
-                        {claim.ramo}
-                      </span>
-                      {claim.notes && <span className="truncate max-w-xl text-xs sm:text-sm">{claim.notes}</span>}
-                    </div>
+                    {claim.notes && (
+                      <div className="flex items-center gap-3 text-muted-foreground text-sm flex-wrap">
+                        <span className="truncate max-w-xl text-xs sm:text-sm">{claim.notes}</span>
+                      </div>
+                    )}
                   </div>
                   <div className="px-3 sm:px-5 pb-3 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-1.5 sm:gap-2 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity flex-wrap">
                     <Button 

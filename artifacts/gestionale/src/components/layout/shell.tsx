@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, CheckSquare, FileText, Sun, Moon, PanelLeftClose, PanelLeftOpen, AlertOctagon } from "lucide-react";
+import { LayoutDashboard, CheckSquare, FileText, Sun, Moon, PanelLeftClose, PanelLeftOpen, AlertOctagon, Briefcase } from "lucide-react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
@@ -12,7 +12,7 @@ const navItems = [
   { path: "/", label: "Dashboard", icon: LayoutDashboard },
   { path: "/attivita", label: "Da Fare", icon: CheckSquare },
   { path: "/polizze-personali", label: "Polizze Personali", icon: FileText },
-  { path: "/polizze-agenzia", label: "Polizze Agenzia", icon: FileText },
+  { path: "/preventivi", label: "Preventivi", icon: Briefcase },
   { path: "/sinistri", label: "Sinistri", icon: AlertOctagon },
 ];
 

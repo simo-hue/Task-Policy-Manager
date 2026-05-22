@@ -434,6 +434,71 @@
     - Sostituito il componente `<Select>` di Radix UI sia nel form di "Quick Add" che nel form principale di "Modifica Sinistro" con un `<Input>` testuale collegato a un `<datalist>` contenente i rami standard.
     - Aggiornati gli stili e gli attributi in modo che l'input testuale si integri fluidamente con il resto del layout del gestionale.
 
+### [2026-05-22 14:45]: Chiusura Automatica dei Date Picker al Click del Giorno
+* *Details*: Introdotta la chiusura automatica (auto-close) globale di tutti i calendari / date picker dell'applicazione non appena l'utente clicca/seleziona un giorno specifico, eliminando la necessità di cliccare fuori dal popover per chiuderlo e migliorando notevolmente la fluidità d'uso quotidiana.
+* *Tech Notes*:
+  - Modificati i file `src/pages/attivita.tsx`, `src/pages/polizze-personali.tsx` e `src/pages/polizze-agenzia.tsx`.
+  - Convertiti tutti i date picker (`Popover` + `Calendar`) da uncontrolled a controlled, sfruttando gli stati React locali `quickDatePopoverOpen`, `editExpiryDatePopoverOpen` (oppure `editDatePopoverOpen`) e `editTargetDatePopoverOpen`.
+  - Aggiornati i callback `onSelect` all'interno dei componenti `<Calendar>` in modo da invocare la chiusura dello stato del rispettivo popover (`setOpen(false)`) contestualmente al salvataggio della data selezionata.
+  - Verificato con successo che la navigazione dei mesi del calendario (pulsanti avanti/indietro) rimane intatta e non provoca chiusure accidentali del popover.
 
+### [2026-05-22 14:48]: Risoluzione Errore quickStatus non definito nei Sinistri
+* *Details*: Corretto un crash a runtime (ReferenceError) nella schermata "Sinistri" causato dalla mancata dichiarazione dello stato `quickStatus` utilizzato nella barra di inserimento rapido.
+* *Tech Notes*:
+  - Modificato `src/pages/sinistri.tsx` per dichiarare correttamente `const [quickStatus, setQuickStatus] = useState<string>("da_aprire")` nel componente `Sinistri`.
 
+### [2026-05-22 14:52]: Ridenominazione placeholder Note e Uniformazione Layout Sinistri
+* *Details*: Riformattata l'interfaccia delle schede dei sinistri per utilizzare lo stesso layout a riga singola compatto già introdotto per le polizze, e rinominati i placeholder di tutti i form di inserimento rapido dell'app per visualizzare coerentemente "Note" anziché "Note (opzionali)...".
+* *Tech Notes*:
+  - **Placeholder Note**: Ridenominati i placeholder degli input di inserimento rapido in `attivita.tsx`, `sinistri.tsx`, `polizze-personali.tsx` e `polizze-agenzia.tsx` da `"Note (opzionali)..."` a `"Note"`.
+  - **Formato Sinistri a Riga Singola**: Modificato il rendering delle schede in `src/pages/sinistri.tsx`:
+    - Spostato il badge del Ramo (`claim.ramo`) all'interno dell'elemento di intestazione `<h3>` a fianco del nome del cliente e del badge di stato.
+    - Limitata la larghezza del nome cliente con `max-w-[180px] sm:max-w-xs truncate` per prevenire disallineamenti.
+    - Spostate le note (`claim.notes`) in un blocco dedicato nella riga sottostante.
+  - **Risoluzione Typecheck**: Tipizzato correttamente lo stato `quickStatus` in `sinistri.tsx` come `Claim["status"]` invece di `string` per eliminare l'errore del compilatore TypeScript.
 
+- [22 May 2026 - 14:50]: Aggiunta Pagina Preventivi
+  - *Details*: Creata una nuova sezione "Preventivi" raggiungibile dalla sidebar per gestire le richieste e le trattative dei clienti, con un layout e un design allineato al resto dell'applicazione.
+  - *Tech Notes*:
+    - Creato store in `src/lib/preventivi-store.ts` per Firestore (collezione `preventivi`).
+    - Creata pagina UI `src/pages/preventivi.tsx` per listing e form (con stati "da_fare", "trattativa_in_corso", "fatto" e relative badge).
+    - Aggiunto il path `/preventivi` su `src/App.tsx`.
+    - Aggiunta la route `Preventivi` nella sidebar in `src/components/layout/shell.tsx`.
+
+- [22 May 2026 - 14:52]: Rimozione Polizze Agenzia
+  - *Details*: Rimossa completamente la funzionalità "Polizze Agenzia" come richiesto.
+  - *Tech Notes*:
+    - Eliminato il file `src/pages/polizze-agenzia.tsx`.
+    - Rimossa la rotta associata in `src/App.tsx`.
+    - Rimosso il link di navigazione dalla sidebar in `src/components/layout/shell.tsx`.
+    - Rimosso l'hook `usePoliciesAgenzia` da `src/lib/policies-store.ts`.
+
+- [22 May 2026 - 14:55]: Unificazione Pagina Preventivi
+  - *Details*: Rimossi i tab di suddivisione per stato nella pagina "Preventivi". Ora tutti i preventivi sono visualizzati in un unico elenco, con la possibilità di assegnare i badge di stato direttamente da ciascuna card.
+  - *Tech Notes*:
+    - Rimosso il componente `Tabs` in `src/pages/preventivi.tsx`.
+    - La form di Quick Add è ora univoca e posta in alto sopra alla lista di tutti i preventivi, assegnando lo stato di default "da_fare".
+
+- [22 May 2026 - 14:57]: Aggiunta data personalizzata per i Preventivi
+  - *Details*: Aggiunta la possibilità di inserire e modificare la data di creazione di un preventivo. Se non specificata in fase di creazione, verrà impostata automaticamente la data corrente.
+  - *Tech Notes*:
+    - Modificato `preventivi-store.ts` per permettere l'aggiornamento del campo `createdAt` e accettare date personalizzate in fase di add.
+    - Aggiornata l'UI in `src/pages/preventivi.tsx` per includere un `DatePicker` nel Quick Add e nel modale di modifica.
+
+- [22 May 2026 - 14:59]: Fix Dashboard e Sostituzione Card
+  - *Details*: Risolto errore di sintassi nella Dashboard dovuto alla rimozione dell'hook `usePoliciesAgenzia`. Sostituita la card "Polizze Agenzia" con la nuova card "Preventivi" per mantenere il layout intatto e mostrare i dati rilevanti.
+  - *Tech Notes*:
+    - Rimosso l'import in `src/pages/dashboard.tsx` di `usePoliciesAgenzia`.
+    - Rimosse le logiche di visualizzazione combinate (badge "PERSONALI" vs "AGENZIA").
+    - Aggiunta importazione di `usePreventivi` e integrata la card `Preventivi` nella griglia delle statistiche principali.
+
+- [22 May 2026 - 15:00]: Aggiornamento Filtri Attività
+  - *Details*: Modificati i bottoni di filtro rapido nella pagina "Da fare". Ora sono limitati esclusivamente a: "Oggi", "Questa settimana" e "Scadute", come richiesto dall'utente.
+  - *Tech Notes*:
+    - Rimosse le opzioni "Tutte" e "Senza data" dall'elenco `filterButtons` in `src/pages/attivita.tsx`.
+    - Modificata la tipizzazione di `QuickFilter` per includere `today` e gestire coerentemente lo stato `all` in background per permettere la deselezione dei filtri (toggle-off).
+
+- [22 May 2026 - 15:02]: Sostituzione Input Ramo con Select
+  - *Details*: Modificato il campo "Ramo" nella pagina Gestione Sinistri. Invece di un campo di testo libero con suggerimenti (datalist), è ora un menu a tendina (Select) per vincolare l'utente a scegliere tra le voci predefinite, sia nella fase di aggiunta rapida che nel modale di modifica.
+  - *Tech Notes*:
+    - Sostituito `<Input list="...">` e `<datalist>` con i componenti `<Select>`, `<SelectTrigger>`, `<SelectContent>` e `<SelectItem>` in `src/pages/sinistri.tsx`.

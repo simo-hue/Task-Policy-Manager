@@ -74,6 +74,9 @@ export function PolizzePersonali() {
   const [quickType, setQuickType] = useState("Auto");
   const [quickCassa, setQuickCassa] = useState("regolare");
   const [quickDate, setQuickDate] = useState<Date | undefined>(undefined);
+  const [quickDatePopoverOpen, setQuickDatePopoverOpen] = useState(false);
+  const [editExpiryDatePopoverOpen, setEditExpiryDatePopoverOpen] = useState(false);
+  const [editTargetDatePopoverOpen, setEditTargetDatePopoverOpen] = useState(false);
 
   const editForm = useForm<PolicyFormValues>({
     resolver: zodResolver(policySchema),
@@ -287,7 +290,7 @@ export function PolizzePersonali() {
       {defaultStatus === "emessa" && (
         <>
           <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
-          <Popover>
+          <Popover open={quickDatePopoverOpen} onOpenChange={setQuickDatePopoverOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant={"outline"}
@@ -304,7 +307,10 @@ export function PolizzePersonali() {
               <Calendar
                 mode="single"
                 selected={quickDate}
-                onSelect={setQuickDate}
+                onSelect={(date) => {
+                  setQuickDate(date);
+                  setQuickDatePopoverOpen(false);
+                }}
                 initialFocus
               />
             </PopoverContent>
@@ -364,7 +370,7 @@ export function PolizzePersonali() {
         <div className="flex-1 relative min-w-[150px]">
           <Input 
             name="quickNotes"
-            placeholder="Note (opzionali)..." 
+            placeholder="Note" 
             className="h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
             autoComplete="off"
           />
@@ -466,7 +472,7 @@ export function PolizzePersonali() {
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Data di Scadenza *</FormLabel>
-              <Popover>
+              <Popover open={editExpiryDatePopoverOpen} onOpenChange={setEditExpiryDatePopoverOpen}>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
@@ -482,7 +488,15 @@ export function PolizzePersonali() {
                   </FormControl>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={(date) => {
+                      field.onChange(date);
+                      setEditExpiryDatePopoverOpen(false);
+                    }}
+                    initialFocus
+                  />
                 </PopoverContent>
               </Popover>
               <FormMessage />
@@ -496,7 +510,7 @@ export function PolizzePersonali() {
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Data Prevista Emissione (opzionale)</FormLabel>
-              <Popover>
+              <Popover open={editTargetDatePopoverOpen} onOpenChange={setEditTargetDatePopoverOpen}>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
@@ -512,7 +526,15 @@ export function PolizzePersonali() {
                   </FormControl>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={(date) => {
+                      field.onChange(date);
+                      setEditTargetDatePopoverOpen(false);
+                    }}
+                    initialFocus
+                  />
                 </PopoverContent>
               </Popover>
               <FormMessage />
