@@ -121,26 +121,6 @@ export function Dashboard() {
             {todayCapitalized}.
           </p>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <Link href="/attivita">
-            <Button variant="outline" data-testid="button-quick-new-task">
-              <Plus className="w-4 h-4 mr-2" />
-              Nuova attività
-            </Button>
-          </Link>
-          <Link href="/polizze-personali">
-            <Button variant="outline" data-testid="button-quick-new-policy-personali">
-              <Plus className="w-4 h-4 mr-2" />
-              Nuova p. personale
-            </Button>
-          </Link>
-          <Link href="/polizze-agenzia">
-            <Button data-testid="button-quick-new-policy-agenzia">
-              <Plus className="w-4 h-4 mr-2" />
-              Nuova p. agenzia
-            </Button>
-          </Link>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">

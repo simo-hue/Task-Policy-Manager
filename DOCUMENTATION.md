@@ -337,3 +337,8 @@
 * *Tech Notes*:
   - Modificato `dashboard.tsx` sostituendo la classe statica `text-gold bg-gold/10` con uno stile condizionale basato su `p.scope`.
   - Utilizzato `text-sky-600 bg-sky-500/10` per le polizze Personali e `text-violet-600 bg-violet-500/10` per le polizze Agenzia (con varianti dark mode).
+
+### [2026-05-22 11:34]: Rimozione Pulsanti "Quick Add" dalla Dashboard
+* *Details*: Rimossi definitivamente i tre pulsanti in alto a destra ("Nuova attività", "Nuova p. personale", "Nuova p. agenzia") dalla vista Dashboard per mantenere un design più pulito e spingere l'utilizzo esclusivo delle barre di "Quick Add" interne alle specifiche schermate.
+* *Tech Notes*:
+  - Rimosso blocco di codice contenente `<div className="flex gap-2 flex-wrap">` e i tre bottoni `<Link>` dal layout principale di `dashboard.tsx`.
