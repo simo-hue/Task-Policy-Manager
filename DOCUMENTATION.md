@@ -422,4 +422,18 @@
     - Aggiornate le funzioni di submit rapido e submit completo (`onEditSubmit`) per salvare correttamente il valore.
     - Il premio viene visualizzato nelle liste sotto forma di badge con formattazione valutaria (es: `€ 250.50`).
 
+### [2026-05-22 14:38]: Rimozione Vincolo Data Vecchia sui Sinistri
+* *Details*: Rimosso il vincolo temporale sulla selezione della data per l'apertura dei sinistri (sia in fase di Quick Add che in fase di modifica completa), consentendo all'utente di selezionare qualsiasi data nel passato per sinistri già aperti o in fase di caricamento.
+* *Tech Notes*:
+  - Modificato `src/pages/sinistri.tsx`: passato l'attributo `disabled={() => false}` ad entrambi i componenti `<Calendar>` (Quick Add e edit form) per sovrascrivere il comportamento predefinito di inibizione delle date passate, lasciando inalterati gli altri moduli applicativi.
+
+### [2026-05-22 14:41]: Inserimento Ramo Personalizzato (A Mano) nei Sinistri
+* *Details*: Aggiunta la possibilità per l'utente di digitare a mano un "Ramo" personalizzato libero quando aggiunge o modifica un sinistro, qualora non trovi la voce adatta nel menu a tendina. Le voci standard rimangono disponibili sotto forma di suggerimenti cliccabili.
+* *Tech Notes*:
+  - Modificato `src/pages/sinistri.tsx`:
+    - Sostituito il componente `<Select>` di Radix UI sia nel form di "Quick Add" che nel form principale di "Modifica Sinistro" con un `<Input>` testuale collegato a un `<datalist>` contenente i rami standard.
+    - Aggiornati gli stili e gli attributi in modo che l'input testuale si integri fluidamente con il resto del layout del gestionale.
+
+
+
 

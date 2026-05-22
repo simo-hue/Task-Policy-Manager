@@ -241,22 +241,27 @@ export function Sinistri() {
       
       <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
       
-      <Select value={quickRamo} onValueChange={setQuickRamo}>
-        <SelectTrigger className="w-full sm:w-[150px] h-11 border-0 shadow-none bg-transparent focus:ring-0 text-sm font-medium">
-          <SelectValue placeholder="Ramo..." />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="RC Auto">RC Auto</SelectItem>
-          <SelectItem value="Infortuni">Infortuni</SelectItem>
-          <SelectItem value="Vita">Vita</SelectItem>
-          <SelectItem value="Incendio e Scoppio">Incendio e Scoppio</SelectItem>
-          <SelectItem value="Responsabilità Civile">Responsabilità Civile</SelectItem>
-          <SelectItem value="Tutela Legale">Tutela Legale</SelectItem>
-          <SelectItem value="Salute e Malattia">Salute e Malattia</SelectItem>
-          <SelectItem value="Fideiussioni e Cauzioni">Fideiussioni e Cauzioni</SelectItem>
-          <SelectItem value="Altri Danni ai Beni">Altri Danni ai Beni</SelectItem>
-        </SelectContent>
-      </Select>
+      <div className="relative w-full sm:w-[150px]">
+        <Input
+          placeholder="Ramo..."
+          value={quickRamo}
+          onChange={(e) => setQuickRamo(e.target.value)}
+          list="quick-rami-list"
+          className="h-11 border-0 shadow-none bg-transparent focus-visible:ring-0 text-sm font-medium"
+          required
+        />
+        <datalist id="quick-rami-list">
+          <option value="RC Auto" />
+          <option value="Infortuni" />
+          <option value="Vita" />
+          <option value="Incendio e Scoppio" />
+          <option value="Responsabilità Civile" />
+          <option value="Tutela Legale" />
+          <option value="Salute e Malattia" />
+          <option value="Fideiussioni e Cauzioni" />
+          <option value="Altri Danni ai Beni" />
+        </datalist>
+      </div>
 
       <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
 
@@ -284,6 +289,7 @@ export function Sinistri() {
               mode="single"
               selected={quickDate}
               onSelect={setQuickDate}
+              disabled={() => false}
               initialFocus
             />
           </PopoverContent>
@@ -374,24 +380,22 @@ export function Sinistri() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Ramo</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona ramo" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="RC Auto">RC Auto</SelectItem>
-                <SelectItem value="Infortuni">Infortuni</SelectItem>
-                <SelectItem value="Vita">Vita</SelectItem>
-                <SelectItem value="Incendio e Scoppio">Incendio e Scoppio</SelectItem>
-                <SelectItem value="Responsabilità Civile">Responsabilità Civile</SelectItem>
-                <SelectItem value="Tutela Legale">Tutela Legale</SelectItem>
-                <SelectItem value="Salute e Malattia">Salute e Malattia</SelectItem>
-                <SelectItem value="Fideiussioni e Cauzioni">Fideiussioni e Cauzioni</SelectItem>
-                <SelectItem value="Altri Danni ai Beni">Altri Danni ai Beni</SelectItem>
-              </SelectContent>
-            </Select>
+            <FormControl>
+              <div className="relative">
+                <Input placeholder="Es. RC Auto, Vita, Infortuni..." list="edit-rami-list" {...field} />
+                <datalist id="edit-rami-list">
+                  <option value="RC Auto" />
+                  <option value="Infortuni" />
+                  <option value="Vita" />
+                  <option value="Incendio e Scoppio" />
+                  <option value="Responsabilità Civile" />
+                  <option value="Tutela Legale" />
+                  <option value="Salute e Malattia" />
+                  <option value="Fideiussioni e Cauzioni" />
+                  <option value="Altri Danni ai Beni" />
+                </datalist>
+              </div>
+            </FormControl>
             <FormMessage />
           </FormItem>
         )}
@@ -419,7 +423,7 @@ export function Sinistri() {
                   </FormControl>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                  <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={() => false} initialFocus />
                 </PopoverContent>
               </Popover>
               <FormMessage />

@@ -1,3 +1,3 @@
 # AZIONI MANUALI RICHIESTE
 - Formato una riga anche per sinistri
-- aggiunta della possibilità di inserire un ramo a mano ( personalizzato )
+- Nuova pagina dei preventivi ( con data di creazione del preventivo e badge possibili: "da fare", "fatto", "trattativa in corso")
