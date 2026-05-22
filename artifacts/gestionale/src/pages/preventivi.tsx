@@ -41,6 +41,8 @@ export function Preventivi() {
   const { preventivi, addPreventivo, updatePreventivo, deletePreventivo } = usePreventivi();
   const [editingPreventivo, setEditingPreventivo] = useState<Preventivo | null>(null);
   const [deletingPreventivo, setDeletingPreventivo] = useState<Preventivo | null>(null);
+  const [completingPreventivo, setCompletingPreventivo] = useState<Preventivo | null>(null);
+  const [editingNotePreventivo, setEditingNotePreventivo] = useState<Preventivo | null>(null);
   const [quickType, setQuickType] = useState("Auto");
   const [quickDate, setQuickDate] = useState<Date | undefined>(undefined);
   const [quickDatePopoverOpen, setQuickDatePopoverOpen] = useState(false);
@@ -66,14 +68,18 @@ export function Preventivi() {
 
   function onEditSubmit(values: PreventivoFormValues) {
     if (!editingPreventivo) return;
-    updatePreventivo(editingPreventivo.id, {
-      clientName: values.clientName,
-      policyType: values.policyType,
-      notes: values.notes || undefined,
-      status: values.status,
-      premio: values.premio,
-      createdAt: values.createdAt ? values.createdAt.toISOString() : undefined,
-    });
+    if (values.status === "fatto") {
+      deletePreventivo(editingPreventivo.id);
+    } else {
+      updatePreventivo(editingPreventivo.id, {
+        clientName: values.clientName,
+        policyType: values.policyType,
+        notes: values.notes || undefined,
+        status: values.status,
+        premio: values.premio,
+        createdAt: values.createdAt ? values.createdAt.toISOString() : undefined,
+      });
+    }
     setEditingPreventivo(null);
   }
 
@@ -119,7 +125,7 @@ export function Preventivi() {
             Cambia Stato
           </DropdownMenuLabel>
           <DropdownMenuSeparator className="my-1" />
-          
+
           <DropdownMenuItem
             onClick={() => updatePreventivo(preventivo.id, { status: "da_fare" })}
             className="flex items-center justify-between cursor-pointer rounded-md px-2 py-1.5 text-xs hover:bg-accent focus:bg-accent"
@@ -141,16 +147,16 @@ export function Preventivi() {
             </div>
             {preventivo.status === "trattativa_in_corso" && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
           </DropdownMenuItem>
-          
+
           <DropdownMenuItem
-            onClick={() => updatePreventivo(preventivo.id, { status: "fatto" })}
-            className="flex items-center justify-between cursor-pointer rounded-md px-2 py-1.5 text-xs hover:bg-accent focus:bg-accent"
+            onClick={() => setCompletingPreventivo(preventivo)}
+            className="flex items-center justify-between cursor-pointer text-emerald-600 dark:text-emerald-400 rounded-md px-2 py-1.5 text-xs hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 focus:bg-emerald-50/50 focus:text-emerald-700"
           >
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
-              <span>Fatto</span>
+              <span className="font-semibold">Fatto (Elimina)</span>
             </div>
-            {preventivo.status === "fatto" && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
+            {preventivo.status === "fatto" && <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -158,7 +164,7 @@ export function Preventivi() {
   };
 
   const renderQuickAdd = (defaultStatus: "da_fare" | "trattativa_in_corso" | "fatto") => (
-    <form 
+    <form
       onSubmit={(e) => {
         e.preventDefault();
         const target = e.target as HTMLFormElement;
@@ -169,12 +175,12 @@ export function Preventivi() {
         const premioInput = target.elements.namedItem("quickPremio") as HTMLInputElement;
         const premioVal = premioInput?.value.trim();
         const premio = premioVal ? Number(premioVal) : undefined;
-        
+
         if (clientName) {
-          addPreventivo({ 
-            clientName, 
-            policyType: quickType, 
-            status: defaultStatus, 
+          addPreventivo({
+            clientName,
+            policyType: quickType,
+            status: defaultStatus,
             notes: notes || undefined,
             premio,
             createdAt: quickDate ? quickDate.toISOString() : undefined
@@ -189,15 +195,15 @@ export function Preventivi() {
     >
       <div className="flex-1 relative">
         <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input 
+        <Input
           name="quickName"
-          placeholder="Nome cliente..." 
+          placeholder="Nome cliente..."
           className="pl-9 h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent"
           autoComplete="off"
           required
         />
       </div>
-      
+
       <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
 
       <Popover open={quickDatePopoverOpen} onOpenChange={setQuickDatePopoverOpen}>
@@ -210,7 +216,7 @@ export function Preventivi() {
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4 opacity-50 shrink-0" />
-            {quickDate ? format(quickDate, "P", { locale: it }) : <span>Data...</span>}
+            {quickDate ? format(quickDate, "P", { locale: it }) : <span>Data</span>}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
@@ -225,9 +231,9 @@ export function Preventivi() {
           />
         </PopoverContent>
       </Popover>
-      
+
       <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
-      
+
       <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
         <Select value={quickType} onValueChange={setQuickType}>
           <SelectTrigger className="h-11 border-0 bg-transparent shadow-none w-full sm:w-[140px] focus:ring-0 font-medium">
@@ -250,32 +256,32 @@ export function Preventivi() {
             <SelectItem value="Non specificata">Altro...</SelectItem>
           </SelectContent>
         </Select>
-        
+
         <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
         <div className="relative w-full sm:w-[110px]">
-          <Input 
+          <Input
             name="quickPremio"
             type="number"
             step="0.01"
-            placeholder="Premio stim. (€)" 
+            placeholder="Premio"
             className="h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
             autoComplete="off"
           />
         </div>
-        
+
         <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
         <div className="flex-1 relative min-w-[150px]">
-          <Input 
+          <Input
             name="quickNotes"
-            placeholder="Note" 
+            placeholder="Note"
             className="h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
             autoComplete="off"
           />
         </div>
-        
-        <Button 
-          type="submit" 
-          size="sm" 
+
+        <Button
+          type="submit"
+          size="sm"
           className="font-medium shrink-0 h-11 px-4"
         >
           Aggiungi
@@ -307,13 +313,30 @@ export function Preventivi() {
                   </span>
                 </div>
                 {preventivo.notes && (
-                  <div className="flex items-center gap-3 text-muted-foreground text-sm flex-wrap mt-2">
-                    <MessageSquare className="w-3.5 h-3.5 opacity-70" />
+                  <div className="flex items-center gap-3 text-muted-foreground text-sm flex-wrap">
                     <span className="truncate max-w-xs">{preventivo.notes}</span>
                   </div>
                 )}
               </div>
               <div className="px-3 sm:px-5 pb-3 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-1.5 sm:gap-2 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity flex-wrap">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="font-medium text-xs gap-1.5 h-8 hover:bg-emerald-500/10 hover:text-emerald-600 hover:border-emerald-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                  onClick={() => setCompletingPreventivo(preventivo)}
+                >
+                  <Check className="w-3.5 h-3.5 text-emerald-500" />
+                  Fatto
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn("hover:text-primary", preventivo.notes ? "text-primary" : "text-muted-foreground")}
+                  onClick={() => setEditingNotePreventivo(preventivo)}
+                  title="Aggiungi o modifica nota"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                </Button>
                 <Button variant="ghost" size="icon" onClick={() => setEditingPreventivo(preventivo)} className="text-muted-foreground hover:text-primary">
                   <Pencil className="w-4 h-4" />
                 </Button>
@@ -393,7 +416,7 @@ export function Preventivi() {
                 name="premio"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Premio Stimato (€) (opzionale)</FormLabel>
+                    <FormLabel>Premio</FormLabel>
                     <FormControl>
                       <Input type="number" step="0.01" placeholder="Es. 250.50" {...field} value={field.value ?? ""} onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)} />
                     </FormControl>
@@ -416,7 +439,7 @@ export function Preventivi() {
                       <SelectContent>
                         <SelectItem value="da_fare">Da Fare</SelectItem>
                         <SelectItem value="trattativa_in_corso">In Trattativa</SelectItem>
-                        <SelectItem value="fatto">Fatto</SelectItem>
+                        <SelectItem value="fatto">Fatto (Elimina)</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -509,6 +532,73 @@ export function Preventivi() {
               Elimina
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!completingPreventivo} onOpenChange={(open) => { if (!open) setCompletingPreventivo(null); }}>
+        <DialogContent className="max-w-md border-border/80 shadow-elevated">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-xl font-semibold text-emerald-600 mb-1 flex items-center gap-2">
+              <Check className="w-5 h-5 text-emerald-500" />
+              Preventivo Completato
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground text-sm leading-relaxed">
+              Sei sicuro di voler contrassegnare il preventivo di <strong className="text-foreground">{completingPreventivo?.clientName}</strong> come fatto? <strong>Verrà eliminato definitivamente dal database</strong> e non sarà più recuperabile.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 pt-5">
+            <Button variant="outline" onClick={() => setCompletingPreventivo(null)}>
+              Annulla
+            </Button>
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-soft border-0 transition-colors"
+              onClick={() => {
+                if (completingPreventivo) {
+                  deletePreventivo(completingPreventivo.id);
+                  setCompletingPreventivo(null);
+                }
+              }}
+            >
+              Conferma
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!editingNotePreventivo} onOpenChange={(open) => { if (!open) setEditingNotePreventivo(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-primary" />
+              Note Preventivo
+            </DialogTitle>
+            <DialogDescription>
+              Aggiungi o modifica le note per <strong className="text-foreground">{editingNotePreventivo?.clientName}</strong>.
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!editingNotePreventivo) return;
+              const target = e.target as HTMLFormElement;
+              const notesInput = target.elements.namedItem("notes") as HTMLTextAreaElement;
+              updatePreventivo(editingNotePreventivo.id, { notes: notesInput.value.trim() || undefined });
+              setEditingNotePreventivo(null);
+            }}
+            className="space-y-4"
+          >
+            <Textarea
+              name="notes"
+              placeholder="Inserisci i dettagli qui..."
+              defaultValue={editingNotePreventivo?.notes || ""}
+              className="min-h-[120px] resize-none"
+              autoFocus
+            />
+            <div className="flex justify-end gap-3 pt-2">
+              <Button type="button" variant="outline" onClick={() => setEditingNotePreventivo(null)}>Annulla</Button>
+              <Button type="submit">Salva note</Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
 

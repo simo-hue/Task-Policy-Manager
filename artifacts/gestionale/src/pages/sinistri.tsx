@@ -92,7 +92,7 @@ export function Sinistri() {
             Cambia Stato Sinistro
           </DropdownMenuLabel>
           <DropdownMenuSeparator className="my-1" />
-          
+
           <DropdownMenuItem
             onClick={() => {
               const patch: any = { status: "da_aprire", openDate: null };
@@ -203,7 +203,7 @@ export function Sinistri() {
   }, [editingClaim, editForm]);
 
   const renderQuickAdd = () => (
-    <form 
+    <form
       onSubmit={(e) => {
         e.preventDefault();
         const target = e.target as HTMLFormElement;
@@ -211,13 +211,13 @@ export function Sinistri() {
         const clientName = nameInput.value.trim();
         const notesInput = target.elements.namedItem("quickNotes") as HTMLInputElement;
         const notes = notesInput.value.trim();
-        
+
         const isDaAprire = quickStatus === "da_aprire";
         if (clientName && quickRamo && (isDaAprire || quickDate)) {
-          addClaim({ 
-            clientName, 
-            ramo: quickRamo, 
-            status: quickStatus || "da_aprire", 
+          addClaim({
+            clientName,
+            ramo: quickRamo,
+            status: quickStatus || "da_aprire",
             openDate: isDaAprire ? undefined : (quickDate ? format(quickDate, 'yyyy-MM-dd') : undefined),
             notes: notes || undefined
           });
@@ -232,17 +232,17 @@ export function Sinistri() {
     >
       <div className="flex-1 relative">
         <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input 
+        <Input
           name="quickName"
-          placeholder="Nome cliente..." 
+          placeholder="Nome cliente..."
           className="pl-9 h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent"
           autoComplete="off"
           required
         />
       </div>
-      
+
       <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
-      
+
       <div className="w-full sm:w-[170px]">
         <Select value={quickRamo} onValueChange={setQuickRamo}>
           <SelectTrigger className="h-11 border-0 shadow-none bg-transparent focus:ring-0 text-sm font-medium w-full">
@@ -280,7 +280,7 @@ export function Sinistri() {
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4 opacity-50 shrink-0" />
-              {quickDate ? format(quickDate, "P", { locale: it }) : <span>Data...</span>}
+              {quickDate ? format(quickDate, "P", { locale: it }) : <span>Data</span>}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
@@ -313,9 +313,9 @@ export function Sinistri() {
       </Select>
 
       <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
-      
+
       <div className="flex-1 relative min-w-[150px]">
-        <Input 
+        <Input
           name="quickNotes"
           placeholder="Note"
           className="h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
@@ -323,10 +323,10 @@ export function Sinistri() {
         />
       </div>
 
-      <Button 
-        type="submit" 
-        variant="secondary" 
-        size="sm" 
+      <Button
+        type="submit"
+        variant="secondary"
+        size="sm"
         className="h-11 px-4 ml-auto font-semibold hover:scale-105 active:scale-95 transition-transform"
         disabled={quickStatus === "da_aprire" ? !quickRamo : (!quickDate || !quickRamo)}
       >
@@ -362,125 +362,125 @@ export function Sinistri() {
   const renderClaimFormFields = (f: typeof editForm) => {
     const status = f.watch("status");
     return (
-    <>
-      <FormField
-        control={f.control}
-        name="clientName"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Nome Cliente</FormLabel>
-            <FormControl>
-              <Input placeholder="Es. Mario Rossi" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={f.control}
-        name="ramo"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Ramo</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona ramo" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="RC Auto">RC Auto</SelectItem>
-                <SelectItem value="Infortuni">Infortuni</SelectItem>
-                <SelectItem value="Vita">Vita</SelectItem>
-                <SelectItem value="Incendio e Scoppio">Incendio e Scoppio</SelectItem>
-                <SelectItem value="Responsabilità Civile">Responsabilità Civile</SelectItem>
-                <SelectItem value="Tutela Legale">Tutela Legale</SelectItem>
-                <SelectItem value="Salute e Malattia">Salute e Malattia</SelectItem>
-                <SelectItem value="Fideiussioni e Cauzioni">Fideiussioni e Cauzioni</SelectItem>
-                <SelectItem value="Altri Danni ai Beni">Altri Danni ai Beni</SelectItem>
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      {status !== "da_aprire" && (
+      <>
         <FormField
           control={f.control}
-          name="openDate"
+          name="clientName"
           render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Data di Apertura *</FormLabel>
-              <Popover open={editDatePopoverOpen} onOpenChange={setEditDatePopoverOpen}>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value ? format(field.value, "PPP", { locale: it }) : <span>Seleziona una data</span>}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={(date) => {
-                      field.onChange(date);
-                      setEditDatePopoverOpen(false);
-                    }}
-                    disabled={() => false}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+            <FormItem>
+              <FormLabel>Nome Cliente</FormLabel>
+              <FormControl>
+                <Input placeholder="Es. Mario Rossi" {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-      )}
-      <FormField
-        control={f.control}
-        name="status"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Stato Sinistro</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value}>
+        <FormField
+          control={f.control}
+          name="ramo"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Ramo</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleziona ramo" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="RC Auto">RC Auto</SelectItem>
+                  <SelectItem value="Infortuni">Infortuni</SelectItem>
+                  <SelectItem value="Vita">Vita</SelectItem>
+                  <SelectItem value="Incendio e Scoppio">Incendio e Scoppio</SelectItem>
+                  <SelectItem value="Responsabilità Civile">Responsabilità Civile</SelectItem>
+                  <SelectItem value="Tutela Legale">Tutela Legale</SelectItem>
+                  <SelectItem value="Salute e Malattia">Salute e Malattia</SelectItem>
+                  <SelectItem value="Fideiussioni e Cauzioni">Fideiussioni e Cauzioni</SelectItem>
+                  <SelectItem value="Altri Danni ai Beni">Altri Danni ai Beni</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        {status !== "da_aprire" && (
+          <FormField
+            control={f.control}
+            name="openDate"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Data di Apertura *</FormLabel>
+                <Popover open={editDatePopoverOpen} onOpenChange={setEditDatePopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value ? format(field.value, "PPP", { locale: it }) : <span>Seleziona una data</span>}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={(date) => {
+                        field.onChange(date);
+                        setEditDatePopoverOpen(false);
+                      }}
+                      disabled={() => false}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+        <FormField
+          control={f.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Stato Sinistro</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleziona stato" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="da_aprire">Da aprire</SelectItem>
+                  <SelectItem value="aperto">Aperto</SelectItem>
+                  <SelectItem value="incaricato">Incaricato perito</SelectItem>
+                  <SelectItem value="non_liquidato">Non liquidato</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={f.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Note / Descrizione</FormLabel>
               <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona stato" />
-                </SelectTrigger>
+                <Textarea placeholder="Dettagli sul sinistro..." {...field} />
               </FormControl>
-              <SelectContent>
-                <SelectItem value="da_aprire">Da aprire</SelectItem>
-                <SelectItem value="aperto">Aperto</SelectItem>
-                <SelectItem value="incaricato">Incaricato perito</SelectItem>
-                <SelectItem value="non_liquidato">Non liquidato</SelectItem>
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={f.control}
-        name="notes"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Note / Descrizione</FormLabel>
-            <FormControl>
-              <Textarea placeholder="Dettagli sul sinistro..." {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-    </>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </>
     );
   };
 
@@ -513,7 +513,7 @@ export function Sinistri() {
 
       <div className="space-y-4">
         {renderQuickAdd()}
-        
+
         {activeClaims.length > 0 ? (
           <div className="grid gap-3">
             {activeClaims.map((claim) => (
@@ -539,9 +539,9 @@ export function Sinistri() {
                     )}
                   </div>
                   <div className="px-3 sm:px-5 pb-3 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-1.5 sm:gap-2 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity flex-wrap">
-                    <Button 
-                      variant="secondary" 
-                      size="sm" 
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       className="font-medium text-xs gap-1.5 h-8 hover:bg-emerald-500/10 hover:text-emerald-600 hover:border-emerald-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                       onClick={() => setLiquidatingClaim(claim)}
                     >
@@ -655,7 +655,7 @@ export function Sinistri() {
             }
           }}>
             <div className="pt-4 pb-6">
-              <Textarea 
+              <Textarea
                 name="notes"
                 defaultValue={editingNoteClaim?.notes || ""}
                 placeholder="Scrivi qui i tuoi appunti, dettagli o numeri di telefono..."

@@ -502,3 +502,10 @@
   - *Details*: Modificato il campo "Ramo" nella pagina Gestione Sinistri. Invece di un campo di testo libero con suggerimenti (datalist), è ora un menu a tendina (Select) per vincolare l'utente a scegliere tra le voci predefinite, sia nella fase di aggiunta rapida che nel modale di modifica.
   - *Tech Notes*:
     - Sostituito `<Input list="...">` e `<datalist>` con i componenti `<Select>`, `<SelectTrigger>`, `<SelectContent>` e `<SelectItem>` in `src/pages/sinistri.tsx`.
+
+- [22 May 2026 - 15:09]: Uniformazione Stile e Azioni Preventivi a Polizze
+  - *Details*: Aggiornato lo stile della lista dei preventivi per farlo corrispondere perfettamente a quello compatto e pulito delle polizze, organizzando tutto su una singola riga. Introdotte le logiche di eliminazione fisica (su base di conferma) quando un preventivo viene impostato allo stato "Fatto". Aggiunto il pulsante inline per l'inserimento/modifica rapida delle note, assieme al nuovo popup dedicato.
+  - *Tech Notes*:
+    - Modificato `preventivi.tsx` per rimuovere la logica che manteneva attivi i preventivi in stato "Fatto".
+    - Aggiunti i popup di conferma (`Dialog`) per lo stato "Fatto" (`completingPreventivo`) e l'aggiunta rapida di note (`editingNotePreventivo`).
+    - L'interfaccia UI dei preventivi condivide ora il layout a riga singola con `polizze-personali.tsx`.
