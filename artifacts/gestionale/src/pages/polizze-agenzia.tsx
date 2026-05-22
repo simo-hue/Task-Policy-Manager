@@ -304,7 +304,7 @@ export function PolizzeAgenzia() {
       )}
 
       <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
-      <div className="flex gap-2 w-full sm:w-auto">
+      <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
         <Select value={quickType} onValueChange={setQuickType}>
           <SelectTrigger className="h-10 border-0 bg-transparent shadow-none w-full sm:w-[140px] focus:ring-0 font-medium">
             <SelectValue placeholder="Tipo polizza" />

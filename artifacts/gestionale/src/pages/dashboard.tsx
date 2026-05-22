@@ -123,7 +123,7 @@ export function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         {statCards.map((c) => {
           const t = toneStyles[c.tone];
           const Icon = c.icon;
@@ -134,16 +134,16 @@ export function Dashboard() {
               className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl"
             >
               <Card
-                className="relative overflow-hidden p-5 shadow-card cursor-pointer transition-all hover:shadow-elevated hover:-translate-y-0.5 hover:border-primary/30"
+                className="relative overflow-hidden p-4 sm:p-5 shadow-card cursor-pointer transition-all hover:shadow-elevated hover:-translate-y-0.5 hover:border-primary/30 flex flex-col h-full"
                 data-testid={c.testId}
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="text-sm font-medium text-muted-foreground">{c.title}</div>
-                  <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center", t.chip)}>
-                    <Icon className="w-[18px] h-[18px]" />
+                <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
+                  <div className="text-xs sm:text-sm font-medium text-muted-foreground leading-tight">{c.title}</div>
+                  <div className={cn("shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center", t.chip)}>
+                    <Icon className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
                   </div>
                 </div>
-                <div className={cn("text-3xl sm:text-4xl font-serif font-semibold tracking-tight", t.value)}>
+                <div className={cn("text-2xl sm:text-4xl font-serif font-semibold tracking-tight mt-auto", t.value)}>
                   {c.value}
                 </div>
                 {c.hint && (

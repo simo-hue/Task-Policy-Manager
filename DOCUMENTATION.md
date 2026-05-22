@@ -342,3 +342,22 @@
 * *Details*: Rimossi definitivamente i tre pulsanti in alto a destra ("Nuova attività", "Nuova p. personale", "Nuova p. agenzia") dalla vista Dashboard per mantenere un design più pulito e spingere l'utilizzo esclusivo delle barre di "Quick Add" interne alle specifiche schermate.
 * *Tech Notes*:
   - Rimosso blocco di codice contenente `<div className="flex gap-2 flex-wrap">` e i tre bottoni `<Link>` dal layout principale di `dashboard.tsx`.
+
+### [2026-05-22 11:43]: Ottimizzazione PWA e Layout Mobile
+* *Details*: L'applicazione è stata trasformata in una Progressive Web App (PWA) completa ed è stato ottimizzato il layout per offrire un'esperienza utente nativa sui dispositivi mobili.
+* *Tech Notes*:
+  - Installato e configurato `vite-plugin-pwa` nel file `vite.config.ts` per gestire la registrazione del service worker (autoUpdate) e la generazione del manifest.
+  - Aggiornato `index.html` aggiungendo i meta tag `theme-color`, `apple-touch-icon` e la viewport configurata con `viewport-fit=cover` e `user-scalable=no`.
+  - Modificato profondamente il file `src/components/layout/shell.tsx`: su schermi mobile la sidebar viene ora nascosta e sostituita da una barra di navigazione fissa sul fondo (Bottom Navigation Bar) e una top bar, integrando le `safe-area-inset` per i dispositivi moderni.
+  - Aggiunte ottimizzazioni UI in `src/index.css` per i dispositivi touch (`overscroll-behavior-y: none;` e `-webkit-tap-highlight-color: transparent;`).
+
+### [2026-05-22 11:45]: Ottimizzazione Griglia Dashboard per Mobile
+* *Details*: I quattro box riassuntivi della dashboard sono stati riorganizzati per occupare esattamente una griglia 2x2 sui dispositivi mobili (anziché incolonnarsi tutti su 4 righe separate), massimizzando l'utilizzo dello spazio a schermo e migliorando l'UX.
+* *Tech Notes*:
+  - Modificato `src/pages/dashboard.tsx` cambiando la classe `grid-cols-1 sm:grid-cols-2` in `grid-cols-2` per la griglia delle `statCards`.
+  - Aggiunti stili responsive ai font (`text-xs sm:text-sm` per il titolo, `text-2xl sm:text-4xl` per il valore numerico) e alle icone per far sì che calzino perfettamente all'interno di box più piccoli su schermi ristretti.
+  - Applicato `flex flex-col h-full` e `mt-auto` al valore numerico per mantenere un allineamento omogeneo qualora il titolo vada a capo.
+
+### [2026-05-22 11:46]: Fix Layout Mobile Form Inserimento Rapido
+* *Details*: Risolto un problema di overflow orizzontale (ritaglio dell'interfaccia) del form di inserimento rapido sulle polizze in scadenza sui dispositivi mobili.
+* *Tech Notes*: Modificati i file `src/pages/polizze-personali.tsx` e `src/pages/polizze-agenzia.tsx` aggiornando la classe Tailwind del container dei filtri da `flex` a `flex-col sm:flex-row` per permettere un impilamento verticale corretto sugli schermi stretti, evitando così che il bottone "Aggiungi" finisse fuori dai bordi dello schermo.

@@ -87,10 +87,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="flex min-h-screen bg-app-gradient">
+      <div className="flex min-h-screen bg-app-gradient pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
         <aside
           className={cn(
-            "border-r border-sidebar-border bg-sidebar bg-sidebar-gradient flex flex-col transition-[width] duration-200 ease-in-out",
+            "hidden md:flex flex-col border-r border-sidebar-border bg-sidebar bg-sidebar-gradient transition-[width] duration-200 ease-in-out z-20",
             collapsed ? "w-16" : "w-64"
           )}
         >
@@ -168,11 +168,43 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <ThemeToggle collapsed={collapsed} />
           </div>
         </aside>
-        <main className="flex-1 overflow-auto min-w-0">
+        
+        {/* Mobile Top Bar */}
+        <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-sidebar/80 backdrop-blur-md border-b border-sidebar-border/60 flex items-center justify-between px-4 z-20 pt-[env(safe-area-inset-top)]">
+          <Logo collapsed={false} />
+          <ThemeToggle collapsed={true} />
+        </div>
+
+        <main className="flex-1 overflow-auto min-w-0 pt-14 md:pt-0">
           <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 xl:p-10">
             {children}
           </div>
         </main>
+
+        {/* Mobile Bottom Navigation */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-sidebar/90 backdrop-blur-lg border-t border-sidebar-border/60 z-20 pb-[env(safe-area-inset-bottom)]">
+          <div className="flex items-center justify-around px-2 py-2">
+            {navItems.map((item) => {
+              const isActive = location === item.path;
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.path}
+                  href={item.path}
+                  className={cn(
+                    "flex flex-col items-center justify-center gap-1 w-16 h-12 rounded-lg transition-all",
+                    isActive
+                      ? "text-gold"
+                      : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-white/5"
+                  )}
+                >
+                  <Icon className={cn("w-5 h-5", isActive && "scale-110 transition-transform")} />
+                  <span className="text-[10px] font-medium truncate w-full text-center">{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
       </div>
     </TooltipProvider>
   );
