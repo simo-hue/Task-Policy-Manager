@@ -161,8 +161,8 @@ export function PolizzeAgenzia() {
     const cassaConfig = {
       regolare: {
         label: "Regolare",
-        className: "bg-slate-500/10 text-slate-600 border-slate-500/20 hover:bg-slate-500/20",
-        dotColor: "bg-slate-500"
+        className: "bg-sky-500/10 text-sky-600 border-sky-500/20 hover:bg-sky-500/20",
+        dotColor: "bg-sky-500"
       },
       da_mettere: {
         label: "Da mettere a cassa",
@@ -203,7 +203,7 @@ export function PolizzeAgenzia() {
             className="flex items-center justify-between cursor-pointer rounded-md px-2 py-1.5 text-xs hover:bg-accent focus:bg-accent"
           >
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-slate-500 shrink-0" />
+              <span className="w-2.5 h-2.5 rounded-full bg-sky-500 shrink-0" />
               <span>Regolare</span>
             </div>
             {currentCassaStato === "regolare" && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
@@ -321,16 +321,20 @@ export function PolizzeAgenzia() {
             <SelectItem value="Non specificata">Altro...</SelectItem>
           </SelectContent>
         </Select>
-        <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
-        <Select value={quickCassa} onValueChange={setQuickCassa}>
-          <SelectTrigger className="h-10 border-0 bg-transparent shadow-none w-full sm:w-[150px] focus:ring-0 font-medium">
-            <SelectValue placeholder="Stato cassa" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="regolare">Regolare</SelectItem>
-            <SelectItem value="da_mettere">Da mettere a cassa</SelectItem>
-          </SelectContent>
-        </Select>
+        {defaultStatus === "emessa" && (
+          <>
+            <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
+            <Select value={quickCassa} onValueChange={setQuickCassa}>
+              <SelectTrigger className="h-10 border-0 bg-transparent shadow-none w-full sm:w-[150px] focus:ring-0 font-medium">
+                <SelectValue placeholder="Stato cassa" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="regolare">Regolare</SelectItem>
+                <SelectItem value="da_mettere">Da mettere a cassa</SelectItem>
+              </SelectContent>
+            </Select>
+          </>
+        )}
         <Button 
           type="submit" 
           size="sm" 
@@ -613,7 +617,6 @@ export function PolizzeAgenzia() {
                       <div className="flex justify-between items-start gap-3 mb-2 flex-wrap">
                         <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2 min-w-0">
                           <span className="truncate">{policy.clientName}</span>
-                          {renderCassaBadge(policy)}
                         </h3>
                         {policy.targetIssueDate && (
                           <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground ring-1 ring-border whitespace-nowrap">
@@ -694,7 +697,7 @@ export function PolizzeAgenzia() {
               Conferma Emissione
             </DialogTitle>
             <DialogDescription className="text-muted-foreground text-sm leading-relaxed">
-              Sei sicuro di voler segnare la polizza di <strong className="text-foreground">{issuingPolicy?.clientName}</strong> come emessa? Verrà spostata nell'elenco delle polizze in scadenza.
+              Sei sicuro di voler segnare la polizza di <strong className="text-foreground">{issuingPolicy?.clientName}</strong> come emessa? <strong>Verrà archiviata ed eliminata definitivamente dal database.</strong>
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-3 pt-5">
@@ -705,11 +708,7 @@ export function PolizzeAgenzia() {
               className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium shadow-soft border-0 transition-colors"
               onClick={() => {
                 if (issuingPolicy) {
-                  updatePolicy(issuingPolicy.id, {
-                    status: "emessa",
-                    targetIssueDate: undefined,
-                    issuedAt: new Date().toISOString(),
-                  });
+                  deletePolicy(issuingPolicy.id);
                   setIssuingPolicy(null);
                 }
               }}

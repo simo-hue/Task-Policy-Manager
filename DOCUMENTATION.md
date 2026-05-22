@@ -277,3 +277,36 @@
   - Aggiunti gli stati locali `deletingPolicy` e `deletingTask` rispettivamente nei file `polizze-personali.tsx`, `polizze-agenzia.tsx` e `attivita.tsx`.
   - Sostituita la chiamata diretta alle funzioni di delete (`deletePolicy`, `deleteTask`) sull'onClick dei bottoni cestino `Trash2` con l'attivazione dei nuovi stati.
   - Inseriti i moduli `<Dialog>` in stile Shadcn UI con la palette cromatica `destructive` alla base di ogni componente per gestire il consenso esplicito dell'utente prima della cancellazione irreversibile.
+
+### [2026-05-22 11:09]: Modifica Cromatica Badge "Regolare"
+* *Details*: Aggiornato il colore del badge per lo stato cassa "Regolare" in tutte le polizze (Personali e Agenzia). Il vecchio grigio-blu (`slate-500`) è stato sostituito con un azzurro-celeste più vivido e chiaro (`sky-500`) per renderlo molto più visibile a colpo d'occhio.
+* *Tech Notes*:
+  - Modificati i file `src/pages/polizze-personali.tsx` e `src/pages/polizze-agenzia.tsx`.
+  - Aggiornato l'oggetto `cassaConfig.regolare.className` e `dotColor` sostituendo tutte le occorrenze di `slate-500` e `slate-600` con `sky-500` e `sky-600`.
+  - Aggiornato il colore del pallino di stato nel menu a tendina corrispondente in entrambi i file.
+
+### [2026-05-22 11:11]: Riorganizzazione Box Dashboard
+* *Details*: Sostituito il box "Urgenze" nella dashboard con "Polizze Agenzia" e rinominato il box "Polizze" in "Polizze Personali". I due box delle polizze sono stati affiancati per una migliore organizzazione visiva.
+* *Tech Notes*:
+  - Modificato il file `src/pages/dashboard.tsx`.
+  - Ricalcolato il conteggio per le polizze personali `personali.filter(...)` e agenzia `agenzia.filter(...)` nei rispettivi box, escludendo le polizze pagate.
+  - Sostituito e riordinato l'array `statCards` per mostrare nell'ordine: Attività, Polizze Personali, Polizze Agenzia, Sinistri.
+
+### [2026-05-22 11:13]: Pulizia Barra Inserimento Rapido
+* *Details*: Rimosso il selettore "Stato Cassa" dalla barra di inserimento rapido quando ci si trova nel tab "Da emettere", poiché una polizza non ancora emessa non ha motivo di avere uno stato cassa immediato.
+* *Tech Notes*:
+  - Modificata la funzione `renderQuickAdd` in `src/pages/polizze-personali.tsx` e `src/pages/polizze-agenzia.tsx`.
+  - Applicato il rendering condizionale `{defaultStatus === "emessa" && (...)}` attorno al componente `<Select>` di `quickCassa` e al relativo separatore `div`.
+
+### [2026-05-22 11:15]: Rimozione Badge Cassa da Lista "Da Emettere"
+* *Details*: Nascosto del tutto il badge indicatore dello "Stato cassa" dalle polizze presenti nel tab "Da emettere".
+* *Tech Notes*:
+  - Modificati `src/pages/polizze-personali.tsx` e `src/pages/polizze-agenzia.tsx`.
+  - Rimossa la chiamata a `{renderCassaBadge(policy)}` all'interno del ciclo `daEmettere.map()`. Il badge viene ora renderizzato esclusivamente all'interno del tab "In scadenza".
+
+### [2026-05-22 11:18]: Modifica Comportamento "Segna Emessa"
+* *Details*: Le polizze "Da emettere", quando contrassegnate come emesse tramite l'apposito bottone col check verde, vengono ora eliminate definitivamente dal database invece di essere semplicemente aggiornate. Questo tratta la lista "Da emettere" come una vera e propria to-do list, archivindo la voce una volta evasa la pratica, per evitare che rimanga "orfana" (invisibile ma conteggiata nelle statistiche in caso di assenza della data di scadenza).
+* *Tech Notes*:
+  - Modificato il componente `<Dialog>` legato allo stato `issuingPolicy` in `src/pages/polizze-personali.tsx` e `src/pages/polizze-agenzia.tsx`.
+  - Aggiornato il testo esplicativo del Dialog (`DialogDescription`) per avvertire l'utente che l'azione eliminerà il record dal database.
+  - Sostituita la funzione `updatePolicy(..., { status: "emessa" })` con `deletePolicy(...)` nell'handler di conferma.
