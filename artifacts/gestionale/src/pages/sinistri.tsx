@@ -29,11 +29,9 @@ import {
 const claimSchema = z.object({
   clientName: z.string().min(1, "Il nome cliente è obbligatorio"),
   ramo: z.string().min(1, "Il ramo è obbligatorio"),
-  openDate: z.date({
-    required_error: "La data di apertura è obbligatoria",
-  }),
+  openDate: z.date().optional(),
   notes: z.string().optional(),
-  status: z.enum(["liquidato", "incaricato", "non_liquidato", "da_aprire"]).optional(),
+  status: z.enum(["liquidato", "incaricato", "non_liquidato", "da_aprire", "aperto"]).optional(),
 });
 
 type ClaimFormValues = z.infer<typeof claimSchema>;
@@ -50,6 +48,11 @@ export function Sinistri() {
         label: "Da aprire",
         className: "bg-violet-500/10 text-violet-600 border-violet-500/20 hover:bg-violet-500/20",
         dotColor: "bg-violet-500"
+      },
+      aperto: {
+        label: "Aperto",
+        className: "bg-blue-500/10 text-blue-600 border-blue-500/20 hover:bg-blue-500/20",
+        dotColor: "bg-blue-500"
       },
       incaricato: {
         label: "Incaricato il perito",
@@ -91,7 +94,10 @@ export function Sinistri() {
           <DropdownMenuSeparator className="my-1" />
           
           <DropdownMenuItem
-            onClick={() => updateClaim(claim.id, { status: "da_aprire" })}
+            onClick={() => {
+              const patch: any = { status: "da_aprire", openDate: null };
+              updateClaim(claim.id, patch);
+            }}
             className="flex items-center justify-between cursor-pointer rounded-md px-2 py-1.5 text-xs hover:bg-accent focus:bg-accent"
           >
             <div className="flex items-center gap-2">
@@ -102,7 +108,30 @@ export function Sinistri() {
           </DropdownMenuItem>
 
           <DropdownMenuItem
-            onClick={() => updateClaim(claim.id, { status: "incaricato" })}
+            onClick={() => {
+              const patch: any = { status: "aperto" };
+              if (currentStatus === "da_aprire" && !claim.openDate) {
+                patch.openDate = format(new Date(), "yyyy-MM-dd");
+              }
+              updateClaim(claim.id, patch);
+            }}
+            className="flex items-center justify-between cursor-pointer rounded-md px-2 py-1.5 text-xs hover:bg-accent focus:bg-accent"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />
+              <span>Aperto</span>
+            </div>
+            {currentStatus === "aperto" && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            onClick={() => {
+              const patch: any = { status: "incaricato" };
+              if (currentStatus === "da_aprire" && !claim.openDate) {
+                patch.openDate = format(new Date(), "yyyy-MM-dd");
+              }
+              updateClaim(claim.id, patch);
+            }}
             className="flex items-center justify-between cursor-pointer rounded-md px-2 py-1.5 text-xs hover:bg-accent focus:bg-accent"
           >
             <div className="flex items-center gap-2">
@@ -113,7 +142,13 @@ export function Sinistri() {
           </DropdownMenuItem>
 
           <DropdownMenuItem
-            onClick={() => updateClaim(claim.id, { status: "non_liquidato" })}
+            onClick={() => {
+              const patch: any = { status: "non_liquidato" };
+              if (currentStatus === "da_aprire" && !claim.openDate) {
+                patch.openDate = format(new Date(), "yyyy-MM-dd");
+              }
+              updateClaim(claim.id, patch);
+            }}
             className="flex items-center justify-between cursor-pointer rounded-md px-2 py-1.5 text-xs hover:bg-accent focus:bg-accent"
           >
             <div className="flex items-center gap-2">
@@ -140,18 +175,16 @@ export function Sinistri() {
     );
   };
 
-  const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingClaim, setEditingClaim] = useState<Claim | null>(null);
   const [liquidatingClaim, setLiquidatingClaim] = useState<Claim | null>(null);
-
-  const form = useForm<ClaimFormValues>({
-    resolver: zodResolver(claimSchema),
-    defaultValues: { clientName: "", ramo: "", notes: "", status: "incaricato" },
-  });
+  const [deletingClaim, setDeletingClaim] = useState<Claim | null>(null);
+  const [quickDate, setQuickDate] = useState<Date | undefined>(new Date());
+  const [quickRamo, setQuickRamo] = useState<string>("");
+  const [quickStatus, setQuickStatus] = useState<Claim["status"]>("da_aprire");
 
   const editForm = useForm<ClaimFormValues>({
     resolver: zodResolver(claimSchema),
-    defaultValues: { clientName: "", ramo: "", notes: "", status: "incaricato" },
+    defaultValues: { clientName: "", ramo: "", notes: "", status: "da_aprire" },
   });
 
   useEffect(() => {
@@ -159,38 +192,152 @@ export function Sinistri() {
       editForm.reset({
         clientName: editingClaim.clientName,
         ramo: editingClaim.ramo,
-        openDate: parseLocalDate(editingClaim.openDate),
+        openDate: editingClaim.openDate ? parseLocalDate(editingClaim.openDate) : undefined,
         notes: editingClaim.notes ?? "",
-        status: editingClaim.status ?? "incaricato",
+        status: editingClaim.status ?? "da_aprire",
       });
     }
   }, [editingClaim, editForm]);
 
-  function onSubmit(values: ClaimFormValues) {
-    addClaim({
-      clientName: values.clientName,
-      ramo: values.ramo,
-      openDate: format(values.openDate, "yyyy-MM-dd"),
-      notes: values.notes || undefined,
-      status: values.status || "incaricato",
-    });
-    setIsAddOpen(false);
-    form.reset({ clientName: "", ramo: "", notes: "", status: "incaricato" });
-  }
+  const renderQuickAdd = () => (
+    <form 
+      onSubmit={(e) => {
+        e.preventDefault();
+        const target = e.target as HTMLFormElement;
+        const nameInput = target.elements.namedItem("quickName") as HTMLInputElement;
+        const clientName = nameInput.value.trim();
+        
+        const isDaAprire = quickStatus === "da_aprire";
+        if (clientName && quickRamo && (isDaAprire || quickDate)) {
+          addClaim({ 
+            clientName, 
+            ramo: quickRamo, 
+            status: quickStatus || "da_aprire", 
+            openDate: isDaAprire ? undefined : (quickDate ? format(quickDate, 'yyyy-MM-dd') : undefined)
+          });
+          nameInput.value = "";
+          setQuickRamo("");
+          setQuickDate(new Date());
+          setQuickStatus("da_aprire");
+        }
+      }}
+      className="flex flex-col sm:flex-row sm:items-center gap-2 mb-6 bg-card p-2 rounded-xl border border-border/60 shadow-sm focus-within:ring-2 focus-within:ring-primary/30 transition-all"
+    >
+      <div className="flex-1 relative">
+        <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input 
+          name="quickName"
+          placeholder="Nome cliente..." 
+          className="pl-9 h-10 border-0 focus-visible:ring-0 shadow-none bg-transparent"
+          autoComplete="off"
+          required
+        />
+      </div>
+      
+      <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
+      
+      <Select value={quickRamo} onValueChange={setQuickRamo}>
+        <SelectTrigger className="w-full sm:w-[150px] h-10 border-0 shadow-none bg-transparent focus:ring-0 text-sm font-medium">
+          <SelectValue placeholder="Ramo..." />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="RC Auto">RC Auto</SelectItem>
+          <SelectItem value="Infortuni">Infortuni</SelectItem>
+          <SelectItem value="Vita">Vita</SelectItem>
+          <SelectItem value="Incendio e Scoppio">Incendio e Scoppio</SelectItem>
+          <SelectItem value="Responsabilità Civile">Responsabilità Civile</SelectItem>
+          <SelectItem value="Tutela Legale">Tutela Legale</SelectItem>
+          <SelectItem value="Salute e Malattia">Salute e Malattia</SelectItem>
+          <SelectItem value="Fideiussioni e Cauzioni">Fideiussioni e Cauzioni</SelectItem>
+          <SelectItem value="Altri Danni ai Beni">Altri Danni ai Beni</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
+
+      {quickStatus === "da_aprire" ? (
+        <Button disabled variant="outline" className="w-full sm:w-[140px] h-10 justify-start text-left font-normal border-0 shadow-none bg-transparent opacity-50 cursor-not-allowed">
+          <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+          <span>Da definire</span>
+        </Button>
+      ) : (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant={"outline"}
+              className={cn(
+                "w-full sm:w-[140px] h-10 justify-start text-left font-normal border-0 shadow-none bg-transparent focus:ring-0",
+                !quickDate && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4 opacity-50 shrink-0" />
+              {quickDate ? format(quickDate, "P", { locale: it }) : <span>Data...</span>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={quickDate}
+              onSelect={setQuickDate}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+      )}
+
+      <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
+
+      <Select value={quickStatus} onValueChange={(val: any) => setQuickStatus(val)}>
+        <SelectTrigger className="w-full sm:w-[160px] h-10 border-0 shadow-none bg-transparent focus:ring-0 text-sm font-medium">
+          <SelectValue placeholder="Stato" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="da_aprire">Da aprire</SelectItem>
+          <SelectItem value="aperto">Aperto</SelectItem>
+          <SelectItem value="incaricato">Incaricato perito</SelectItem>
+          <SelectItem value="non_liquidato">Non liquidato</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Button 
+        type="submit" 
+        variant="secondary" 
+        size="sm" 
+        className="h-10 px-4 ml-auto font-semibold hover:scale-105 active:scale-95 transition-transform"
+        disabled={quickStatus === "da_aprire" ? !quickRamo : (!quickDate || !quickRamo)}
+      >
+        Aggiungi
+      </Button>
+    </form>
+  );
 
   function onEditSubmit(values: ClaimFormValues) {
     if (!editingClaim) return;
+    const isDaAprire = values.status === "da_aprire";
+    const wasDaAprire = editingClaim.status === "da_aprire";
+    let newOpenDate = editingClaim.openDate;
+
+    if (isDaAprire) {
+      newOpenDate = undefined;
+    } else if (values.openDate) {
+      newOpenDate = format(values.openDate, "yyyy-MM-dd");
+    } else if (wasDaAprire) {
+      newOpenDate = format(new Date(), "yyyy-MM-dd");
+    }
+
     updateClaim(editingClaim.id, {
       clientName: values.clientName,
       ramo: values.ramo,
-      openDate: format(values.openDate, "yyyy-MM-dd"),
+      openDate: newOpenDate,
       notes: values.notes || undefined,
-      status: values.status || "incaricato",
+      status: values.status || "da_aprire",
     });
     setEditingClaim(null);
   }
 
-  const renderClaimFormFields = (f: typeof form) => (
+  const renderClaimFormFields = (f: typeof editForm) => {
+    const status = f.watch("status");
+    return (
     <>
       <FormField
         control={f.control}
@@ -211,55 +358,59 @@ export function Sinistri() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Ramo</FormLabel>
-            <FormControl>
-              <div className="relative">
-                <Input placeholder="Es. RC Auto, Infortuni, Vita..." list="claim-ramo-types" {...field} />
-                <datalist id="claim-ramo-types">
-                  <option value="RC Auto" />
-                  <option value="Infortuni" />
-                  <option value="Vita" />
-                  <option value="Incendio e Scoppio" />
-                  <option value="Responsabilità Civile" />
-                  <option value="Tutela Legale" />
-                  <option value="Salute e Malattia" />
-                  <option value="Fideiussioni e Cauzioni" />
-                  <option value="Altri Danni ai Beni" />
-                </datalist>
-              </div>
-            </FormControl>
+            <Select onValueChange={field.onChange} value={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona ramo" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="RC Auto">RC Auto</SelectItem>
+                <SelectItem value="Infortuni">Infortuni</SelectItem>
+                <SelectItem value="Vita">Vita</SelectItem>
+                <SelectItem value="Incendio e Scoppio">Incendio e Scoppio</SelectItem>
+                <SelectItem value="Responsabilità Civile">Responsabilità Civile</SelectItem>
+                <SelectItem value="Tutela Legale">Tutela Legale</SelectItem>
+                <SelectItem value="Salute e Malattia">Salute e Malattia</SelectItem>
+                <SelectItem value="Fideiussioni e Cauzioni">Fideiussioni e Cauzioni</SelectItem>
+                <SelectItem value="Altri Danni ai Beni">Altri Danni ai Beni</SelectItem>
+              </SelectContent>
+            </Select>
             <FormMessage />
           </FormItem>
         )}
       />
-      <FormField
-        control={f.control}
-        name="openDate"
-        render={({ field }) => (
-          <FormItem className="flex flex-col">
-            <FormLabel>Data di Apertura *</FormLabel>
-            <Popover>
-              <PopoverTrigger asChild>
-                <FormControl>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full pl-3 text-left font-normal",
-                      !field.value && "text-muted-foreground"
-                    )}
-                  >
-                    {field.value ? format(field.value, "PPP", { locale: it }) : <span>Seleziona una data</span>}
-                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                  </Button>
-                </FormControl>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
-              </PopoverContent>
-            </Popover>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {status !== "da_aprire" && (
+        <FormField
+          control={f.control}
+          name="openDate"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Data di Apertura *</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? format(field.value, "PPP", { locale: it }) : <span>Seleziona una data</span>}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
       <FormField
         control={f.control}
         name="status"
@@ -274,8 +425,8 @@ export function Sinistri() {
               </FormControl>
               <SelectContent>
                 <SelectItem value="da_aprire">Da aprire</SelectItem>
-                <SelectItem value="liquidato">Liquidato</SelectItem>
-                <SelectItem value="incaricato">Incaricato il perito</SelectItem>
+                <SelectItem value="aperto">Aperto</SelectItem>
+                <SelectItem value="incaricato">Incaricato perito</SelectItem>
                 <SelectItem value="non_liquidato">Non liquidato</SelectItem>
               </SelectContent>
             </Select>
@@ -297,7 +448,8 @@ export function Sinistri() {
         )}
       />
     </>
-  );
+    );
+  };
 
   return (
     <div className="space-y-12">
@@ -307,28 +459,6 @@ export function Sinistri() {
           <h1 className="text-3xl sm:text-4xl font-serif font-semibold text-primary mb-2 tracking-tight">Gestione Sinistri</h1>
           <p className="text-muted-foreground text-sm sm:text-base">Visualizza ed inserisci i sinistri aperti del portafoglio clienti.</p>
         </div>
-        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-          <DialogTrigger asChild>
-            <Button data-testid="button-add-claim">
-              <Plus className="w-4 h-4 mr-2" />
-              Nuovo sinistro
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Nuovo Sinistro</DialogTitle>
-              <DialogDescription>Inserisci i dettagli del sinistro da aprire.</DialogDescription>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                {renderClaimFormFields(form)}
-                <div className="flex justify-end pt-4">
-                  <Button type="submit">Salva sinistro</Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
       </div>
 
       <Dialog open={!!editingClaim} onOpenChange={(open) => { if (!open) setEditingClaim(null); }}>
@@ -349,6 +479,8 @@ export function Sinistri() {
       </Dialog>
 
       <div className="space-y-4">
+        {renderQuickAdd()}
+        
         {activeClaims.length > 0 ? (
           <div className="grid gap-3">
             {activeClaims.map((claim) => (
@@ -363,7 +495,7 @@ export function Sinistri() {
                       </h3>
                       <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground ring-1 ring-border whitespace-nowrap">
                         <CalendarIcon className="w-3 h-3 mr-1" />
-                        Apertura: {format(parseLocalDate(claim.openDate), "d MMM yyyy", { locale: it })}
+                        Apertura: {claim.openDate ? format(parseLocalDate(claim.openDate), "d MMM yyyy", { locale: it }) : "Da definire"}
                       </span>
                     </div>
                     <div className="flex items-center gap-3 text-muted-foreground text-sm flex-wrap">
@@ -387,7 +519,7 @@ export function Sinistri() {
                     <Button variant="ghost" size="icon" onClick={() => setEditingClaim(claim)} className="text-muted-foreground hover:text-primary" data-testid={`button-edit-claim-${claim.id}`}>
                       <Pencil className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => deleteClaim(claim.id)} className="text-muted-foreground hover:text-destructive">
+                    <Button variant="ghost" size="icon" onClick={() => setDeletingClaim(claim)} className="text-muted-foreground hover:text-destructive">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -421,12 +553,43 @@ export function Sinistri() {
               className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-soft border-0 transition-colors"
               onClick={() => {
                 if (liquidatingClaim) {
-                  updateClaim(liquidatingClaim.id, { status: "liquidato" });
+                  deleteClaim(liquidatingClaim.id);
                   setLiquidatingClaim(null);
                 }
               }}
             >
               Conferma
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!deletingClaim} onOpenChange={(open) => { if (!open) setDeletingClaim(null); }}>
+        <DialogContent className="max-w-md border-border/80 shadow-elevated">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-xl font-semibold text-destructive mb-1 flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-destructive" />
+              Conferma Eliminazione
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground text-sm leading-relaxed">
+              Sei sicuro di voler eliminare definitivamente il sinistro di <strong className="text-foreground">{deletingClaim?.clientName}</strong>? Questa azione è irreversibile.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 pt-5">
+            <Button variant="outline" onClick={() => setDeletingClaim(null)}>
+              Annulla
+            </Button>
+            <Button
+              variant="destructive"
+              className="font-medium shadow-soft border-0 transition-colors"
+              onClick={() => {
+                if (deletingClaim) {
+                  deleteClaim(deletingClaim.id);
+                  setDeletingClaim(null);
+                }
+              }}
+            >
+              Elimina
             </Button>
           </div>
         </DialogContent>

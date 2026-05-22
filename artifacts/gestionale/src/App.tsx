@@ -1,4 +1,4 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/toaster";
@@ -9,21 +9,51 @@ import { PolizzePersonali } from "@/pages/polizze-personali";
 import { PolizzeAgenzia } from "@/pages/polizze-agenzia";
 import { Sinistri } from "@/pages/sinistri";
 import { Shell } from "@/components/layout/shell";
+import { Login } from "@/pages/login";
+import { useAuth } from "@/hooks/use-auth";
+import { useEffect } from "react";
+import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
 
-function Router() {
+function ProtectedRoute({ component: Component }: { component: any }) {
+  const { user, loading } = useAuth();
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      setLocation("/login");
+    }
+  }, [user, loading, setLocation]);
+
+  if (loading) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
   return (
     <Shell>
-      <Switch>
-        <Route path="/" component={Dashboard} />
-        <Route path="/attivita" component={Attivita} />
-        <Route path="/polizze-personali" component={PolizzePersonali} />
-        <Route path="/polizze-agenzia" component={PolizzeAgenzia} />
-        <Route path="/sinistri" component={Sinistri} />
-        <Route component={NotFound} />
-      </Switch>
+      <Component />
     </Shell>
+  );
+}
+
+function Router() {
+  return (
+    <Switch>
+      <Route path="/login" component={Login} />
+      <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
+      <Route path="/attivita" component={() => <ProtectedRoute component={Attivita} />} />
+      <Route path="/polizze-personali" component={() => <ProtectedRoute component={PolizzePersonali} />} />
+      <Route path="/polizze-agenzia" component={() => <ProtectedRoute component={PolizzeAgenzia} />} />
+      <Route path="/sinistri" component={() => <ProtectedRoute component={Sinistri} />} />
+      <Route component={() => <ProtectedRoute component={NotFound} />} />
+    </Switch>
   );
 }
 

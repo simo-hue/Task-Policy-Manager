@@ -1,5 +1,8 @@
-import { useLocalStorage } from '@/hooks/use-local-storage';
-import { safeUUID } from '@/lib/utils';
+import { useState, useEffect } from 'react';
+import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useAuth } from '@/hooks/use-auth';
+import { cleanFirestoreData } from '@/lib/utils';
 
 export interface Task {
   id: string;
@@ -8,44 +11,53 @@ export interface Task {
   dueDate?: string;
   createdAt: string;
   completedAt?: string;
+  userId: string;
 }
 
-const initialTasks: Task[] = [
-  {
-    id: safeUUID(),
-    title: 'Richiamare Mario Rossi',
-    notes: 'Per rinnovo polizza auto',
-    dueDate: new Date().toISOString().split('T')[0],
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: safeUUID(),
-    title: 'Inviare preventivo Studio Bianchi',
-    createdAt: new Date().toISOString(),
-  }
-];
-
 export function useTasks() {
-  const [tasks, setTasks] = useLocalStorage<Task[]>('gestionale.tasks.v1', initialTasks);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const { user } = useAuth();
 
-  const addTask = (input: Omit<Task, 'id' | 'createdAt'>) => {
-    setTasks(prev => [...prev, { ...input, id: safeUUID(), createdAt: new Date().toISOString() }]);
+  useEffect(() => {
+    if (!user) {
+      setTasks([]);
+      return;
+    }
+    const q = query(collection(db, 'tasks'), where('userId', '==', user.uid));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Task));
+      // Ordina per data di creazione, i più recenti in alto se non hanno una dueDate? 
+      // Lasciamo che la UI gestisca l'ordine, restituiamo solo i dati.
+      setTasks(data);
+    });
+    return () => unsubscribe();
+  }, [user]);
+
+  const addTask = async (input: Omit<Task, 'id' | 'createdAt' | 'userId'>) => {
+    if (!user) return;
+    await addDoc(collection(db, 'tasks'), cleanFirestoreData({
+      ...input,
+      createdAt: new Date().toISOString(),
+      userId: user.uid
+    }));
   };
 
-  const completeTask = (id: string) => {
-    setTasks(prev => prev.map(t => (t.id === id && !t.completedAt) ? { ...t, completedAt: new Date().toISOString() } : t));
+  const completeTask = async (id: string) => {
+    await deleteDoc(doc(db, 'tasks', id));
   };
 
-  const reopenTask = (id: string) => {
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, completedAt: undefined } : t));
+  const reopenTask = async (id: string) => {
+    await updateDoc(doc(db, 'tasks', id), cleanFirestoreData({
+      completedAt: null
+    }));
   };
 
-  const deleteTask = (id: string) => {
-    setTasks(prev => prev.filter(t => t.id !== id));
+  const deleteTask = async (id: string) => {
+    await deleteDoc(doc(db, 'tasks', id));
   };
 
-  const updateTask = (id: string, input: Omit<Task, 'id' | 'createdAt' | 'completedAt'>) => {
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, ...input } : t));
+  const updateTask = async (id: string, input: Partial<Omit<Task, 'id' | 'createdAt' | 'completedAt' | 'userId'>>) => {
+    await updateDoc(doc(db, 'tasks', id), cleanFirestoreData(input));
   };
 
   return { tasks, addTask, completeTask, reopenTask, deleteTask, updateTask };

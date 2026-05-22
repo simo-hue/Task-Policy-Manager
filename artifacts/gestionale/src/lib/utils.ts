@@ -33,3 +33,13 @@ export function safeUUID(): string {
   }
   return `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
+
+export function cleanFirestoreData<T extends object>(obj: T): T {
+  const cleaned = { ...obj } as any;
+  Object.keys(cleaned).forEach((key) => {
+    if (cleaned[key] === undefined) {
+      delete cleaned[key];
+    }
+  });
+  return cleaned as T;
+}

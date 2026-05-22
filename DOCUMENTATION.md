@@ -118,3 +118,162 @@
   - Implemented the `renderCassaBadge` dropdown switcher helper inside the component and rendered it in card headers next to the client's name for both list categories.
   - Integrated a new `<Select>` dropdown for `cassaStato` in the policy forms, replacing any missing/manual cash state tracking with native validations.
 
+
+### [2026-05-22 09:56]: Migrazione a Firebase (Auth + Firestore)
+* *Details*: L'app è stata migrata da un database puramente locale (`localStorage`) a Firebase (Authentication + Firestore) per consentire la sincronizzazione cross-device e la persistenza sicura dei dati in cloud (gratuita per sempre).
+* *Tech Notes*:
+  - Installato package `firebase`.
+  - Creato `src/lib/firebase.ts` per inizializzazione SDK tramite variabili d'ambiente.
+  - Implementato hook `useAuth` in `src/hooks/use-auth.ts` per tracciare `onAuthStateChanged`.
+  - Creata pagina di `/login` usando componenti UI.
+  - Aggiornato `App.tsx` con un `ProtectedRoute` e rimozione dell'accesso globale: ora l'app ridireziona automaticamente a `/login` se `user` è null.
+  - Riscritti tutti gli store (`tasks-store.ts`, `policies-store.ts`, `claims-store.ts`) sostituendo `useLocalStorage` con hook reattivi basati su `onSnapshot` di Firestore.
+  - I documenti Firestore ora vengono vincolati all'ID dell'utente loggato (`userId`), garantendo l'isolamento dei dati e l'assoluta sicurezza.
+
+### [2026-05-22 10:05]: Fix Errori Undefined su Firestore
+* *Details*: Corretto un crash in cui Firebase bloccava il salvataggio dei documenti se contenevano campi opzionali non compilati (con valore `undefined`).
+* *Tech Notes*:
+  - Creata utility `cleanFirestoreData` in `src/lib/utils.ts` che rimuove iterativamente tutte le chiavi `undefined` da un oggetto prima di inviarlo al server.
+  - Aggiornati i metodi `addDoc` e `updateDoc` in `tasks-store.ts`, `policies-store.ts` e `claims-store.ts` per pulire automaticamente il payload tramite la nuova utility.
+
+### [2026-05-22 10:14]: Eliminazione Definitiva Polizze Pagate
+* *Details*: Modificato il comportamento dello stato cassa "Pagata". Ora, sezionando questo stato, la polizza viene eliminata fisicamente dal database invece di essere archiviata.
+* *Tech Notes*:
+  - Aggiornati i file `src/pages/polizze-personali.tsx` e `src/pages/polizze-agenzia.tsx`.
+  - La logica del pulsante del badge e del modulo di modifica (`onEditSubmit`) ora chiama `deletePolicy(id)` al posto di `updatePolicy` quando `cassaStato === "pagata"`.
+  - Modificati i testi UI (es. "Pagata (Elimina)" al posto di "Archivia") per avvisare l'utente.
+
+### [2026-05-22 10:15]: Restyling Premium del DatePicker (Calendario)
+* *Details*: Totalmente ridisegnato il componente del calendario per la selezione delle date (scadenze polizze, aperture sinistri). Il vecchio design appariva datato e "orribile", ora è in linea con un'interfaccia moderna e di lusso.
+* *Tech Notes*:
+  - Modificato `src/components/ui/calendar.tsx`.
+  - Aggiunto effetto glassmorphism al container (`backdrop-blur-xl`, sfondo semitrasparente) con angoli più morbidi.
+  - I pulsanti dei giorni sono ora perfettamente rotondi con un'animazione fluida di espansione (`scale-[1.12]`) all'hovering.
+  - Aggiunta di ombre colorate primarie sul giorno selezionato per un look più vivido.
+  - Aggiustamento tipografico: intestazione mese più decisa, giorni della settimana ridotti, uppercase e con spaziatura maggiorata (`tracking-widest`).
+
+### [2026-05-22 10:17]: Semplificazione Gestione Attività (Eliminazione Definitiva)
+* *Details*: Rimossa la vista separata per le attività completate. Ora le attività vengono eliminate definitivamente dal database quando contrassegnate come completate, in analogia al comportamento delle polizze pagate.
+* *Tech Notes*:
+  - Modificato `tasks-store.ts`: il metodo `completeTask` ora chiama direttamente `deleteDoc` per cancellare il record su Firestore.
+  - Modificato `src/pages/attivita.tsx`: rimossi i componenti `Tabs` e l'intera logica di raggruppamento delle attività completate (`completedTasks`, `groupedCompleted`, ecc.). Resta solo una lista unica delle attività da fare.
+
+### [2026-05-22 10:18]: Input "Quick Add" per Attività
+* *Details*: Aggiunto un campo di input inline in alto alla lista delle attività che permette all'utente di digitare e premere "Invio" per creare rapidamente un'attività, senza dover aprire modali o usare il bottone in alto a destra.
+* *Tech Notes*:
+  - Inserito un tag `<form>` con un campo di input testuale in `src/pages/attivita.tsx`.
+  - La funzione `onSubmit` di questo piccolo form chiama direttamente `addTask({ title })`.
+  - Migliorata l'UX con stili moderni e focus borders dinamici.
+  - Rimosso completamente il pulsante e il modale "Nuova attività" (insieme agli hook `isAddOpen` e `form` ad esso dedicati) dall'intestazione, snellendo ulteriormente il componente.
+
+### [2026-05-22 10:24]: Input "Quick Add" per Polizze (Personali e Agenzia)
+* *Details*: Replicato il sistema di inserimento rapido anche per le polizze (sia personali che d'agenzia), rimuovendo i vecchi modali "Nuova polizza" e i relativi pulsanti, massimizzando la velocità di inserimento.
+* *Tech Notes*:
+  - Aggiunti form inline (`<form>`) per `polizze-personali.tsx` e `polizze-agenzia.tsx`.
+  - Implementata logica intelligente: l'utente può inserire "Cliente - TipoPolizza" (es: "Mario Rossi - RCA") e lo split automatico per separatore assegnerà Nome e Tipo in automatico. In assenza di "-", il tipo è impostato su "Da definire".
+  - Rimosso stato `isAddOpen`, la gestione `onSubmit` originale e l'hook `useForm` iniziale, mantenendo solo `editForm`. Risolti problemi di tipizzazione con `ReturnType<typeof useForm<PolicyFormValues>>`.
+
+### [2026-05-22 10:28]: Miglioramento Quick Add Contestuale con Dropdown
+* *Details*: Spostata la barra di Quick Add *all'interno* di ogni singola vista ("In scadenza" e "Da emettere") in modo che il sistema sappia in automatico lo stato in cui salvare la polizza. Sono stati integrati inoltre menu a tendina direttamente nella barra per selezionare il Tipo di Polizza e lo Stato della Cassa (solo Desktop/Tablet per non ingombrare da Mobile).
+* *Tech Notes*:
+  - Refactoring della UI: creata una funzione interna `renderQuickAdd(defaultStatus)` che restituisce il form inline sfruttando `Radix Select` (componenti di shadcn) al posto dei dropdown nativi.
+  - La form adesso gestisce stati interni `quickType` e `quickCassa` per alimentare i `Select`, offrendo una combinazione di campo testuale ed elementi cliccabili, senza perdere la velocità e leggerezza raggiunta in precedenza.
+
+### [2026-05-22 10:33]: Selettore Data in Quick Add Polizze
+* *Details*: Corretto un bug per il quale l'aggiunta di una polizza nel tab "In scadenza" falliva in modo silenzioso in quanto una polizza "Emessa" richiede obbligatoriamente la data di scadenza. Aggiunto quindi un DatePicker dedicato che appare dinamicamente nella barra di Quick Add se il tab attivo è "In Scadenza".
+* *Tech Notes*:
+  - Introdotto stato `quickDate` in `polizze-personali.tsx` e `polizze-agenzia.tsx`.
+  - La funzione `renderQuickAdd` ora mostra condizionalmente un `Popover` contenente un componente `Calendar` (già ridisegnato in chiave premium in precedenza) solo quando `defaultStatus === "emessa"`.
+  - Aggiunta protezione lato UX: il pulsante "Aggiungi" si disabilita (`disabled={defaultStatus === "emessa" && !quickDate}`) finché non viene selezionata una data, impedendo salvataggi non validi su Firestore.
+
+### [2026-05-22 10:35]: Miglioramento UX Calendario (Date Passate e Giorno Corrente)
+* *Details*: Reso impossibile selezionare date antecedenti al giorno odierno in modo globale su tutti i DatePicker, in quanto non pertinenti per logiche di scadenza/rinnovo. Il giorno odierno è stato inoltre fortemente evidenziato (verde brillante con ombra luminosa) per guidare l'utente.
+* *Tech Notes*:
+  - Modificato `src/components/ui/calendar.tsx`: aggiunto `defaultDisabled` con logica `date < new Date(new Date().setHours(0, 0, 0, 0))` e passato come fallback.
+  - Aggiornata la classe `today` nelle classNames del `DayPicker`: inserito stile `bg-emerald-500/20 text-emerald-600 font-bold border-2 border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.2)]` che rimuove l'ambiguità visiva e spicca nettamente sul resto.
+
+### [2026-05-22 10:39]: Conferma Eliminazione Attività
+* *Details*: Introdotto un popup di conferma quando l'utente clicca sul cerchietto per segnare un'attività come completata (e quindi eliminarla). Questo previene click accidentali.
+* *Tech Notes*:
+  - Modificato `src/pages/attivita.tsx`.
+  - Il bottone per il completamento dell'attività è stato wrappato in un `AlertDialog` di shadcn. Cliccando su "Completa" nel footer del popup viene innescata la logica distruttiva su Firestore.
+
+### [2026-05-22 10:41]: Rimozione Filtro Scadenza Polizze
+* *Details*: Rimosso completamente dalla UI e dalla logica di filtering il selettore "In scadenza entro X giorni". Ora la vista "In scadenza" funge da lista completa di tutte le polizze emesse, ordinate cronologicamente, offrendo un colpo d'occhio totale senza nascondere elementi in base alla data.
+* *Tech Notes*:
+  - Modificati `polizze-personali.tsx` e `polizze-agenzia.tsx`.
+  - Rimosso l'elemento JSX contenente gli input e i bottoni rapidi per i giorni (7, 14, 30, ecc).
+  - Rimossa l'estrazione di `setExpiryThresholdDays` dall'hook `useSettings`.
+  - Modificata la computed property `inScadenza` per rimuovere la clausola `.filter(p => differenceInDays(...) <= threshold)`, mantenendo solo l'ordinamento `.sort()`.
+
+### [2026-05-22 10:46]: Quick Add per i Sinistri
+* *Details*: Introdotta la comodissima barra di Quick Add anche nella pagina dei Sinistri, replicando la user experience pulita e veloce già adottata per le Polizze e le Attività.
+* *Tech Notes*:
+  - Modificato `src/pages/sinistri.tsx`: eliminato il bottone "Nuovo sinistro" e tutta la logica della modale associata (`isAddOpen`, `useForm`).
+  - Creata la funzione `renderQuickAdd()` che gestisce l'inserimento rapido inline, supportato dagli stati locali `quickDate` e `quickStatus`.
+  - I campi del Quick Add per il sinistro ora includono in un'unica riga: Nome Cliente (text input), Ramo (text input con datalist per suggerimenti), Data di Apertura (Date Picker) e Stato Sinistro (Select).
+  - L'invio resetta istantaneamente i campi per agevolare l'inserimento multiplo continuo.
+
+### [2026-05-22 10:48]: Eliminazione Sinistri Liquidati
+* *Details*: Quando un sinistro viene segnato come "Liquidato", ora viene eliminato fisicamente dal database anziché rimanere nascosto o archiviato.
+* *Tech Notes*:
+  - Modificato `src/pages/sinistri.tsx`.
+  - Sostituita l'azione `updateClaim(..., { status: 'liquidato' })` con `deleteClaim(...)` all'interno della modale di conferma liquidazione.
+  - Rimossa l'opzione "Liquidato" dalle Select di inserimento e modifica, per impedire all'utente di creare un sinistro fantasma. La liquidazione è ora possibile solo tramite l'apposito bottone distruttivo (con popup di sicurezza).
+
+### [2026-05-22 10:49]: Aggiornamento Ramo e Stato Default Sinistri
+* *Details*: La selezione del "Ramo" dei sinistri è diventata un vero e proprio menu a tendina (Select), uniformandosi all'interfaccia delle polizze. Inoltre, lo stato di default per i nuovi sinistri è stato impostato su "Da aprire".
+* *Tech Notes*:
+  - Sostituito l'elemento `<Input list="...">` con un `<Select>` di Radix UI in `renderQuickAdd` e in `renderClaimFormFields`.
+  - Lo stato locale `quickStatus`, la form logic e le costanti di reset in `src/pages/sinistri.tsx` utilizzano ora `"da_aprire"` come valore di partenza invece di `"incaricato"`.
+
+### [2026-05-22 10:52]: Gestione Automatica Data Sinistri
+* *Details*: I sinistri in stato "Da aprire" ora non richiedono più l'inserimento di una data (il calendario risulta disabilitato e mostra "Da definire"). Non appena il sinistro cambia stato, la data di apertura viene automaticamente popolata con la data corrente.
+* *Tech Notes*:
+  - Reso opzionale il campo `openDate` in `src/lib/claims-store.ts` e nello schema Zod di validazione in `sinistri.tsx`.
+  - Inibito il Popover del calendario nella barra Quick Add e rimosso l'input date nel dialog di modifica se lo stato scelto è `da_aprire`.
+  - Aggiunta logica per iniettare `format(new Date(), 'yyyy-MM-dd')` durante le transizioni di stato dal menu a tendina Badge e durante l'`onEditSubmit`.
+  - Aggiornata la renderizzazione delle card affinché mostri un placeholder pulito al posto di una data invalida.
+
+### [2026-05-22 10:56]: Ridefinizione Contatori Dashboard
+* *Details*: Risolto un "falso blocco" della Dashboard in cui i contatori sembravano non aggiornarsi. Prima, infatti, venivano conteggiati solo elementi specifici (es. attività in scadenza *oggi*, o polizze già *emesse* in scadenza a breve). Ora la prima linea di schede restituisce un colpo d'occhio completo: Totale Attività, Totale Polizze, Totale Sinistri e un'unica scheda cumulativa per le "Urgenze".
+* *Tech Notes*:
+  - Modificate le definizioni delle `statCards` in `src/pages/dashboard.tsx`.
+  - "Attività": mostra `activeTasks.length` anziché `tasksDueToday.length`.
+  - "Polizze": mostra `policies.length` anziché `policiesExpiringSoon.length`.
+  - "Urgenze": raggruppa dinamicamente `overdueTasks.length + policiesExpiringSoon.length` in un unico indicatore di allerta (rosso se > 0).
+
+### [2026-05-22 10:58]: Nuovo stato Sinistri (Aperto)
+* *Details*: Aggiunto un nuovo stato "Aperto" per i sinistri. Selezionandolo come primo passaggio da "Da aprire", il sistema fissa in automatico la data odierna come data di apertura. Cambiando successivamente lo stato in altre voci (es. Incaricato perito), la data di apertura precedentemente fissata viene mantenuta intatta.
+* *Tech Notes*:
+  - Aggiunto `"aperto"` all'enum dei tipi in `claims-store.ts` e nello schema Zod di `sinistri.tsx`.
+  - Aggiunta configurazione UI per `"aperto"` in `renderInteractiveBadge` (colore badge `blue-500`).
+  - La logica implementata nel precedente aggiornamento per `updateClaim` e `onEditSubmit` copre già perfettamente la persistenza immutabile della data dopo il primo popolamento automatico in uscita da `da_aprire`.
+
+### [2026-05-22 11:00]: Quick Add Attività Potenziato
+* *Details*: La barra di aggiunta rapida per le Attività include ora anche un selettore per la data di scadenza. Questo rende l'inserimento immediato molto più flessibile senza dover aprire la finestra di modifica in un secondo momento. La data è del tutto opzionale.
+* *Tech Notes*:
+  - Modificato `src/pages/attivita.tsx` per convertire la barra di Quick Add da un semplice `Input` ad un form in linea simile a quello dei sinistri.
+  - Aggiunto lo stato `quickDate` e un `Popover` contenente il `<Calendar>`.
+  - La logica di invio converte automaticamente la data se selezionata, o lascia il campo `dueDate` vuoto, azzerando correttamente gli stati post-inserimento.
+
+### [2026-05-22 11:03]: Prevenzione Esposizione Segreti e API Keys
+* *Details*: È stato eseguito un super-controllo sull'intera repository per verificare l'assenza di API keys hardcoded e file sensibili prima di un push pubblico verso GitHub.
+* *Tech Notes*:
+  - Verificato che `src/lib/firebase.ts` sfrutti esclusivamente variabili di ambiente (`import.meta.env.VITE_FIREBASE_API_KEY`, etc.) senza hardcode.
+  - Eseguita ricerca approfondita (tramite RegExp) di pattern per chiavi segrete, token e password, escludendo dipendenze: nessun dato sensibile trovato.
+  - Aggiunte al `.gitignore` di root le wildcard fondamentali per prevenire la pubblicazione accidentale (`.env`, `.env.*`, `.env.local`, ecc.), risolvendo la pre-esistente lacuna di sicurezza (il file `.env.local` locale risultava untracked e pronto ad un potenziale `git add`). Ora è in sicurezza.
+
+### [2026-05-22 11:04]: Conferma Eliminazione Sinistri
+* *Details*: Introdotto un popup di conferma quando si clicca sull'icona del cestino per eliminare un sinistro, prevenendo cancellazioni accidentali.
+* *Tech Notes*:
+  - Modificato `src/pages/sinistri.tsx` introducendo lo stato locale `deletingClaim`.
+  - Il bottone con l'icona `Trash2` ora aggiorna lo stato anziché chiamare direttamente `deleteClaim`.
+  - Integrato un `<Dialog>` di conferma dedicato, coerente col design system e colorato di rosso (`destructive`), con annesso bottone di "Elimina".
+
+### [2026-05-22 11:06]: Estensione Popup di Conferma Eliminazione a Polizze e Attività
+* *Details*: Uniformata l'esperienza utente (UX) e rafforzata la sicurezza dei dati estendendo il popup di conferma per l'eliminazione anche alle sezioni Polizze Personali, Polizze Agenzia e Attività.
+* *Tech Notes*:
+  - Aggiunti gli stati locali `deletingPolicy` e `deletingTask` rispettivamente nei file `polizze-personali.tsx`, `polizze-agenzia.tsx` e `attivita.tsx`.
+  - Sostituita la chiamata diretta alle funzioni di delete (`deletePolicy`, `deleteTask`) sull'onClick dei bottoni cestino `Trash2` con l'attivazione dei nuovi stati.
+  - Inseriti i moduli `<Dialog>` in stile Shadcn UI con la palette cromatica `destructive` alla base di ogni componente per gestire il consenso esplicito dell'utente prima della cancellazione irreversibile.

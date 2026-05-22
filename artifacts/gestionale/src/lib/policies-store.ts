@@ -1,5 +1,8 @@
-import { useLocalStorage } from '@/hooks/use-local-storage';
-import { safeUUID } from '@/lib/utils';
+import { useState, useEffect } from 'react';
+import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useAuth } from '@/hooks/use-auth';
+import { cleanFirestoreData } from '@/lib/utils';
 
 export interface Policy {
   id: string;
@@ -13,63 +16,78 @@ export interface Policy {
   issuedAt?: string;
   daMettereACassa?: boolean;
   cassaStato?: 'regolare' | 'da_mettere' | 'pagata';
+  userId: string;
 }
 
-const initialPoliciesPersonali: Policy[] = [
-  {
-    id: safeUUID(),
-    clientName: 'Mario Rossi',
-    policyType: 'RC Auto Personale',
-    status: 'emessa',
-    expiryDate: new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0],
-    createdAt: new Date().toISOString(),
-    issuedAt: new Date().toISOString(),
-    daMettereACassa: true,
-  }
-];
-
-const initialPoliciesAgenzia: Policy[] = [
-  {
-    id: safeUUID(),
-    clientName: 'Studio Bianchi SRL',
-    policyType: 'RC Professionale Agenzia',
-    status: 'da_emettere',
-    targetIssueDate: new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0],
-    createdAt: new Date().toISOString(),
-  }
-];
-
 export function usePoliciesPersonali() {
-  const [policies, setPolicies] = useLocalStorage<Policy[]>('gestionale.policies.personali.v1', initialPoliciesPersonali);
+  const [policies, setPolicies] = useState<Policy[]>([]);
+  const { user } = useAuth();
 
-  const addPolicy = (input: Omit<Policy, 'id' | 'createdAt'>) => {
-    setPolicies(prev => [...prev, { ...input, id: safeUUID(), createdAt: new Date().toISOString() }]);
+  useEffect(() => {
+    if (!user) {
+      setPolicies([]);
+      return;
+    }
+    const q = query(collection(db, 'policies_personali'), where('userId', '==', user.uid));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Policy));
+      setPolicies(data);
+    });
+    return () => unsubscribe();
+  }, [user]);
+
+  const addPolicy = async (input: Omit<Policy, 'id' | 'createdAt' | 'userId'>) => {
+    if (!user) return;
+    await addDoc(collection(db, 'policies_personali'), cleanFirestoreData({
+      ...input,
+      createdAt: new Date().toISOString(),
+      userId: user.uid
+    }));
   };
 
-  const updatePolicy = (id: string, patch: Partial<Omit<Policy, 'id' | 'createdAt'>>) => {
-    setPolicies(prev => prev.map(p => p.id === id ? { ...p, ...patch } : p));
+  const updatePolicy = async (id: string, patch: Partial<Omit<Policy, 'id' | 'createdAt' | 'userId'>>) => {
+    await updateDoc(doc(db, 'policies_personali', id), cleanFirestoreData(patch));
   };
 
-  const deletePolicy = (id: string) => {
-    setPolicies(prev => prev.filter(p => p.id !== id));
+  const deletePolicy = async (id: string) => {
+    await deleteDoc(doc(db, 'policies_personali', id));
   };
 
   return { policies, addPolicy, updatePolicy, deletePolicy };
 }
 
 export function usePoliciesAgenzia() {
-  const [policies, setPolicies] = useLocalStorage<Policy[]>('gestionale.policies.agenzia.v1', initialPoliciesAgenzia);
+  const [policies, setPolicies] = useState<Policy[]>([]);
+  const { user } = useAuth();
 
-  const addPolicy = (input: Omit<Policy, 'id' | 'createdAt'>) => {
-    setPolicies(prev => [...prev, { ...input, id: safeUUID(), createdAt: new Date().toISOString() }]);
+  useEffect(() => {
+    if (!user) {
+      setPolicies([]);
+      return;
+    }
+    const q = query(collection(db, 'policies_agenzia'), where('userId', '==', user.uid));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Policy));
+      setPolicies(data);
+    });
+    return () => unsubscribe();
+  }, [user]);
+
+  const addPolicy = async (input: Omit<Policy, 'id' | 'createdAt' | 'userId'>) => {
+    if (!user) return;
+    await addDoc(collection(db, 'policies_agenzia'), cleanFirestoreData({
+      ...input,
+      createdAt: new Date().toISOString(),
+      userId: user.uid
+    }));
   };
 
-  const updatePolicy = (id: string, patch: Partial<Omit<Policy, 'id' | 'createdAt'>>) => {
-    setPolicies(prev => prev.map(p => p.id === id ? { ...p, ...patch } : p));
+  const updatePolicy = async (id: string, patch: Partial<Omit<Policy, 'id' | 'createdAt' | 'userId'>>) => {
+    await updateDoc(doc(db, 'policies_agenzia', id), cleanFirestoreData(patch));
   };
 
-  const deletePolicy = (id: string) => {
-    setPolicies(prev => prev.filter(p => p.id !== id));
+  const deletePolicy = async (id: string) => {
+    await deleteDoc(doc(db, 'policies_agenzia', id));
   };
 
   return { policies, addPolicy, updatePolicy, deletePolicy };

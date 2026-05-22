@@ -1,0 +1,1 @@
+# AZIONI MANUALI RICHIESTE (Firebase Security e Autenticazione)

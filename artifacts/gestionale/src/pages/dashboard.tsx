@@ -67,40 +67,40 @@ export function Dashboard() {
     hint?: string;
   }[] = [
       {
-        title: "Da Fare",
-        value: tasksDueToday.length,
+        title: "Attività",
+        value: activeTasks.length,
         icon: CheckSquare,
         href: "/attivita",
-        testId: "card-tasks-today",
+        testId: "card-tasks-all",
         tone: "neutral",
-        hint: "in scadenza oggi",
+        hint: "totale da fare",
       },
       {
-        title: "In Sospeso",
-        value: overdueTasks.length,
-        icon: AlertCircle,
-        href: "/attivita",
-        testId: "card-tasks-overdue",
-        tone: overdueTasks.length > 0 ? "danger" : "muted",
-        hint: "da gestire subito",
-      },
-      {
-        title: "Scadenze",
-        value: policiesExpiringSoon.length,
-        icon: CalendarClock,
+        title: "Polizze",
+        value: policies.length,
+        icon: FileText,
         href: "/polizze-personali",
-        testId: "card-policies-expiring",
+        testId: "card-policies-all",
         tone: "gold",
-        hint: "polizze in scadenza",
+        hint: "totale da gestire",
       },
       {
         title: "Sinistri",
         value: activeClaims.length,
         icon: AlertOctagon,
         href: "/sinistri",
-        testId: "card-policies-to-issue",
+        testId: "card-claims-all",
         tone: "neutral",
-        hint: "sinistri aperti",
+        hint: "totale aperti",
+      },
+      {
+        title: "Urgenze",
+        value: overdueTasks.length + policiesExpiringSoon.length,
+        icon: AlertCircle,
+        href: "/attivita",
+        testId: "card-urgencies",
+        tone: (overdueTasks.length + policiesExpiringSoon.length) > 0 ? "danger" : "muted",
+        hint: "attività e polizze",
       },
     ];
 
@@ -201,7 +201,7 @@ export function Dashboard() {
                       <div className="min-w-0">
                         <div className="font-medium truncate">{p.clientName}</div>
                         <div className="text-sm text-muted-foreground truncate">
-                          {p.policyType} <span className="text-[10px] uppercase font-bold text-gold bg-gold/10 px-1.5 py-0.5 rounded ml-1.5">{p.scope === 'personali' ? 'Pers.' : 'Agenzia'}</span>
+                          {p.policyType} <span className="text-[10px] uppercase font-bold text-gold bg-gold/10 px-1.5 py-0.5 rounded ml-1.5">{p.scope === 'personali' ? 'PERSONALI' : 'Agenzia'}</span>
                         </div>
                       </div>
                       <DatePill date={exp} tone={tone} />

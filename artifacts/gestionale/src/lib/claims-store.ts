@@ -1,59 +1,52 @@
-import { useLocalStorage } from '@/hooks/use-local-storage';
-import { safeUUID } from '@/lib/utils';
+import { useState, useEffect } from 'react';
+import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useAuth } from '@/hooks/use-auth';
+import { cleanFirestoreData } from '@/lib/utils';
 
 export interface Claim {
   id: string;
   clientName: string;
-  openDate: string; // YYYY-MM-DD
+  openDate?: string; // YYYY-MM-DD (null/undefined se da aprire)
   ramo: string;
   notes?: string;
-  status?: 'liquidato' | 'incaricato' | 'non_liquidato' | 'da_aprire';
+  status?: 'liquidato' | 'incaricato' | 'non_liquidato' | 'da_aprire' | 'aperto';
   createdAt: string;
+  userId: string;
 }
 
-const initialClaims: Claim[] = [
-  {
-    id: safeUUID(),
-    clientName: 'Luca Verdi',
-    openDate: '2026-05-10',
-    ramo: 'RC Auto',
-    notes: 'Tamponamento a catena in autostrada. CID compilato.',
-    status: 'incaricato',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: safeUUID(),
-    clientName: 'Elena Neri',
-    openDate: '2026-05-18',
-    ramo: 'Infortuni',
-    notes: 'Caduta accidentale durante attività sportiva.',
-    status: 'liquidato',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: safeUUID(),
-    clientName: 'Marco Rossi',
-    openDate: '2026-05-21',
-    ramo: 'Incendio',
-    notes: 'Cortocircuito quadro elettrico box auto.',
-    status: 'da_aprire',
-    createdAt: new Date().toISOString(),
-  }
-];
-
 export function useClaims() {
-  const [claims, setClaims] = useLocalStorage<Claim[]>('gestionale.claims.v1', initialClaims);
+  const [claims, setClaims] = useState<Claim[]>([]);
+  const { user } = useAuth();
 
-  const addClaim = (input: Omit<Claim, 'id' | 'createdAt'>) => {
-    setClaims(prev => [...prev, { ...input, id: safeUUID(), createdAt: new Date().toISOString() }]);
+  useEffect(() => {
+    if (!user) {
+      setClaims([]);
+      return;
+    }
+    const q = query(collection(db, 'claims'), where('userId', '==', user.uid));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Claim));
+      setClaims(data);
+    });
+    return () => unsubscribe();
+  }, [user]);
+
+  const addClaim = async (input: Omit<Claim, 'id' | 'createdAt' | 'userId'>) => {
+    if (!user) return;
+    await addDoc(collection(db, 'claims'), cleanFirestoreData({
+      ...input,
+      createdAt: new Date().toISOString(),
+      userId: user.uid
+    }));
   };
 
-  const updateClaim = (id: string, patch: Partial<Omit<Claim, 'id' | 'createdAt'>>) => {
-    setClaims(prev => prev.map(c => c.id === id ? { ...c, ...patch } : c));
+  const updateClaim = async (id: string, patch: Partial<Omit<Claim, 'id' | 'createdAt' | 'userId'>>) => {
+    await updateDoc(doc(db, 'claims', id), cleanFirestoreData(patch));
   };
 
-  const deleteClaim = (id: string) => {
-    setClaims(prev => prev.filter(c => c.id !== id));
+  const deleteClaim = async (id: string) => {
+    await deleteDoc(doc(db, 'claims', id));
   };
 
   return { claims, addClaim, updateClaim, deleteClaim };

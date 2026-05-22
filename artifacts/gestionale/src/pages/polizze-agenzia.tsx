@@ -63,16 +63,14 @@ type PolicyFormValues = z.infer<typeof policySchema>;
 
 export function PolizzeAgenzia() {
   const { policies, addPolicy, updatePolicy, deletePolicy } = usePoliciesAgenzia();
-  const { settings, setExpiryThresholdDays } = useSettings();
-  const [isAddOpen, setIsAddOpen] = useState(false);
+  const { settings } = useSettings();
   const [editingPolicy, setEditingPolicy] = useState<Policy | null>(null);
   const [issuingPolicy, setIssuingPolicy] = useState<Policy | null>(null);
   const [payingPolicy, setPayingPolicy] = useState<Policy | null>(null);
-
-  const form = useForm<PolicyFormValues>({
-    resolver: zodResolver(policySchema),
-    defaultValues: { clientName: "", policyType: "", notes: "", status: "da_emettere", daMettereACassa: false, cassaStato: "regolare" },
-  });
+  const [deletingPolicy, setDeletingPolicy] = useState<Policy | null>(null);
+  const [quickType, setQuickType] = useState("Auto");
+  const [quickCassa, setQuickCassa] = useState("regolare");
+  const [quickDate, setQuickDate] = useState<Date | undefined>(undefined);
 
   const editForm = useForm<PolicyFormValues>({
     resolver: zodResolver(policySchema),
@@ -94,47 +92,34 @@ export function PolizzeAgenzia() {
     }
   }, [editingPolicy, editForm]);
 
-  function onSubmit(values: PolicyFormValues) {
-    addPolicy({
-      clientName: values.clientName,
-      policyType: values.policyType,
-      notes: values.notes || undefined,
-      status: values.status,
-      expiryDate: values.expiryDate ? format(values.expiryDate, 'yyyy-MM-dd') : undefined,
-      targetIssueDate: values.targetIssueDate ? format(values.targetIssueDate, 'yyyy-MM-dd') : undefined,
-      daMettereACassa: values.cassaStato === "da_mettere",
-      cassaStato: values.cassaStato || "regolare",
-    });
-    setIsAddOpen(false);
-    form.reset({ clientName: "", policyType: "", notes: "", status: "da_emettere", daMettereACassa: false, cassaStato: "regolare" });
-  }
 
   function onEditSubmit(values: PolicyFormValues) {
     if (!editingPolicy) return;
-    updatePolicy(editingPolicy.id, {
-      clientName: values.clientName,
-      policyType: values.policyType,
-      notes: values.notes || undefined,
-      status: values.status,
-      expiryDate: values.status === "emessa" && values.expiryDate
-        ? format(values.expiryDate, 'yyyy-MM-dd')
-        : undefined,
-      targetIssueDate: values.status === "da_emettere" && values.targetIssueDate
-        ? format(values.targetIssueDate, 'yyyy-MM-dd')
-        : undefined,
-      issuedAt: values.status === "emessa"
-        ? (editingPolicy.issuedAt ?? new Date().toISOString())
-        : editingPolicy.issuedAt,
-      daMettereACassa: values.cassaStato === "da_mettere",
-      cassaStato: values.cassaStato || "regolare",
-    });
+    if (values.cassaStato === "pagata") {
+      deletePolicy(editingPolicy.id);
+    } else {
+      updatePolicy(editingPolicy.id, {
+        clientName: values.clientName,
+        policyType: values.policyType,
+        notes: values.notes || undefined,
+        status: values.status,
+        expiryDate: values.status === "emessa" && values.expiryDate
+          ? format(values.expiryDate, 'yyyy-MM-dd')
+          : undefined,
+        targetIssueDate: values.status === "da_emettere" && values.targetIssueDate
+          ? format(values.targetIssueDate, 'yyyy-MM-dd')
+          : undefined,
+        issuedAt: values.status === "emessa"
+          ? (editingPolicy.issuedAt ?? new Date().toISOString())
+          : editingPolicy.issuedAt,
+        daMettereACassa: values.cassaStato === "da_mettere",
+        cassaStato: values.cassaStato || "regolare",
+      });
+    }
     setEditingPolicy(null);
   }
 
-  const statusWatcher = form.watch("status");
   const editStatusWatcher = editForm.watch("status");
-
-  const threshold = settings.expiryThresholdDays;
 
   const emesse = policies.filter(p => p.status === 'emessa' && p.expiryDate && p.cassaStato !== 'pagata');
 
@@ -142,7 +127,6 @@ export function PolizzeAgenzia() {
   todayStart.setHours(0, 0, 0, 0);
 
   const inScadenza = emesse
-    .filter(p => differenceInDays(parseLocalDate(p.expiryDate!), todayStart) <= threshold)
     .sort((a, b) => parseLocalDate(a.expiryDate!).getTime() - parseLocalDate(b.expiryDate!).getTime());
 
   const daEmettere = policies.filter(p => p.status === 'da_emettere' && p.cassaStato !== 'pagata').sort((a, b) => {
@@ -244,7 +228,7 @@ export function PolizzeAgenzia() {
           >
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
-              <span className="font-semibold">Pagata (Archivia)</span>
+              <span className="font-semibold">Pagata (Elimina)</span>
             </div>
             {currentCassaStato === "pagata" && <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />}
           </DropdownMenuItem>
@@ -253,8 +237,114 @@ export function PolizzeAgenzia() {
     );
   };
 
+  const renderQuickAdd = (defaultStatus: "emessa" | "da_emettere") => (
+    <form 
+      onSubmit={(e) => {
+        e.preventDefault();
+        const target = e.target as HTMLFormElement;
+        const nameInput = target.elements.namedItem("quickName") as HTMLInputElement;
+        const clientName = nameInput.value.trim();
+        if (clientName) {
+          addPolicy({ 
+            clientName, 
+            policyType: quickType, 
+            status: defaultStatus, 
+            expiryDate: defaultStatus === "emessa" && quickDate ? format(quickDate, 'yyyy-MM-dd') : undefined,
+            daMettereACassa: quickCassa === "da_mettere", 
+            cassaStato: quickCassa as any 
+          });
+          nameInput.value = "";
+          setQuickDate(undefined);
+        }
+      }}
+      className="flex flex-col sm:flex-row sm:items-center gap-2 mb-6 bg-card p-2 rounded-xl border border-border/60 shadow-sm focus-within:ring-2 focus-within:ring-primary/30 transition-all"
+    >
+      <div className="flex-1 relative">
+        <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input 
+          name="quickName"
+          placeholder="Nome cliente..." 
+          className="pl-9 h-10 border-0 focus-visible:ring-0 shadow-none bg-transparent"
+          autoComplete="off"
+          required
+        />
+      </div>
+      
+      {defaultStatus === "emessa" && (
+        <>
+          <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-full sm:w-[140px] h-10 justify-start text-left font-normal border-0 shadow-none bg-transparent focus:ring-0",
+                  !quickDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4 opacity-50 shrink-0" />
+                {quickDate ? format(quickDate, "P", { locale: it }) : <span>Scadenza...</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={quickDate}
+                onSelect={setQuickDate}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </>
+      )}
+
+      <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
+      <div className="flex gap-2 w-full sm:w-auto">
+        <Select value={quickType} onValueChange={setQuickType}>
+          <SelectTrigger className="h-10 border-0 bg-transparent shadow-none w-full sm:w-[140px] focus:ring-0 font-medium">
+            <SelectValue placeholder="Tipo polizza" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Auto">Auto</SelectItem>
+            <SelectItem value="Moto">Moto</SelectItem>
+            <SelectItem value="Furgone">Furgone</SelectItem>
+            <SelectItem value="Abitazione">Abitazione</SelectItem>
+            <SelectItem value="Infortuni">Infortuni</SelectItem>
+            <SelectItem value="Malattia">Malattia</SelectItem>
+            <SelectItem value="Vita">Vita</SelectItem>
+            <SelectItem value="TCM">TCM</SelectItem>
+            <SelectItem value="Commercio">Commercio</SelectItem>
+            <SelectItem value="RC Professionale">RC Professionale</SelectItem>
+            <SelectItem value="RC Terzi">RC Terzi</SelectItem>
+            <SelectItem value="RC Capofamiglia">RC Capofamiglia</SelectItem>
+            <SelectItem value="Animali">Animali</SelectItem>
+            <SelectItem value="Non specificata">Altro...</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
+        <Select value={quickCassa} onValueChange={setQuickCassa}>
+          <SelectTrigger className="h-10 border-0 bg-transparent shadow-none w-full sm:w-[150px] focus:ring-0 font-medium">
+            <SelectValue placeholder="Stato cassa" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="regolare">Regolare</SelectItem>
+            <SelectItem value="da_mettere">Da mettere a cassa</SelectItem>
+          </SelectContent>
+        </Select>
+        <Button 
+          type="submit" 
+          size="sm" 
+          className="font-medium shrink-0 h-10 px-4"
+          disabled={defaultStatus === "emessa" && !quickDate}
+        >
+          Aggiungi
+        </Button>
+      </div>
+    </form>
+  );
+
   const renderPolicyFormFields = (
-    f: typeof form,
+    f: ReturnType<typeof useForm<PolicyFormValues>>,
     currentStatus: PolicyFormValues["status"],
   ) => (
     <>
@@ -397,7 +487,7 @@ export function PolizzeAgenzia() {
               <SelectContent>
                 <SelectItem value="regolare">Regolare</SelectItem>
                 <SelectItem value="da_mettere">Da mettere a cassa</SelectItem>
-                <SelectItem value="pagata">Pagata (Archivia)</SelectItem>
+                <SelectItem value="pagata">Pagata (Elimina)</SelectItem>
               </SelectContent>
             </Select>
             <FormMessage />
@@ -429,28 +519,6 @@ export function PolizzeAgenzia() {
           <h1 className="text-3xl sm:text-4xl font-serif font-semibold text-primary mb-2 tracking-tight">Polizze Agenzia</h1>
           <p className="text-muted-foreground text-sm sm:text-base">Monitora il portafoglio agenzia e gestisci i sinistri.</p>
         </div>
-        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-          <DialogTrigger asChild>
-            <Button data-testid="button-add-policy">
-              <Plus className="w-4 h-4 mr-2" />
-              Nuova polizza
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Aggiungi polizza</DialogTitle>
-              <DialogDescription>Inserisci i dati della nuova polizza.</DialogDescription>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                {renderPolicyFormFields(form, statusWatcher)}
-                <div className="flex justify-end pt-4">
-                  <Button type="submit">Salva polizza</Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
       </div>
 
       <Dialog open={!!editingPolicy} onOpenChange={(open) => { if (!open) setEditingPolicy(null); }}>
@@ -471,69 +539,21 @@ export function PolizzeAgenzia() {
       </Dialog>
 
       <Tabs defaultValue="in-scadenza" className="w-full">
-        <TabsList className="mb-6">
-          <TabsTrigger value="in-scadenza" data-testid="tab-in-scadenza">
-            <ShieldAlert className="w-4 h-4 mr-2" />
-            In scadenza ({inScadenza.length})
-          </TabsTrigger>
-          <TabsTrigger value="da-emettere" data-testid="tab-da-emettere">
-            <FileSignature className="w-4 h-4 mr-2" />
-            Da emettere ({daEmettere.length})
-          </TabsTrigger>
-        </TabsList>
+        <div className="flex justify-center mb-6">
+          <TabsList>
+            <TabsTrigger value="in-scadenza" data-testid="tab-in-scadenza">
+              <ShieldAlert className="w-4 h-4 mr-2" />
+              In scadenza ({inScadenza.length})
+            </TabsTrigger>
+            <TabsTrigger value="da-emettere" data-testid="tab-da-emettere">
+              <FileSignature className="w-4 h-4 mr-2" />
+              Da emettere ({daEmettere.length})
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="in-scadenza" className="space-y-4">
-          <div className="inline-flex items-center gap-3 text-sm bg-card border rounded-full pl-4 pr-1.5 py-1.5 shadow-soft flex-wrap max-w-full">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Settings2 className="w-4 h-4" />
-              <label htmlFor="threshold-input" className="font-medium whitespace-nowrap">In scadenza entro</label>
-            </div>
-            <div className="flex items-center gap-0.5 bg-muted/60 rounded-full p-0.5">
-              {[
-                { label: "7", value: 7 },
-                { label: "14", value: 14 },
-                { label: "30", value: 30 },
-                { label: "60", value: 60 },
-                { label: "90", value: 90 },
-              ].map((preset) => {
-                const active = threshold === preset.value;
-                return (
-                  <button
-                    key={preset.value}
-                    type="button"
-                    onClick={() => setExpiryThresholdDays(preset.value)}
-                    data-testid={`button-threshold-${preset.value}`}
-                    aria-pressed={active}
-                    className={cn(
-                      "h-7 min-w-[2.25rem] px-2.5 rounded-full text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-card",
-                      active
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {preset.label}
-                    <span className="ml-0.5 opacity-60 font-normal">gg</span>
-                  </button>
-                );
-              })}
-            </div>
-            <div className="flex items-center gap-1.5 pl-1 border-l border-border/70">
-              <Input
-                id="threshold-input"
-                type="number"
-                min={1}
-                max={365}
-                value={threshold}
-                onChange={(e) => {
-                  const v = parseInt(e.target.value, 10);
-                  if (!Number.isNaN(v) && v > 0 && v <= 365) setExpiryThresholdDays(v);
-                }}
-                className="w-14 h-7 text-sm text-center font-semibold tabular-nums border-0 bg-transparent shadow-none focus-visible:ring-1 focus-visible:ring-ring px-1"
-                data-testid="input-threshold"
-              />
-              <span className="text-muted-foreground text-xs pr-2">giorni</span>
-            </div>
-          </div>
+          {renderQuickAdd("emessa")}
 
           {inScadenza.length > 0 ? (
             <div className="grid gap-3">
@@ -566,7 +586,7 @@ export function PolizzeAgenzia() {
                       <Button variant="ghost" size="icon" onClick={() => setEditingPolicy(policy)} className="text-muted-foreground hover:text-primary" data-testid={`button-edit-policy-${policy.id}`}>
                         <Pencil className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => deletePolicy(policy.id)} className="text-muted-foreground hover:text-destructive">
+                      <Button variant="ghost" size="icon" onClick={() => setDeletingPolicy(policy)} className="text-muted-foreground hover:text-destructive">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -576,12 +596,14 @@ export function PolizzeAgenzia() {
             </div>
           ) : (
             <div className="p-10 text-center bg-card/50 border border-dashed rounded-xl text-muted-foreground text-sm">
-              Nessuna polizza in scadenza entro {threshold} giorni.
+              Nessuna polizza in scadenza.
             </div>
           )}
         </TabsContent>
 
         <TabsContent value="da-emettere" className="space-y-4">
+          {renderQuickAdd("da_emettere")}
+
           {daEmettere.length > 0 ? (
             <div className="grid gap-3">
               {daEmettere.map(policy => (
@@ -618,7 +640,7 @@ export function PolizzeAgenzia() {
                       <Button variant="ghost" size="icon" onClick={() => setEditingPolicy(policy)} className="text-muted-foreground hover:text-primary" data-testid={`button-edit-policy-${policy.id}`}>
                         <Pencil className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => deletePolicy(policy.id)} className="text-muted-foreground hover:text-destructive">
+                      <Button variant="ghost" size="icon" onClick={() => setDeletingPolicy(policy)} className="text-muted-foreground hover:text-destructive">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -642,7 +664,7 @@ export function PolizzeAgenzia() {
               Conferma Pagamento
             </DialogTitle>
             <DialogDescription className="text-muted-foreground text-sm leading-relaxed">
-              Sei sicuro di voler contrassegnare la polizza di <strong className="text-foreground">{payingPolicy?.clientName}</strong> come pagata? Verrà archiviata e non sarà più visibile nell'elenco attivo.
+              Sei sicuro di voler contrassegnare la polizza di <strong className="text-foreground">{payingPolicy?.clientName}</strong> come pagata? <strong>Verrà eliminata definitivamente dal database</strong> e non sarà più recuperabile.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-3 pt-5">
@@ -653,7 +675,7 @@ export function PolizzeAgenzia() {
               className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-soft border-0 transition-colors"
               onClick={() => {
                 if (payingPolicy) {
-                  updatePolicy(payingPolicy.id, { cassaStato: "pagata", daMettereACassa: false });
+                  deletePolicy(payingPolicy.id);
                   setPayingPolicy(null);
                 }
               }}
@@ -693,6 +715,37 @@ export function PolizzeAgenzia() {
               }}
             >
               Conferma
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!deletingPolicy} onOpenChange={(open) => { if (!open) setDeletingPolicy(null); }}>
+        <DialogContent className="max-w-md border-border/80 shadow-elevated">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-xl font-semibold text-destructive mb-1 flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-destructive" />
+              Conferma Eliminazione
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground text-sm leading-relaxed">
+              Sei sicuro di voler eliminare definitivamente la polizza di <strong className="text-foreground">{deletingPolicy?.clientName}</strong>? Questa azione è irreversibile.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 pt-5">
+            <Button variant="outline" onClick={() => setDeletingPolicy(null)}>
+              Annulla
+            </Button>
+            <Button
+              variant="destructive"
+              className="font-medium shadow-soft border-0 transition-colors"
+              onClick={() => {
+                if (deletingPolicy) {
+                  deletePolicy(deletingPolicy.id);
+                  setDeletingPolicy(null);
+                }
+              }}
+            >
+              Elimina
             </Button>
           </div>
         </DialogContent>
