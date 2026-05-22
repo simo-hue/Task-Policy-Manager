@@ -17,6 +17,7 @@ export interface Policy {
   daMettereACassa?: boolean;
   cassaStato?: 'regolare' | 'da_mettere' | 'pagata';
   userId: string;
+  premio?: number;
 }
 
 export function usePoliciesPersonali() {

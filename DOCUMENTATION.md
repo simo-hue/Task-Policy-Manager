@@ -412,4 +412,14 @@
 * *Tech Notes*:
   - Modificato `artifacts/gestionale/vite.config.ts` per impostare `process.env.PORT || "5173"` e `process.env.BASE_PATH || "/"`, eliminando le eccezioni bloccanti sollevate in precedenza in assenza di variabili d'ambiente.
 
+### [2026-05-22 12:49]: Aggiunta Premio (Valore Numerico) alle Polizze
+* *Details*: È stato aggiunto un campo "Premio" a tutte le polizze (Personali e Agenzia), permettendo l'inserimento di un valore numerico opzionale rappresentante il premio della polizza in fase di inserimento rapido.
+* *Tech Notes*:
+  - Modificato `src/lib/policies-store.ts`: aggiunto `premio?: number` all'interfaccia `Policy`.
+  - Modificato `src/pages/polizze-personali.tsx` e `src/pages/polizze-agenzia.tsx`:
+    - Aggiornato lo schema Zod (`policySchema`) con `premio: z.coerce.number().optional()`.
+    - Inserito un campo `Input` di tipo `number` (step "0.01") alla destra del selettore del "Ramo" (`quickType`) all'interno della barra di Quick Add.
+    - Aggiornate le funzioni di submit rapido e submit completo (`onEditSubmit`) per salvare correttamente il valore.
+    - Il premio viene visualizzato nelle liste sotto forma di badge con formattazione valutaria (es: `€ 250.50`).
+
 

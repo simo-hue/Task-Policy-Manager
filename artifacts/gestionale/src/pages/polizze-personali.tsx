@@ -32,6 +32,7 @@ import {
 const policySchema = z.object({
   clientName: z.string().min(1, "Il nome cliente è obbligatorio"),
   policyType: z.string().min(1, "Il tipo di polizza è obbligatorio"),
+  premio: z.coerce.number().optional(),
   notes: z.string().optional(),
   status: z.enum(["da_emettere", "emessa"]),
   expiryDate: z.date().optional(),
@@ -76,7 +77,7 @@ export function PolizzePersonali() {
 
   const editForm = useForm<PolicyFormValues>({
     resolver: zodResolver(policySchema),
-    defaultValues: { clientName: "", policyType: "", notes: "", status: "da_emettere", daMettereACassa: false, cassaStato: "regolare" },
+    defaultValues: { clientName: "", policyType: "", notes: "", status: "da_emettere", daMettereACassa: false, cassaStato: "regolare", premio: undefined },
   });
 
   useEffect(() => {
@@ -90,6 +91,7 @@ export function PolizzePersonali() {
         targetIssueDate: editingPolicy.targetIssueDate ? parseLocalDate(editingPolicy.targetIssueDate) : undefined,
         daMettereACassa: editingPolicy.daMettereACassa ?? false,
         cassaStato: editingPolicy.cassaStato ?? (editingPolicy.daMettereACassa ? "da_mettere" : "regolare"),
+        premio: editingPolicy.premio,
       });
     }
   }, [editingPolicy, editForm]);
@@ -116,6 +118,7 @@ export function PolizzePersonali() {
           : editingPolicy.issuedAt,
         daMettereACassa: values.cassaStato === "da_mettere",
         cassaStato: values.cassaStato || "regolare",
+        premio: values.premio,
       });
     }
     setEditingPolicy(null);
@@ -248,6 +251,9 @@ export function PolizzePersonali() {
         const clientName = nameInput.value.trim();
         const notesInput = target.elements.namedItem("quickNotes") as HTMLInputElement;
         const notes = notesInput.value.trim();
+        const premioInput = target.elements.namedItem("quickPremio") as HTMLInputElement;
+        const premioVal = premioInput?.value.trim();
+        const premio = premioVal ? Number(premioVal) : undefined;
         if (clientName) {
           addPolicy({ 
             clientName, 
@@ -256,10 +262,12 @@ export function PolizzePersonali() {
             expiryDate: defaultStatus === "emessa" && quickDate ? format(quickDate, 'yyyy-MM-dd') : undefined,
             daMettereACassa: quickCassa === "da_mettere", 
             cassaStato: quickCassa as any,
-            notes: notes || undefined
+            notes: notes || undefined,
+            premio
           });
           nameInput.value = "";
           notesInput.value = "";
+          if (premioInput) premioInput.value = "";
           setQuickDate(undefined);
         }
       }}
@@ -327,6 +335,17 @@ export function PolizzePersonali() {
             <SelectItem value="Non specificata">Altro...</SelectItem>
           </SelectContent>
         </Select>
+        <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
+        <div className="relative w-full sm:w-[110px]">
+          <Input 
+            name="quickPremio"
+            type="number"
+            step="0.01"
+            placeholder="Premio (€)" 
+            className="h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
+            autoComplete="off"
+          />
+        </div>
         {defaultStatus === "emessa" && (
           <>
             <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
@@ -400,6 +419,19 @@ export function PolizzePersonali() {
                   <option value="Fideiussione" />
                 </datalist>
               </div>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={f.control}
+        name="premio"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Premio (€) (opzionale)</FormLabel>
+            <FormControl>
+              <Input type="number" step="0.01" placeholder="Es. 250.50" {...field} value={field.value ?? ""} onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -579,16 +611,23 @@ export function PolizzePersonali() {
                   <CardContent className="p-0 flex flex-col sm:flex-row sm:items-center">
                     <div className="p-3 sm:p-5 flex-1 min-w-0">
                       <div className="flex justify-between items-start gap-3 mb-2 flex-wrap">
-                        <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2 min-w-0">
-                          <span className="truncate">{policy.clientName}</span>
+                        <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2 min-w-0 flex-wrap">
+                          <span className="truncate max-w-[180px] sm:max-w-xs">{policy.clientName}</span>
                           {renderCassaBadge(policy)}
+                          <span className="bg-secondary px-2 py-0.5 rounded-md text-secondary-foreground font-medium text-xs">{policy.policyType}</span>
+                          {policy.premio !== undefined && (
+                            <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-md font-medium text-xs whitespace-nowrap">
+                              € {policy.premio.toFixed(2)}
+                            </span>
+                          )}
                         </h3>
                         {policy.expiryDate && <UrgencyBadge date={policy.expiryDate} />}
                       </div>
-                      <div className="flex items-center gap-3 text-muted-foreground text-sm flex-wrap">
-                        <span className="bg-secondary px-2 py-0.5 rounded-md text-secondary-foreground font-medium text-xs">{policy.policyType}</span>
-                        {policy.notes && <span className="truncate max-w-xs">{policy.notes}</span>}
-                      </div>
+                      {policy.notes && (
+                        <div className="flex items-center gap-3 text-muted-foreground text-sm flex-wrap">
+                          <span className="truncate max-w-xs">{policy.notes}</span>
+                        </div>
+                      )}
                     </div>
                     <div className="px-3 sm:px-5 pb-3 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-1.5 sm:gap-2 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity flex-wrap">
                       <Button 
@@ -637,8 +676,14 @@ export function PolizzePersonali() {
                   <CardContent className="p-0 flex flex-col sm:flex-row sm:items-center">
                     <div className="p-3 sm:p-5 flex-1 min-w-0">
                       <div className="flex justify-between items-start gap-3 mb-2 flex-wrap">
-                        <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2 min-w-0">
-                          <span className="truncate">{policy.clientName}</span>
+                        <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2 min-w-0 flex-wrap">
+                          <span className="truncate max-w-[180px] sm:max-w-xs">{policy.clientName}</span>
+                          <span className="bg-secondary px-2 py-0.5 rounded-md text-secondary-foreground font-medium text-xs">{policy.policyType}</span>
+                          {policy.premio !== undefined && (
+                            <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-md font-medium text-xs whitespace-nowrap">
+                              € {policy.premio.toFixed(2)}
+                            </span>
+                          )}
                         </h3>
                         {policy.targetIssueDate && (
                           <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground ring-1 ring-border whitespace-nowrap">
@@ -647,10 +692,11 @@ export function PolizzePersonali() {
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-3 text-muted-foreground text-sm flex-wrap">
-                        <span className="bg-secondary px-2 py-0.5 rounded-md text-secondary-foreground font-medium text-xs">{policy.policyType}</span>
-                        {policy.notes && <span className="truncate max-w-xs">{policy.notes}</span>}
-                      </div>
+                      {policy.notes && (
+                        <div className="flex items-center gap-3 text-muted-foreground text-sm flex-wrap">
+                          <span className="truncate max-w-xs">{policy.notes}</span>
+                        </div>
+                      )}
                     </div>
                     <div className="px-3 sm:px-5 pb-3 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-1.5 sm:gap-2 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity flex-wrap">
                       <Button 
