@@ -201,7 +201,15 @@ export function Dashboard() {
                       <div className="min-w-0">
                         <div className="font-medium truncate">{p.clientName}</div>
                         <div className="text-sm text-muted-foreground truncate">
-                          {p.policyType} <span className="text-[10px] uppercase font-bold text-gold bg-gold/10 px-1.5 py-0.5 rounded ml-1.5">{p.scope === 'personali' ? 'PERSONALI' : 'Agenzia'}</span>
+                          {p.policyType} 
+                          <span className={cn(
+                            "text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ml-1.5",
+                            p.scope === 'personali' 
+                              ? "text-sky-600 bg-sky-500/10 dark:text-sky-400" 
+                              : "text-violet-600 bg-violet-500/10 dark:text-violet-400"
+                          )}>
+                            {p.scope === 'personali' ? 'PERSONALI' : 'AGENZIA'}
+                          </span>
                         </div>
                       </div>
                       <DatePill date={exp} tone={tone} />

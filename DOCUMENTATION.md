@@ -331,3 +331,9 @@
 * *Tech Notes*:
   - Aggiornate le istruzioni di configurazione ambientale (`.env.local` e Firebase).
   - Rimossi i vecchi riferimenti all'utilizzo esclusivo del `localStorage`.
+
+### [2026-05-22 11:32]: Differenziazione Colori Tag Polizze in Dashboard
+* *Details*: Differenziato il colore e aggiornato il testo dei badge (tag) per distinguere a colpo d'occhio le polizze "PERSONALI" da quelle "AGENZIA" nell'elenco delle prossime scadenze sulla dashboard principale.
+* *Tech Notes*:
+  - Modificato `dashboard.tsx` sostituendo la classe statica `text-gold bg-gold/10` con uno stile condizionale basato su `p.scope`.
+  - Utilizzato `text-sky-600 bg-sky-500/10` per le polizze Personali e `text-violet-600 bg-violet-500/10` per le polizze Agenzia (con varianti dark mode).
