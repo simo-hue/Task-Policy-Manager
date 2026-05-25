@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useClaims, Claim } from "@/lib/claims-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +41,11 @@ export function Sinistri() {
   const activeClaims = claims
     .filter(c => c.status !== "liquidato")
     .sort((a, b) => {
+      const statusOrder: Record<string, number> = { da_aprire: 1, aperto: 2, incaricato: 3, visita_medico_legale: 4 };
+      const statusA = statusOrder[a.status || "incaricato"] || 99;
+      const statusB = statusOrder[b.status || "incaricato"] || 99;
+      if (statusA !== statusB) return statusA - statusB;
+
       if (!a.openDate && !b.openDate) return 0;
       if (!a.openDate) return 1;
       if (!b.openDate) return -1;
@@ -599,21 +604,54 @@ export function Sinistri() {
 
         {filteredClaims.length > 0 ? (
           <div className="grid gap-3">
-            {filteredClaims.map((claim) => (
-              <Card key={claim.id} className="overflow-hidden group shadow-soft hover:shadow-card hover:border-primary/30 transition-all">
-                <CardContent className="p-0 flex flex-col sm:flex-row sm:items-center">
-                  <div className="p-3 sm:p-5 flex-1 min-w-0">
-                    <div className="flex justify-between items-start gap-3 mb-2 flex-wrap">
-                      <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2 flex-wrap min-w-0">
-                        <AlertOctagon className="w-4 h-4 text-destructive shrink-0" />
-                        <span className="truncate max-w-[180px] sm:max-w-xs">{claim.clientName}</span>
-                        {renderInteractiveBadge(claim)}
-                      </h3>
-                      <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground ring-1 ring-border whitespace-nowrap">
-                        <CalendarIcon className="w-3 h-3 mr-1" />
-                        Apertura: {claim.openDate ? format(parseLocalDate(claim.openDate), "d MMM yyyy", { locale: it }) : "Da definire"}
+            {filteredClaims.map((claim, index) => {
+              const statusLabels: Record<string, string> = {
+                da_aprire: "DA APRIRE",
+                aperto: "APERTO",
+                incaricato: "INCARICATO PERITO",
+                visita_medico_legale: "VISITA MEDICO LEGALE",
+                liquidato: "LIQUIDATO"
+              };
+              
+              const currentStatus = claim.status || "incaricato";
+              const currentStatusLabel = statusLabels[currentStatus] || "INCARICATO PERITO";
+              const currentDateKey = claim.openDate ? format(parseLocalDate(claim.openDate), "d MMMM yyyy", { locale: it }).toUpperCase() : "DA DEFINIRE";
+              
+              const groupKey = `${currentStatusLabel} - ${currentDateKey}`;
+              
+              let showSeparator = false;
+              if (index === 0) {
+                showSeparator = true;
+              } else {
+                const prevClaim = filteredClaims[index - 1];
+                const prevStatus = prevClaim.status || "incaricato";
+                const prevStatusLabel = statusLabels[prevStatus] || "INCARICATO PERITO";
+                const prevDateKey = prevClaim.openDate ? format(parseLocalDate(prevClaim.openDate), "d MMMM yyyy", { locale: it }).toUpperCase() : "DA DEFINIRE";
+                const prevGroupKey = `${prevStatusLabel} - ${prevDateKey}`;
+                showSeparator = groupKey !== prevGroupKey;
+              }
+
+              return (
+                <React.Fragment key={claim.id}>
+                  {showSeparator && (
+                    <div className={cn("relative flex items-center pb-2", index !== 0 && "pt-6")}>
+                      <div className="flex-grow border-t border-border/60"></div>
+                      <span className="mx-4 text-xs font-semibold tracking-[0.18em] text-primary/80 uppercase text-center">
+                        {groupKey}
                       </span>
+                      <div className="flex-grow border-t border-border/60"></div>
                     </div>
+                  )}
+                  <Card className="overflow-hidden group shadow-soft hover:shadow-card hover:border-primary/30 transition-all">
+                    <CardContent className="p-0 flex flex-col sm:flex-row sm:items-center">
+                      <div className="p-3 sm:p-5 flex-1 min-w-0">
+                        <div className="flex justify-between items-start gap-3 mb-2 flex-wrap">
+                          <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2 flex-wrap min-w-0">
+                            <AlertOctagon className="w-4 h-4 text-destructive shrink-0" />
+                            <span className="truncate max-w-[180px] sm:max-w-xs">{claim.clientName}</span>
+                            {renderInteractiveBadge(claim)}
+                          </h3>
+                        </div>
                     {claim.notes && (
                       <div className="flex items-center gap-3 text-muted-foreground text-sm flex-wrap">
                         <span className="truncate max-w-xl text-xs sm:text-sm">{claim.notes}</span>
@@ -648,8 +686,10 @@ export function Sinistri() {
                     </Button>
                   </div>
                 </CardContent>
-              </Card>
-            ))}
+                  </Card>
+                </React.Fragment>
+              );
+            })}
           </div>
         ) : (
           <div className="p-10 text-center bg-card/50 border border-dashed rounded-xl text-muted-foreground text-sm">

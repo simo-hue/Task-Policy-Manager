@@ -636,3 +636,7 @@
 - [2026-05-25 10:55:00]: Aggiunta filtro stato Sinistri
   - *Details*: Aggiunto un secondo livello di filtro per lo stato del sinistro (es. 'Da aprire', 'Incaricato', ecc.) sotto al filtro dei rami, garantendo un'interfaccia utente professionale e moderna.
   - *Tech Notes*: Aggiunto lo stato `selectedStatus`, la logica di filtering in cascata e un componente UI compatto con stile a pillole in `src/pages/sinistri.tsx`.
+
+- [2026-05-25 11:00:00]: Raggruppamento Sinistri per Stato e Data
+  - *Details*: Rimosso il badge della data dalle singole card dei sinistri e introdotto un sistema di raggruppamento visivo. I sinistri sono ora ordinati prima per stato e poi per data, e raggruppati con un elegante separatore testuale in formato "STATO - DATA".
+  - *Tech Notes*: Riscritto l'ordinamento in `activeClaims` per dare priorità a `statusOrder`. Modificato il loop `.map` dei claim in `sinistri.tsx` iniettando `React.Fragment` e un `div` con bordi superiori che renderizza `groupKey` come separatore visivo quando rileva un cambio rispetto all'elemento precedente.
