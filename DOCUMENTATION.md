@@ -734,3 +734,10 @@
   - La Barra di Ricerca ora occupa il 100% della larghezza (`w-full`) ed è posizionata in cima.
   - La Barra di Aggiunta si trova al centro, mantenendo il layout grafico preesistente (`max-w-4xl mx-auto`).
   - Il Selettore dei Filtri si trova ora in basso, sotto l'inserimento rapido.
+
+### [2026-05-25 16:38]: Ripristino Barra Inserimento Rapido Desktop (Polizze Personali)
+* *Details*: Sostituito il FAB (Floating Action Button) circolare con la barra di inserimento in linea per la versione Desktop, mantenendo intatta l'esperienza su mobile (PWA).
+* *Tech Notes*:
+  - Aggiunta la classe `md:hidden` al trigger del Dialog del FAB per nasconderlo su schermi grandi.
+  - Creata la funzione `renderDesktopQuickAdd` che genera un form `hidden md:block` con tutti i campi necessari per un inserimento rapido in linea.
+  - Il nuovo form desktop è stato posizionato in cima ai due pannelli dei `TabsContent` ('in-scadenza' e 'da-emettere').

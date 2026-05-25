@@ -251,7 +251,7 @@ export function PolizzePersonali() {
       <DialogTrigger asChild>
         <Button 
           size="icon" 
-          className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] md:bottom-8 right-4 md:right-8 w-14 h-14 rounded-full shadow-elevated z-40 hover:scale-105 active:scale-95 transition-all bg-primary text-primary-foreground hover:bg-primary/90"
+          className="md:hidden fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] md:bottom-8 right-4 md:right-8 w-14 h-14 rounded-full shadow-elevated z-40 hover:scale-105 active:scale-95 transition-all bg-primary text-primary-foreground hover:bg-primary/90"
         >
           <Plus className="w-6 h-6" />
         </Button>
@@ -398,6 +398,129 @@ export function PolizzePersonali() {
       </DialogContent>
     </Dialog>
   );
+
+  const renderDesktopQuickAdd = (defaultStatus: "emessa" | "da_emettere") => (
+    <div className="hidden md:block w-full mb-4">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const target = e.target as HTMLFormElement;
+          const nameInput = target.elements.namedItem("quickNameDesktop") as HTMLInputElement;
+          const clientName = nameInput.value.trim();
+          const notesInput = target.elements.namedItem("quickNotesDesktop") as HTMLInputElement;
+          const notes = notesInput.value.trim();
+          const premioInput = target.elements.namedItem("quickPremioDesktop") as HTMLInputElement;
+          const premioVal = premioInput?.value.trim();
+          const premio = premioVal ? Number(premioVal) : undefined;
+          
+          if (clientName) {
+            addPolicy({ 
+              clientName, 
+              policyType: quickType, 
+              status: defaultStatus, 
+              expiryDate: defaultStatus === "emessa" && quickDate ? format(quickDate, 'yyyy-MM-dd') : undefined,
+              targetIssueDate: defaultStatus === "da_emettere" && quickDate ? format(quickDate, 'yyyy-MM-dd') : undefined,
+              daMettereACassa: quickCassa === "da_mettere", 
+              cassaStato: quickCassa as any,
+              notes: notes || "",
+              premio
+            });
+            nameInput.value = "";
+            notesInput.value = "";
+            if (premioInput) premioInput.value = "";
+            setQuickDate(undefined);
+          }
+        }}
+        className="flex flex-row items-center gap-2 bg-card p-2 rounded-xl border border-border/60 shadow-sm transition-all w-full mx-auto"
+      >
+        <div className="flex-1 relative min-w-[200px]">
+          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/70" />
+          <Input 
+            name="quickNameDesktop" 
+            placeholder="Nome Cliente" 
+            className="pl-9 h-10 border-0 bg-secondary/50 focus-visible:ring-1 focus-visible:ring-primary/30 rounded-xl text-sm" 
+            autoComplete="off" 
+            required 
+          />
+        </div>
+
+        <Select value={quickType} onValueChange={setQuickType}>
+          <SelectTrigger className="h-10 w-[140px] border-0 bg-secondary/50 focus:ring-1 focus:ring-primary/30 rounded-xl text-sm font-medium">
+            <SelectValue placeholder="Tipo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Auto">Auto</SelectItem>
+            <SelectItem value="Moto">Moto</SelectItem>
+            <SelectItem value="Furgone">Furgone</SelectItem>
+            <SelectItem value="Abitazione">Abitazione</SelectItem>
+            <SelectItem value="Infortuni">Infortuni</SelectItem>
+            <SelectItem value="Malattia">Malattia</SelectItem>
+            <SelectItem value="Vita">Vita</SelectItem>
+            <SelectItem value="TCM">TCM</SelectItem>
+            <SelectItem value="Commercio">Commercio</SelectItem>
+            <SelectItem value="RC Professionale">RC Professionale</SelectItem>
+            <SelectItem value="RC Terzi">RC Terzi</SelectItem>
+            <SelectItem value="RC Capofamiglia">RC Capofamiglia</SelectItem>
+            <SelectItem value="Animali">Animali</SelectItem>
+            <SelectItem value="Non specificata">Altro...</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Popover open={quickDatePopoverOpen} onOpenChange={setQuickDatePopoverOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant={"secondary"}
+              className={cn("h-10 w-[140px] bg-secondary/50 font-normal border-0 text-sm rounded-xl justify-start", !quickDate && "text-muted-foreground")}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4 opacity-50 shrink-0" />
+              <span className="truncate">{quickDate ? format(quickDate, "d MMM yy", { locale: it }) : (defaultStatus === "emessa" ? "Scadenza" : "Emissione")}</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0 border-none bg-transparent shadow-none" align="start">
+            <Calendar mode="single" selected={quickDate} onSelect={(date) => { setQuickDate(date); setQuickDatePopoverOpen(false); }} initialFocus />
+          </PopoverContent>
+        </Popover>
+
+        <div className="w-[110px]">
+          <Input 
+            name="quickPremioDesktop" 
+            type="number" 
+            inputMode="decimal" 
+            step="0.01" 
+            placeholder="Premio €" 
+            className="h-10 border-0 bg-secondary/50 focus-visible:ring-1 focus-visible:ring-primary/30 rounded-xl text-sm" 
+            autoComplete="off" 
+          />
+        </div>
+
+        {defaultStatus === "emessa" && (
+          <Select value={quickCassa} onValueChange={setQuickCassa}>
+            <SelectTrigger className="h-10 w-[140px] border-0 bg-secondary/50 focus:ring-1 focus:ring-primary/30 rounded-xl text-sm font-medium">
+              <SelectValue placeholder="Cassa" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="regolare">Regolare</SelectItem>
+              <SelectItem value="da_mettere">Da mettere</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
+
+        <div className="flex-1 relative min-w-[150px]">
+          <Input 
+            name="quickNotesDesktop" 
+            placeholder="Note..." 
+            className="h-10 border-0 bg-secondary/50 focus-visible:ring-1 focus-visible:ring-primary/30 rounded-xl text-sm" 
+            autoComplete="off" 
+          />
+        </div>
+
+        <Button type="submit" size="sm" className="h-10 px-5 font-medium rounded-xl shrink-0" disabled={defaultStatus === "emessa" && !quickDate}>
+          Aggiungi
+        </Button>
+      </form>
+    </div>
+  );
+
 
   const renderPolicyFormFields = (
     f: ReturnType<typeof useForm<PolicyFormValues>>,
@@ -636,6 +759,7 @@ export function PolizzePersonali() {
         </div>
 
         <TabsContent value="in-scadenza" className="space-y-4 flex flex-col flex-1 pb-32 md:pb-4 h-full">
+          {renderDesktopQuickAdd("emessa")}
           {inScadenza.length > 0 ? (
             <div className="flex flex-col gap-3 flex-1">
               {inScadenza.map((policy, index) => {
@@ -729,6 +853,7 @@ export function PolizzePersonali() {
         </TabsContent>
 
         <TabsContent value="da-emettere" className="space-y-4 flex flex-col flex-1 pb-32 md:pb-4 h-full">
+          {renderDesktopQuickAdd("da_emettere")}
           {daEmettere.length > 0 ? (
             <div className="flex flex-col gap-3 flex-1">
               {daEmettere.map((policy, index) => {
