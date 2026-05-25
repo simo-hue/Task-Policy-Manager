@@ -628,3 +628,7 @@
 - [2026-05-25 10:25:00]: Aggiunta ramo 'Furto'
   - *Details*: Aggiunto il ramo 'Furto' nella pagina dei sinistri per completare le opzioni assicurative.
   - *Tech Notes*: Aggiunte le opzioni `SelectItem` per 'Furto' nei menu a tendina in `src/pages/sinistri.tsx`.
+
+- [2026-05-25 10:50:00]: Allineamento centrale filtro rami Sinistri
+  - *Details*: Centrato orizzontalmente il selettore dei filtri per i rami nella pagina dei sinistri, per migliorare il layout visivo e mantenere l'armonia con il resto della pagina.
+  - *Tech Notes*: Aggiunto un container wrapper con classi Tailwind `flex justify-center w-full mb-6` attorno al contenitore dei filtri in `src/pages/sinistri.tsx`.

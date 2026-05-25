@@ -530,7 +530,8 @@ export function Sinistri() {
         {renderQuickAdd()}
 
         {uniqueRami.length > 0 && (
-          <div className="relative mb-6 p-1.5 inline-flex flex-wrap gap-1.5 items-center bg-muted/30 backdrop-blur-lg border border-border/50 rounded-2xl shadow-inner">
+          <div className="flex justify-center w-full mb-6">
+            <div className="relative p-1.5 inline-flex flex-wrap justify-center gap-1.5 items-center bg-muted/30 backdrop-blur-lg border border-border/50 rounded-2xl shadow-inner">
             {uniqueRami.map((ramo) => {
               const isSelected = effectiveSelectedRamo === ramo;
               return (
@@ -551,6 +552,7 @@ export function Sinistri() {
                 </button>
               );
             })}
+            </div>
           </div>
         )}
 
