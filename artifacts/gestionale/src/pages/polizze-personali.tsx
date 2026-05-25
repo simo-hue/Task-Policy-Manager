@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { usePoliciesPersonali, Policy } from "@/lib/policies-store";
 import { useSettings } from "@/hooks/use-settings";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
-import { format, differenceInDays } from "date-fns";
+import { format, differenceInDays, isToday, isYesterday } from "date-fns";
 import { it } from "date-fns/locale";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -77,6 +77,7 @@ export function PolizzePersonali() {
   const [quickDatePopoverOpen, setQuickDatePopoverOpen] = useState(false);
   const [editExpiryDatePopoverOpen, setEditExpiryDatePopoverOpen] = useState(false);
   const [editTargetDatePopoverOpen, setEditTargetDatePopoverOpen] = useState(false);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
 
   const editForm = useForm<PolicyFormValues>({
     resolver: zodResolver(policySchema),
@@ -246,144 +247,139 @@ export function PolizzePersonali() {
   };
 
   const renderQuickAdd = (defaultStatus: "emessa" | "da_emettere") => (
-    <form 
-      onSubmit={(e) => {
-        e.preventDefault();
-        const target = e.target as HTMLFormElement;
-        const nameInput = target.elements.namedItem("quickName") as HTMLInputElement;
-        const clientName = nameInput.value.trim();
-        const notesInput = target.elements.namedItem("quickNotes") as HTMLInputElement;
-        const notes = notesInput.value.trim();
-        const premioInput = target.elements.namedItem("quickPremio") as HTMLInputElement;
-        const premioVal = premioInput?.value.trim();
-        const premio = premioVal ? Number(premioVal) : undefined;
-        if (clientName) {
-          addPolicy({ 
-            clientName, 
-            policyType: quickType, 
-            status: defaultStatus, 
-            expiryDate: defaultStatus === "emessa" && quickDate ? format(quickDate, 'yyyy-MM-dd') : undefined,
-            targetIssueDate: defaultStatus === "da_emettere" && quickDate ? format(quickDate, 'yyyy-MM-dd') : undefined,
-            daMettereACassa: quickCassa === "da_mettere", 
-            cassaStato: quickCassa as any,
-            notes: notes || "",
-            premio
-          });
-          nameInput.value = "";
-          notesInput.value = "";
-          if (premioInput) premioInput.value = "";
-          setQuickDate(undefined);
-        }
-      }}
-      className="flex flex-col sm:flex-row sm:items-center gap-2 mb-6 bg-card p-2 rounded-xl border border-border/60 shadow-sm focus-within:ring-2 focus-within:ring-primary/30 transition-all"
-    >
-      <div className="flex-1 relative">
-        <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input 
-          name="quickName"
-          placeholder="Nome cliente..." 
-          className="pl-9 h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent"
-          autoComplete="off"
-          required
-        />
-      </div>
-      
-      <>
-        <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
-        <Popover open={quickDatePopoverOpen} onOpenChange={setQuickDatePopoverOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant={"outline"}
-              className={cn(
-                "w-full sm:w-[140px] h-11 justify-start text-left font-normal border-0 shadow-none bg-transparent focus:ring-0",
-                !quickDate && "text-muted-foreground"
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4 opacity-50 shrink-0" />
-              {quickDate ? format(quickDate, "P", { locale: it }) : <span>{defaultStatus === "emessa" ? "Scadenza..." : "Data..."}</span>}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0 border-none bg-transparent shadow-none" align="start">
-            <Calendar
-              mode="single"
-              selected={quickDate}
-              onSelect={(date) => {
-                setQuickDate(date);
-                setQuickDatePopoverOpen(false);
-              }}
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
-      </>
-
-      <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
-      <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-        <Select value={quickType} onValueChange={setQuickType}>
-          <SelectTrigger className="h-11 border-0 bg-transparent shadow-none w-full sm:w-[140px] focus:ring-0 font-medium">
-            <SelectValue placeholder="Tipo polizza" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Auto">Auto</SelectItem>
-            <SelectItem value="Moto">Moto</SelectItem>
-            <SelectItem value="Furgone">Furgone</SelectItem>
-            <SelectItem value="Abitazione">Abitazione</SelectItem>
-            <SelectItem value="Infortuni">Infortuni</SelectItem>
-            <SelectItem value="Malattia">Malattia</SelectItem>
-            <SelectItem value="Vita">Vita</SelectItem>
-            <SelectItem value="TCM">TCM</SelectItem>
-            <SelectItem value="Commercio">Commercio</SelectItem>
-            <SelectItem value="RC Professionale">RC Professionale</SelectItem>
-            <SelectItem value="RC Terzi">RC Terzi</SelectItem>
-            <SelectItem value="RC Capofamiglia">RC Capofamiglia</SelectItem>
-            <SelectItem value="Animali">Animali</SelectItem>
-            <SelectItem value="Non specificata">Altro...</SelectItem>
-          </SelectContent>
-        </Select>
-        <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
-        <div className="relative w-full sm:w-[110px]">
-          <Input 
-            name="quickPremio"
-            type="number"
-            step="0.01"
-            placeholder="Premio (€)" 
-            className="h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
-            autoComplete="off"
-          />
-        </div>
-        {defaultStatus === "emessa" && (
-          <>
-            <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
-            <Select value={quickCassa} onValueChange={setQuickCassa}>
-              <SelectTrigger className="h-11 border-0 bg-transparent shadow-none w-full sm:w-[150px] focus:ring-0 font-medium">
-                <SelectValue placeholder="Stato cassa" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="regolare">Regolare</SelectItem>
-                <SelectItem value="da_mettere">Da mettere a cassa</SelectItem>
-              </SelectContent>
-            </Select>
-          </>
-        )}
-        <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
-        <div className="flex-1 relative min-w-[150px]">
-          <Input 
-            name="quickNotes"
-            placeholder="Note" 
-            className="h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
-            autoComplete="off"
-          />
-        </div>
+    <Dialog open={quickAddOpen} onOpenChange={setQuickAddOpen}>
+      <DialogTrigger asChild>
         <Button 
-          type="submit" 
-          size="sm" 
-          className="font-medium shrink-0 h-11 px-4"
-          disabled={defaultStatus === "emessa" && !quickDate}
+          size="icon" 
+          className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] md:bottom-8 right-4 md:right-8 w-14 h-14 rounded-full shadow-elevated z-40 hover:scale-105 active:scale-95 transition-all bg-primary text-primary-foreground hover:bg-primary/90"
         >
-          Aggiungi
+          <Plus className="w-6 h-6" />
         </Button>
-      </div>
-    </form>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-xl p-0 border-border/80 shadow-elevated overflow-hidden">
+        <DialogHeader className="p-6 pb-2 border-b border-border/40">
+          <DialogTitle className="text-xl font-serif">Aggiungi Polizza</DialogTitle>
+          <DialogDescription>
+            Inserisci rapidamente una nuova polizza {defaultStatus === "emessa" ? "in scadenza" : "da emettere"}.
+          </DialogDescription>
+        </DialogHeader>
+        <form 
+          onSubmit={(e) => {
+            e.preventDefault();
+            const target = e.target as HTMLFormElement;
+            const nameInput = target.elements.namedItem("quickName") as HTMLInputElement;
+            const clientName = nameInput.value.trim();
+            const notesInput = target.elements.namedItem("quickNotes") as HTMLInputElement;
+            const notes = notesInput.value.trim();
+            const premioInput = target.elements.namedItem("quickPremio") as HTMLInputElement;
+            const premioVal = premioInput?.value.trim();
+            const premio = premioVal ? Number(premioVal) : undefined;
+            if (clientName) {
+              addPolicy({ 
+                clientName, 
+                policyType: quickType, 
+                status: defaultStatus, 
+                expiryDate: defaultStatus === "emessa" && quickDate ? format(quickDate, 'yyyy-MM-dd') : undefined,
+                targetIssueDate: defaultStatus === "da_emettere" && quickDate ? format(quickDate, 'yyyy-MM-dd') : undefined,
+                daMettereACassa: quickCassa === "da_mettere", 
+                cassaStato: quickCassa as any,
+                notes: notes || "",
+                premio
+              });
+              nameInput.value = "";
+              notesInput.value = "";
+              if (premioInput) premioInput.value = "";
+              setQuickDate(undefined);
+              setQuickAddOpen(false);
+            }
+          }}
+          className="p-6 flex flex-col gap-5"
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium leading-none text-foreground/90">Nome Cliente</label>
+              <div className="relative">
+                <Input name="quickName" placeholder="Es. Mario Rossi" required className="pl-9 h-11" autoComplete="off" />
+                <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              </div>
+            </div>
+            
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium leading-none text-foreground/90">Tipo Polizza</label>
+              <Select value={quickType} onValueChange={setQuickType}>
+                <SelectTrigger className="h-11">
+                  <SelectValue placeholder="Tipo polizza" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Auto">Auto</SelectItem>
+                  <SelectItem value="Moto">Moto</SelectItem>
+                  <SelectItem value="Furgone">Furgone</SelectItem>
+                  <SelectItem value="Abitazione">Abitazione</SelectItem>
+                  <SelectItem value="Infortuni">Infortuni</SelectItem>
+                  <SelectItem value="Malattia">Malattia</SelectItem>
+                  <SelectItem value="Vita">Vita</SelectItem>
+                  <SelectItem value="TCM">TCM</SelectItem>
+                  <SelectItem value="Commercio">Commercio</SelectItem>
+                  <SelectItem value="RC Professionale">RC Professionale</SelectItem>
+                  <SelectItem value="RC Terzi">RC Terzi</SelectItem>
+                  <SelectItem value="RC Capofamiglia">RC Capofamiglia</SelectItem>
+                  <SelectItem value="Animali">Animali</SelectItem>
+                  <SelectItem value="Non specificata">Altro...</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium leading-none text-foreground/90">{defaultStatus === "emessa" ? "Scadenza" : "Prevista Emissione"}</label>
+              <Popover open={quickDatePopoverOpen} onOpenChange={setQuickDatePopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn("w-full h-11 justify-start text-left font-normal", !quickDate && "text-muted-foreground")}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4 opacity-50 shrink-0" />
+                    {quickDate ? format(quickDate, "P", { locale: it }) : "Seleziona data"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 border-none bg-transparent shadow-none" align="start">
+                  <Calendar mode="single" selected={quickDate} onSelect={(date) => { setQuickDate(date); setQuickDatePopoverOpen(false); }} initialFocus />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium leading-none text-foreground/90">Premio (€)</label>
+              <Input name="quickPremio" type="number" step="0.01" placeholder="Es. 250.00" className="h-11" autoComplete="off" />
+            </div>
+
+            {defaultStatus === "emessa" && (
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium leading-none text-foreground/90">Stato Cassa</label>
+                <Select value={quickCassa} onValueChange={setQuickCassa}>
+                  <SelectTrigger className="h-11">
+                    <SelectValue placeholder="Stato cassa" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="regolare">Regolare</SelectItem>
+                    <SelectItem value="da_mettere">Da mettere a cassa</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div className={cn("space-y-1.5", defaultStatus === "emessa" ? "sm:col-span-1" : "sm:col-span-2")}>
+              <label className="text-sm font-medium leading-none text-foreground/90">Note</label>
+              <Input name="quickNotes" placeholder="Note aggiuntive..." className="h-11" autoComplete="off" />
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-5 mt-2 border-t border-border/40 gap-3">
+            <Button type="button" variant="ghost" onClick={() => setQuickAddOpen(false)}>Annulla</Button>
+            <Button type="submit" className="px-6" disabled={defaultStatus === "emessa" && !quickDate}>Aggiungi Polizza</Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 
   const renderPolicyFormFields = (
@@ -582,7 +578,7 @@ export function PolizzePersonali() {
   );
 
   return (
-    <div className="space-y-6 sm:space-y-12">
+    <div className="flex flex-col h-full min-h-[calc(100vh-120px)] space-y-6 sm:space-y-12 relative">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
           <div className="text-xs uppercase tracking-[0.18em] text-gold/90 font-semibold mb-2">Personale</div>
@@ -608,7 +604,7 @@ export function PolizzePersonali() {
         </DialogContent>
       </Dialog>
 
-      <Tabs defaultValue="in-scadenza" className="w-full">
+      <Tabs defaultValue="in-scadenza" className="w-full flex flex-col flex-1">
         <div className="flex justify-center mb-6">
           <TabsList>
             <TabsTrigger value="in-scadenza" data-testid="tab-in-scadenza">
@@ -622,28 +618,53 @@ export function PolizzePersonali() {
           </TabsList>
         </div>
 
-        <TabsContent value="in-scadenza" className="space-y-4">
-          {renderQuickAdd("emessa")}
-
+        <TabsContent value="in-scadenza" className="space-y-4 flex flex-col flex-1 pb-32 md:pb-4 h-full">
           {inScadenza.length > 0 ? (
-            <div className="grid gap-3">
-              {inScadenza.map(policy => (
-                <Card key={policy.id} className="overflow-hidden group shadow-soft hover:shadow-card hover:border-primary/30 transition-all">
-                  <CardContent className="p-0 flex flex-col sm:flex-row sm:items-center">
-                    <div className="p-3 sm:p-5 flex-1 min-w-0">
-                      <div className="flex justify-between items-start gap-3 mb-2 flex-wrap">
-                        <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2 min-w-0 flex-wrap">
-                          <span className="truncate max-w-[180px] sm:max-w-xs">{policy.clientName}</span>
-                          {renderCassaBadge(policy)}
-                          <span className="bg-secondary px-2 py-0.5 rounded-md text-secondary-foreground font-medium text-xs">{policy.policyType}</span>
-                          {policy.premio !== undefined && (
-                            <span className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md font-medium text-xs whitespace-nowrap">
-                              € {policy.premio.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </span>
-                          )}
-                        </h3>
-                        {policy.expiryDate && <UrgencyBadge date={policy.expiryDate} />}
+            <div className="flex flex-col gap-3 flex-1">
+              {inScadenza.map((policy, index) => {
+                const dateKey = policy.expiryDate ? format(parseLocalDate(policy.expiryDate), "yyyy-MM-dd") : "none";
+                const prevDateKey = index > 0 ? (inScadenza[index - 1].expiryDate ? format(parseLocalDate(inScadenza[index - 1].expiryDate!), "yyyy-MM-dd") : "none") : null;
+                
+                const showSeparator = dateKey !== prevDateKey;
+                
+                let separatorLabel = "";
+                if (showSeparator) {
+                  if (dateKey === "none") {
+                    separatorLabel = "NESSUNA SCADENZA";
+                  } else {
+                    const d = parseLocalDate(policy.expiryDate!);
+                    separatorLabel = format(d, "d MMMM yyyy", { locale: it }).toUpperCase();
+                    if (isToday(d)) separatorLabel = "OGGI - " + separatorLabel;
+                    if (isYesterday(d)) separatorLabel = "IERI - " + separatorLabel;
+                  }
+                }
+
+                return (
+                  <Fragment key={policy.id}>
+                    {showSeparator && (
+                      <div className={cn("relative flex items-center pb-1", index !== 0 && "pt-4")}>
+                        <div className="flex-grow border-t border-border/60"></div>
+                        <span className="mx-4 text-xs font-semibold tracking-[0.18em] text-primary/80 uppercase text-center">
+                          {separatorLabel}
+                        </span>
+                        <div className="flex-grow border-t border-border/60"></div>
                       </div>
+                    )}
+                    <Card className="overflow-hidden group shadow-soft hover:shadow-card hover:border-primary/30 transition-all">
+                      <CardContent className="p-0 flex flex-col sm:flex-row sm:items-center">
+                        <div className="p-3 sm:p-5 flex-1 min-w-0">
+                          <div className="flex justify-between items-start gap-3 mb-2 flex-wrap">
+                            <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2 min-w-0 flex-wrap">
+                              <span className="truncate max-w-[180px] sm:max-w-xs">{policy.clientName}</span>
+                              {renderCassaBadge(policy)}
+                              <span className="bg-secondary px-2 py-0.5 rounded-md text-secondary-foreground font-medium text-xs">{policy.policyType}</span>
+                              {policy.premio !== undefined && (
+                                <span className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md font-medium text-xs whitespace-nowrap">
+                                  € {policy.premio.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </span>
+                              )}
+                            </h3>
+                          </div>
                       {policy.notes && (
                         <div className="flex items-center gap-3 text-muted-foreground text-sm flex-wrap">
                           <span className="truncate max-w-xs">{policy.notes}</span>
@@ -678,41 +699,64 @@ export function PolizzePersonali() {
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+                  </Fragment>
+                );
+              })}
             </div>
           ) : (
-            <div className="p-10 text-center bg-card/50 border border-dashed rounded-xl text-muted-foreground text-sm">
+            <div className="p-10 text-center bg-card/50 border border-dashed rounded-xl text-muted-foreground text-sm flex-1">
               Nessuna polizza in scadenza.
             </div>
           )}
+          {renderQuickAdd("emessa")}
         </TabsContent>
 
-        <TabsContent value="da-emettere" className="space-y-4">
-          {renderQuickAdd("da_emettere")}
-
+        <TabsContent value="da-emettere" className="space-y-4 flex flex-col flex-1 pb-32 md:pb-4 h-full">
           {daEmettere.length > 0 ? (
-            <div className="grid gap-3">
-              {daEmettere.map(policy => (
-                <Card key={policy.id} className="overflow-hidden group shadow-soft hover:shadow-card hover:border-primary/30 transition-all border-dashed">
-                  <CardContent className="p-0 flex flex-col sm:flex-row sm:items-center">
-                    <div className="p-3 sm:p-5 flex-1 min-w-0">
-                      <div className="flex justify-between items-start gap-3 mb-2 flex-wrap">
-                        <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2 min-w-0 flex-wrap">
-                          <span className="truncate max-w-[180px] sm:max-w-xs">{policy.clientName}</span>
-                          <span className="bg-secondary px-2 py-0.5 rounded-md text-secondary-foreground font-medium text-xs">{policy.policyType}</span>
-                          {policy.premio !== undefined && (
-                            <span className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md font-medium text-xs whitespace-nowrap">
-                              € {policy.premio.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </span>
-                          )}
-                        </h3>
-                        {policy.targetIssueDate && (
-                          <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground ring-1 ring-border whitespace-nowrap">
-                            <CalendarIcon className="w-3 h-3 mr-1" />
-                            {format(parseLocalDate(policy.targetIssueDate), "d MMM yyyy", { locale: it })}
-                          </span>
-                        )}
+            <div className="flex flex-col gap-3 flex-1">
+              {daEmettere.map((policy, index) => {
+                const dateKey = policy.targetIssueDate ? format(parseLocalDate(policy.targetIssueDate), "yyyy-MM-dd") : "none";
+                const prevDateKey = index > 0 ? (daEmettere[index - 1].targetIssueDate ? format(parseLocalDate(daEmettere[index - 1].targetIssueDate!), "yyyy-MM-dd") : "none") : null;
+                
+                const showSeparator = dateKey !== prevDateKey;
+                
+                let separatorLabel = "";
+                if (showSeparator) {
+                  if (dateKey === "none") {
+                    separatorLabel = "NESSUNA DATA";
+                  } else {
+                    const d = parseLocalDate(policy.targetIssueDate!);
+                    separatorLabel = format(d, "d MMMM yyyy", { locale: it }).toUpperCase();
+                    if (isToday(d)) separatorLabel = "OGGI - " + separatorLabel;
+                    if (isYesterday(d)) separatorLabel = "IERI - " + separatorLabel;
+                  }
+                }
+
+                return (
+                  <Fragment key={policy.id}>
+                    {showSeparator && (
+                      <div className={cn("relative flex items-center pb-1", index !== 0 && "pt-4")}>
+                        <div className="flex-grow border-t border-border/60"></div>
+                        <span className="mx-4 text-xs font-semibold tracking-[0.18em] text-primary/80 uppercase text-center">
+                          {separatorLabel}
+                        </span>
+                        <div className="flex-grow border-t border-border/60"></div>
                       </div>
+                    )}
+                    <Card className="overflow-hidden group shadow-soft hover:shadow-card hover:border-primary/30 transition-all border-dashed">
+                      <CardContent className="p-0 flex flex-col sm:flex-row sm:items-center">
+                        <div className="p-3 sm:p-5 flex-1 min-w-0">
+                          <div className="flex justify-between items-start gap-3 mb-2 flex-wrap">
+                            <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2 min-w-0 flex-wrap">
+                              <span className="truncate max-w-[180px] sm:max-w-xs">{policy.clientName}</span>
+                              <span className="bg-secondary px-2 py-0.5 rounded-md text-secondary-foreground font-medium text-xs">{policy.policyType}</span>
+                              {policy.premio !== undefined && (
+                                <span className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md font-medium text-xs whitespace-nowrap">
+                                  € {policy.premio.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </span>
+                              )}
+                            </h3>
+                          </div>
                       {policy.notes && (
                         <div className="flex items-center gap-3 text-muted-foreground text-sm flex-wrap">
                           <span className="truncate max-w-xs">{policy.notes}</span>
@@ -747,13 +791,16 @@ export function PolizzePersonali() {
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+                  </Fragment>
+                );
+              })}
             </div>
           ) : (
-            <div className="p-10 text-center bg-card/50 border border-dashed rounded-xl text-muted-foreground text-sm">
+            <div className="p-10 text-center bg-card/50 border border-dashed rounded-xl text-muted-foreground text-sm flex-1">
               Nessuna polizza da emettere.
             </div>
           )}
+          {renderQuickAdd("da_emettere")}
         </TabsContent>
       </Tabs>
 
