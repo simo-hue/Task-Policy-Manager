@@ -697,3 +697,27 @@
 * *Details*: Abbassato l'elemento floating di 'Quick Add' (inserimento rapido) nelle pagine Sinistri e Attività in modo che si appoggi perfettamente alla barra di navigazione inferiore (Bottom Navigation) sulle PWA, rimuovendo il gap antiestetico.
 * *Tech Notes*:
   - Modificato `sinistri.tsx` e `attivita.tsx` riducendo il valore di `bottom-[calc()]` da 64px a 56px per compensare correttamente le spaziature della nav bar mobile.
+
+### [2026-05-25 16:15]: Fix Gap Bottom Sheet su Mobile (Further tweak)
+* *Details*: Abbassato ulteriormente l'elemento floating di 'Quick Add' nelle pagine Sinistri, Attività e Preventivi per farlo aderire ancora meglio alla Bottom Navigation.
+* *Tech Notes*:
+  - Modificati i valori di `bottom-[calc()]` da 56px a 48px nei rispettivi file.
+
+### [2026-05-25 16:18]: Ottimizzazione Premium PWA Dashboard
+* *Details*: Aggiornata la UI della schermata Home (Dashboard) per massimizzare l'esperienza nativa PWA su smartphone.
+* *Tech Notes*:
+  - Modificato `dashboard.tsx` introducendo animazioni tattili (touch-feedback) fluide con `active:scale-[0.96]` e `active:scale-[0.98]` su tutte le card e le liste.
+  - Introdotto un design 'Glassmorphism' (`bg-card/80 backdrop-blur-sm border-border/50`) coerente con i trend iOS recenti per i widget e i contenitori di lista.
+  - Arrotondati gli angoli principali in stile widget (`rounded-[1.25rem]`) specifici per la visualizzazione mobile.
+
+### [2026-05-25 16:25]: Fix Overflow Orizzontale Liste Dashboard
+* *Details*: Risolto un bug visivo in cui testi lunghi nei box 'Prossime scadenze' e 'Attività urgenti' spingevano il badge della data fuori dai margini della card, causando uno strabordamento orizzontale.
+* *Tech Notes*:
+  - Aggiunta la classe `flex-1` ai container di testo interni (`min-w-0`) in `dashboard.tsx` per forzarli a rispettare i confini del flexbox padre e abilitare il corretto funzionamento del troncamento CSS (`truncate`).
+
+### [2026-05-25 16:27]: Fix Definitivo Overflow PWA su Dispositivi Mobili
+* *Details*: Risolto definitivamente il problema dello scroll orizzontale inatteso (pagina che 'balla' lateralmente) nella Dashboard e nell'intera PWA. La causa era la mancanza di vincoli strutturali sulle grid e sui flex-item annidati, unita all'assenza di un blocco di overflow sulla shell principale.
+* *Tech Notes*:
+  - Aggiunto `min-w-0` al grid container principale in `dashboard.tsx` e al root div di `SectionList`.
+  - Impostato `flex-wrap` e `min-w-0 flex-1` sull'header di `SectionList` per permettere al titolo lungo di troncarsi anziché forzare l'allargamento della pagina.
+  - Modificato `shell.tsx`: il tag `<main>` usa ora `overflow-x-hidden overflow-y-auto` invece del generico `overflow-auto`, rendendo letteralmente impossibile lo scorrimento orizzontale dell'intera PWA e bloccando ogni comportamento anomalo su iOS/Android.

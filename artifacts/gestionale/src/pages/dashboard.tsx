@@ -131,23 +131,23 @@ export function Dashboard() {
             <Link
               key={c.testId}
               href={c.href}
-              className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl"
+              className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-[1.25rem] sm:rounded-2xl"
             >
               <Card
-                className="relative overflow-hidden p-4 sm:p-5 shadow-card cursor-pointer transition-all hover:shadow-elevated hover:-translate-y-0.5 hover:border-primary/30 flex flex-col h-full"
+                className="relative overflow-hidden p-4 sm:p-5 shadow-sm border border-border/50 bg-card/80 backdrop-blur-sm cursor-pointer transition-all duration-300 active:scale-[0.96] sm:hover:shadow-elevated sm:hover:-translate-y-1 sm:hover:border-primary/30 flex flex-col h-full"
                 data-testid={c.testId}
               >
                 <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
                   <div className="text-xs sm:text-sm font-medium text-muted-foreground leading-tight">{c.title}</div>
-                  <div className={cn("shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center", t.chip)}>
-                    <Icon className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
+                  <div className={cn("shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shadow-inner", t.chip)}>
+                    <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                 </div>
-                <div className={cn("text-2xl sm:text-4xl font-serif font-semibold tracking-tight mt-auto", t.value)}>
+                <div className={cn("text-2xl sm:text-4xl font-serif font-bold tracking-tight mt-auto drop-shadow-sm", t.value)}>
                   {c.value}
                 </div>
                 {c.hint && (
-                  <div className="text-xs text-muted-foreground mt-1.5">{c.hint}</div>
+                  <div className="text-[10px] sm:text-xs text-muted-foreground/80 mt-1 sm:mt-1.5 uppercase tracking-wider font-semibold">{c.hint}</div>
                 )}
               </Card>
             </Link>
@@ -155,7 +155,7 @@ export function Dashboard() {
         })}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
+      <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 min-w-0">
         <SectionList
           title="Prossime scadenze"
           href="/polizze-personali"
@@ -175,10 +175,10 @@ export function Dashboard() {
                 return (
                   <Link key={p.id} href={targetHref} className="block">
                     <div
-                      className="flex justify-between items-center gap-3 px-3 py-3 sm:px-5 sm:py-4 transition-colors hover:bg-muted/40 active:bg-muted/60"
+                      className="flex justify-between items-center gap-3 px-3 py-3 sm:px-5 sm:py-4 transition-all duration-200 active:scale-[0.98] active:bg-muted/60 sm:hover:bg-muted/40"
                       data-testid={`dashboard-policy-${p.id}`}
                     >
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="font-medium truncate">{p.clientName}</div>
                         <div className="text-sm text-muted-foreground truncate">
                           {p.policyType}
@@ -209,10 +209,10 @@ export function Dashboard() {
                 return (
                   <Link key={t.id} href="/attivita" className="block">
                     <div
-                      className="flex justify-between items-center gap-3 px-3 py-3 sm:px-5 sm:py-4 transition-colors hover:bg-muted/40 active:bg-muted/60"
+                      className="flex justify-between items-center gap-3 px-3 py-3 sm:px-5 sm:py-4 transition-all duration-200 active:scale-[0.98] active:bg-muted/60 sm:hover:bg-muted/40"
                       data-testid={`dashboard-task-${t.id}`}
                     >
-                      <div className="min-w-0 pr-2">
+                      <div className="min-w-0 flex-1 pr-2">
                         <div className="font-medium truncate">{t.title}</div>
                         {t.notes && <div className="text-sm text-muted-foreground truncate">{t.notes}</div>}
                       </div>
@@ -242,9 +242,9 @@ function SectionList({
 }) {
   const hasChildren = !!children && (Array.isArray(children) ? children.length > 0 : true);
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-serif font-semibold text-primary">{title}</h2>
+    <div className="space-y-3 min-w-0">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h2 className="text-lg font-serif font-semibold text-primary truncate min-w-0 flex-1 pr-2">{title}</h2>
         <Link
           href={href}
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors py-2 px-2 -my-2 -mr-2 rounded-lg active:bg-muted/40"
@@ -254,12 +254,12 @@ function SectionList({
         </Link>
       </div>
       {hasChildren ? (
-        <Card className="overflow-hidden shadow-soft">
+        <Card className="overflow-hidden shadow-sm border border-border/50 bg-card/80 backdrop-blur-sm rounded-[1.25rem] sm:rounded-2xl">
           {children}
         </Card>
       ) : (
         <Link href={href} className="block">
-          <div className="p-8 text-center bg-card/50 border border-dashed border-border rounded-xl text-muted-foreground text-sm hover:border-primary/40 hover:text-primary transition-all">
+          <div className="p-8 text-center bg-card/50 backdrop-blur-sm border border-dashed border-border/60 rounded-[1.25rem] sm:rounded-2xl text-muted-foreground text-sm hover:border-primary/40 hover:text-primary transition-all active:scale-[0.98]">
             {empty}
           </div>
         </Link>

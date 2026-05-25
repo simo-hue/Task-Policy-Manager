@@ -175,7 +175,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <ThemeToggle collapsed={true} />
         </div>
 
-        <main className="flex-1 overflow-auto min-w-0 md:pt-0" style={{ paddingTop: 'calc(3.5rem + env(safe-area-inset-top))' }}>
+        <main className="flex-1 overflow-x-hidden overflow-y-auto min-w-0 md:pt-0" style={{ paddingTop: 'calc(3.5rem + env(safe-area-inset-top))' }}>
           <div className="max-w-7xl mx-auto px-3 py-4 sm:p-6 lg:p-8 xl:p-10">
             {children}
           </div>
