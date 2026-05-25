@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { usePreventivi, Preventivo } from "@/lib/preventivi-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +31,7 @@ const preventivoSchema = z.object({
   policyType: z.string().min(1, "Il tipo di polizza è obbligatorio"),
   premio: z.coerce.number().optional(),
   notes: z.string().optional(),
-  status: z.enum(["da_fare", "fatto", "trattativa_in_corso"]),
+  status: z.enum(["da_fare", "accettato", "consegnato"]),
   createdAt: z.date().optional(),
 });
 
@@ -68,7 +68,7 @@ export function Preventivi() {
 
   function onEditSubmit(values: PreventivoFormValues) {
     if (!editingPreventivo) return;
-    if (values.status === "fatto") {
+    if (values.status === "accettato") {
       deletePreventivo(editingPreventivo.id);
     } else {
       updatePreventivo(editingPreventivo.id, {
@@ -91,14 +91,14 @@ export function Preventivi() {
         dotColor: "bg-rose-500",
         icon: ClipboardList
       },
-      trattativa_in_corso: {
-        label: "In Trattativa",
+      consegnato: {
+        label: "Consegnato",
         className: "bg-amber-500/10 text-amber-600 border-amber-500/20 hover:bg-amber-500/20",
         dotColor: "bg-amber-500",
         icon: Briefcase
       },
-      fatto: {
-        label: "Fatto",
+      accettato: {
+        label: "Accettato",
         className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20",
         dotColor: "bg-emerald-500",
         icon: CheckCircle2
@@ -138,14 +138,14 @@ export function Preventivi() {
           </DropdownMenuItem>
 
           <DropdownMenuItem
-            onClick={() => updatePreventivo(preventivo.id, { status: "trattativa_in_corso" })}
+            onClick={() => updatePreventivo(preventivo.id, { status: "consegnato" })}
             className="flex items-center justify-between cursor-pointer rounded-md px-2 py-1.5 text-xs hover:bg-accent focus:bg-accent"
           >
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
-              <span>In Trattativa</span>
+              <span>Consegnato</span>
             </div>
-            {preventivo.status === "trattativa_in_corso" && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
+            {preventivo.status === "consegnato" && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
           </DropdownMenuItem>
 
           <DropdownMenuItem
@@ -154,16 +154,16 @@ export function Preventivi() {
           >
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
-              <span className="font-semibold">Fatto (Elimina)</span>
+              <span className="font-semibold">Accettato (Elimina)</span>
             </div>
-            {preventivo.status === "fatto" && <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />}
+            {preventivo.status === "accettato" && <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     );
   };
 
-  const renderQuickAdd = (defaultStatus: "da_fare" | "trattativa_in_corso" | "fatto") => (
+  const renderQuickAdd = (defaultStatus: "da_fare" | "consegnato" | "accettato") => (
     <div className="fixed md:static bottom-[calc(48px+env(safe-area-inset-bottom))] md:bottom-auto left-0 right-0 px-3 md:px-0 z-30 pt-6 pb-0 md:py-0 bg-gradient-to-t from-background via-background/95 to-transparent md:bg-none pointer-events-none md:pointer-events-auto">
       <form
         onSubmit={(e) => {
@@ -302,60 +302,82 @@ export function Preventivi() {
   const renderPreventivoList = (list: Preventivo[], emptyMessage: string) => (
     list.length > 0 ? (
       <div className="grid gap-3">
-        {list.map(preventivo => (
-          <Card key={preventivo.id} className="overflow-hidden group shadow-soft hover:shadow-card hover:border-primary/30 transition-all border-dashed">
-            <CardContent className="p-0 flex flex-col sm:flex-row sm:items-center">
-              <div className="p-3 sm:p-5 flex-1 min-w-0">
-                <div className="flex justify-between items-start gap-3 mb-2 flex-wrap">
-                  <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2 min-w-0 flex-wrap">
-                    <span className="truncate max-w-[180px] sm:max-w-xs">{preventivo.clientName}</span>
-                    {renderStatusBadge(preventivo)}
-                    <span className="bg-secondary px-2 py-0.5 rounded-md text-secondary-foreground font-medium text-xs">{preventivo.policyType}</span>
-                    {preventivo.premio !== undefined && (
-                      <span className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md font-medium text-xs whitespace-nowrap">
-                        € {preventivo.premio.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </span>
-                    )}
-                  </h3>
-                  <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground ring-1 ring-border whitespace-nowrap">
-                    {format(new Date(preventivo.createdAt), "d MMM yyyy", { locale: it })}
+        {list.map((preventivo, index) => {
+          const currentDateKey = preventivo.createdAt ? format(new Date(preventivo.createdAt), "d MMMM yyyy", { locale: it }).toUpperCase() : "DATA SCONOSCIUTA";
+          const groupKey = currentDateKey;
+
+          let showSeparator = false;
+          if (index === 0) {
+            showSeparator = true;
+          } else {
+            const prevPreventivo = list[index - 1];
+            const prevDateKey = prevPreventivo.createdAt ? format(new Date(prevPreventivo.createdAt), "d MMMM yyyy", { locale: it }).toUpperCase() : "DATA SCONOSCIUTA";
+            showSeparator = groupKey !== prevDateKey;
+          }
+
+          return (
+            <React.Fragment key={preventivo.id}>
+              {showSeparator && (
+                <div className={cn("relative flex items-center pb-2", index !== 0 && "pt-6")}>
+                  <div className="flex-grow border-t border-border/60"></div>
+                  <span className="mx-4 text-xs font-semibold tracking-[0.18em] text-primary/80 uppercase text-center">
+                    {groupKey}
                   </span>
+                  <div className="flex-grow border-t border-border/60"></div>
                 </div>
-                {preventivo.notes && (
-                  <div className="flex items-center gap-3 text-muted-foreground text-sm flex-wrap">
-                    <span className="truncate max-w-xs">{preventivo.notes}</span>
+              )}
+              <Card className="overflow-hidden group shadow-soft hover:shadow-card hover:border-primary/30 transition-all border-dashed">
+                <CardContent className="p-0 flex flex-col sm:flex-row sm:items-center">
+                  <div className="p-3 sm:p-5 flex-1 min-w-0">
+                    <div className="flex justify-between items-start gap-3 mb-2 flex-wrap">
+                      <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2 min-w-0 flex-wrap">
+                        <span className="truncate max-w-[180px] sm:max-w-xs">{preventivo.clientName}</span>
+                        {renderStatusBadge(preventivo)}
+                        <span className="bg-secondary px-2 py-0.5 rounded-md text-secondary-foreground font-medium text-xs">{preventivo.policyType}</span>
+                        {preventivo.premio !== undefined && (
+                          <span className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md font-medium text-xs whitespace-nowrap">
+                            € {preventivo.premio.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        )}
+                      </h3>
+                    </div>
+                    {preventivo.notes && (
+                      <div className="flex items-center gap-3 text-muted-foreground text-sm flex-wrap">
+                        <span className="truncate max-w-xs">{preventivo.notes}</span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <div className="px-3 sm:px-5 pb-3 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-1.5 sm:gap-2 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity flex-wrap">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="font-medium text-xs gap-1.5 h-8 hover:bg-emerald-500/10 hover:text-emerald-600 hover:border-emerald-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                  onClick={() => setCompletingPreventivo(preventivo)}
-                >
-                  <Check className="w-3.5 h-3.5 text-emerald-500" />
-                  Fatto
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={cn("hover:text-primary", preventivo.notes ? "text-primary" : "text-muted-foreground")}
-                  onClick={() => setEditingNotePreventivo(preventivo)}
-                  title="Aggiungi o modifica nota"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => setEditingPreventivo(preventivo)} className="text-muted-foreground hover:text-primary">
-                  <Pencil className="w-4 h-4" />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => setDeletingPreventivo(preventivo)} className="text-muted-foreground hover:text-destructive">
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                  <div className="px-3 sm:px-5 pb-3 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-1.5 sm:gap-2 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity flex-wrap">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="font-medium text-xs gap-1.5 h-8 hover:bg-emerald-500/10 hover:text-emerald-600 hover:border-emerald-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                      onClick={() => setCompletingPreventivo(preventivo)}
+                    >
+                      <Check className="w-3.5 h-3.5 text-emerald-500" />
+                      Accettato
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={cn("hover:text-primary", preventivo.notes ? "text-primary" : "text-muted-foreground")}
+                      onClick={() => setEditingNotePreventivo(preventivo)}
+                      title="Aggiungi o modifica nota"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => setEditingPreventivo(preventivo)} className="text-muted-foreground hover:text-primary">
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => setDeletingPreventivo(preventivo)} className="text-muted-foreground hover:text-destructive">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </React.Fragment>
+          );
+        })}
       </div>
     ) : (
       <div className="p-10 text-center bg-card/50 border border-dashed rounded-xl text-muted-foreground text-sm">
@@ -455,8 +477,8 @@ export function Preventivi() {
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="da_fare">Da Fare</SelectItem>
-                        <SelectItem value="trattativa_in_corso">In Trattativa</SelectItem>
-                        <SelectItem value="fatto">Fatto (Elimina)</SelectItem>
+                        <SelectItem value="consegnato">Consegnato</SelectItem>
+                        <SelectItem value="accettato">Accettato (Elimina)</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -558,10 +580,10 @@ export function Preventivi() {
           <DialogHeader>
             <DialogTitle className="font-serif text-xl font-semibold text-emerald-600 mb-1 flex items-center gap-2">
               <Check className="w-5 h-5 text-emerald-500" />
-              Preventivo Completato
+              Preventivo Accettato
             </DialogTitle>
             <DialogDescription className="text-muted-foreground text-sm leading-relaxed">
-              Sei sicuro di voler contrassegnare il preventivo di <strong className="text-foreground">{completingPreventivo?.clientName}</strong> come fatto? <strong>Verrà eliminato definitivamente dal database</strong> e non sarà più recuperabile.
+              Sei sicuro di voler contrassegnare il preventivo di <strong className="text-foreground">{completingPreventivo?.clientName}</strong> come accettato? <strong>Verrà eliminato definitivamente dal database</strong> e non sarà più recuperabile.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-3 pt-5">

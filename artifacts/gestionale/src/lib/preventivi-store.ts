@@ -9,7 +9,7 @@ export interface Preventivo {
   clientName: string;
   policyType: string;
   notes?: string;
-  status: 'da_fare' | 'fatto' | 'trattativa_in_corso';
+  status: 'da_fare' | 'accettato' | 'consegnato';
   createdAt: string;
   userId: string;
   premio?: number;

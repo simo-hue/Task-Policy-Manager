@@ -86,7 +86,7 @@ export function Dashboard() {
       },
       {
         title: "Preventivi",
-        value: preventivi.filter(p => p.status !== "fatto").length,
+        value: preventivi.filter(p => p.status !== "accettato").length,
         icon: Briefcase,
         href: "/preventivi",
         testId: "card-preventivi",

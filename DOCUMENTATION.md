@@ -741,3 +741,15 @@
   - Aggiunta la classe `md:hidden` al trigger del Dialog del FAB per nasconderlo su schermi grandi.
   - Creata la funzione `renderDesktopQuickAdd` che genera un form `hidden md:block` con tutti i campi necessari per un inserimento rapido in linea.
   - Il nuovo form desktop è stato posizionato in cima ai due pannelli dei `TabsContent` ('in-scadenza' e 'da-emettere').
+
+### [2026-05-25 19:33]: Aggiornamento Stati Preventivi
+* *Details*: Aggiornati gli stati dei preventivi da 'da_fare', 'trattativa_in_corso', 'fatto' a 'da_fare', 'consegnato', 'accettato'. Lo stato 'accettato' ora comporta l'eliminazione del preventivo quando confermato.
+* *Tech Notes*:
+  - Modificato `src/lib/preventivi-store.ts` per aggiornare i tipi dello stato.
+  - Modificato `src/pages/preventivi.tsx` per riflettere i nuovi stati nei menu a tendina, nei badge e nella logica di eliminazione/salvataggio.
+  - Modificato `src/pages/dashboard.tsx` per escludere i preventivi in stato 'accettato' invece di 'fatto'.
+
+### [2026-05-25 19:35]: Rimozione Badge Data e Aggiunta Separatori su Preventivi
+* *Details*: Rimossa l'etichetta (badge) della data all'interno delle card dei preventivi. È stata invece implementata la tecnica dei "separatori di gruppo" (come sui Sinistri) che raggruppa dinamicamente i preventivi emessi nello stesso giorno sotto un'unica intestazione testuale con data in maiuscolo (es: '25 MAGGIO 2026'), pulendo ulteriormente l'interfaccia delle singole card.
+* *Tech Notes*:
+  - Modificato `src/pages/preventivi.tsx`: implementato `React.Fragment` e inserita la logica di calcolo di `showSeparator` e `groupKey` per renderizzare i divisori grafici tra i gruppi di date.
