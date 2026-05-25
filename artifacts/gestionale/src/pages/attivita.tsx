@@ -106,7 +106,7 @@ export function Attivita() {
   ];
 
   return (
-    <div className="space-y-5 sm:space-y-8">
+    <div className="flex flex-col h-full min-h-[calc(100vh-120px)] space-y-5 sm:space-y-8 relative">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
           <div className="text-xs uppercase tracking-[0.18em] text-gold/90 font-semibold mb-2">Da fare</div>
@@ -199,14 +199,14 @@ export function Attivita() {
         </DialogContent>
       </Dialog>
 
-      <div className="space-y-3">
-        <div className="relative">
+      <div className="space-y-4">
+        <div className="relative max-w-md mx-auto">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cerca per titolo o note..."
-            className="pl-9 pr-9"
+            placeholder="Cerca attività..."
+            className="pl-9 pr-9 h-11 rounded-xl shadow-sm bg-background border-border/60 focus-visible:ring-primary/30"
             data-testid="input-search-tasks"
           />
           {search && (
@@ -221,125 +221,45 @@ export function Attivita() {
             </button>
           )}
         </div>
-        <div className="relative p-1.5 inline-flex flex-wrap gap-1.5 items-center bg-muted/30 backdrop-blur-lg border border-border/50 rounded-2xl shadow-inner max-w-full">
-          {filterButtons.map((f) => {
-            const isSelected = quickFilter === f.value;
-            return (
+        <div className="flex justify-center w-full">
+          <div className="relative p-1.5 inline-flex flex-wrap gap-1.5 items-center justify-center bg-muted/30 backdrop-blur-lg border border-border/50 rounded-2xl shadow-inner max-w-full">
+            {filterButtons.map((f) => {
+              const isSelected = quickFilter === f.value;
+              return (
+                <button
+                  key={f.value}
+                  onClick={() => setQuickFilter(isSelected ? "all" : f.value)}
+                  data-testid={`button-filter-${f.value}`}
+                  className={cn(
+                    "relative px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 ease-out outline-none select-none",
+                    isSelected
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground hover:bg-background/40"
+                  )}
+                >
+                  {isSelected && (
+                    <span className="absolute inset-0 bg-background border border-border/80 rounded-xl shadow-soft -z-10" />
+                  )}
+                  {f.label}
+                </button>
+              );
+            })}
+            {hasActiveFilters && (
               <button
-                key={f.value}
-                onClick={() => setQuickFilter(isSelected ? "all" : f.value)}
-                data-testid={`button-filter-${f.value}`}
-                className={cn(
-                  "relative px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 ease-out outline-none select-none",
-                  isSelected
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-background/40"
-                )}
+                type="button"
+                onClick={() => { setSearch(""); setQuickFilter("all"); }}
+                data-testid="button-reset-filters"
+                className="relative px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 ease-out outline-none select-none text-muted-foreground hover:text-foreground hover:bg-background/40 flex items-center"
               >
-                {isSelected && (
-                  <span className="absolute inset-0 bg-background border border-border/80 rounded-xl shadow-soft -z-10" />
-                )}
-                {f.label}
+                <X className="w-4 h-4 mr-1" />
+                Azzera filtri
               </button>
-            );
-          })}
-          {hasActiveFilters && (
-            <button
-              type="button"
-              onClick={() => { setSearch(""); setQuickFilter("all"); }}
-              data-testid="button-reset-filters"
-              className="relative px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 ease-out outline-none select-none text-muted-foreground hover:text-foreground hover:bg-background/40 flex items-center"
-            >
-              <X className="w-4 h-4 mr-1" />
-              Azzera filtri
-            </button>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
-      <form 
-        onSubmit={(e) => {
-          e.preventDefault();
-          const target = e.target as HTMLFormElement;
-          const titleInput = target.elements.namedItem("quickTitle") as HTMLInputElement;
-          const title = titleInput.value.trim();
-          const notesInput = target.elements.namedItem("quickNotes") as HTMLInputElement;
-          const notes = notesInput.value.trim();
-          if (title) {
-            addTask({ 
-              title,
-              notes: notes || "",
-              dueDate: quickDate ? format(quickDate, 'yyyy-MM-dd') : undefined
-            });
-            titleInput.value = "";
-            notesInput.value = "";
-            setQuickDate(undefined);
-          }
-        }}
-        className="flex flex-col sm:flex-row sm:items-center gap-2 bg-card p-2 rounded-xl border border-border/60 shadow-sm focus-within:ring-2 focus-within:ring-primary/30 transition-all"
-      >
-        <div className="flex-1 relative">
-          <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input 
-            name="quickTitle"
-            placeholder="Scrivi qui una nuova attività veloce..." 
-            className="pl-9 h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
-            autoComplete="off"
-            required
-          />
-        </div>
-
-        <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
-
-        <div className="flex-1 relative min-w-[150px]">
-          <Input 
-            name="quickNotes"
-            placeholder="Note" 
-            className="h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
-            autoComplete="off"
-          />
-        </div>
-        
-        <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
-        
-        <Popover open={quickDatePopoverOpen} onOpenChange={setQuickDatePopoverOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              type="button"
-              variant={"outline"}
-              className={cn(
-                "w-full sm:w-[160px] h-11 justify-start text-left font-normal border-0 shadow-none bg-transparent focus:ring-0",
-                !quickDate && "text-muted-foreground"
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4 opacity-50 shrink-0" />
-              {quickDate ? format(quickDate, "P", { locale: it }) : <span>Data (opzionale)</span>}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0 border-none bg-transparent shadow-none" align="start">
-            <Calendar
-              mode="single"
-              selected={quickDate}
-              onSelect={(date) => {
-                setQuickDate(date);
-                setQuickDatePopoverOpen(false);
-              }}
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
-
-        <Button 
-          type="submit" 
-          variant="secondary" 
-          size="sm" 
-          className="h-11 px-6 sm:ml-auto font-semibold hover:scale-105 active:scale-95 transition-transform"
-        >
-          Aggiungi
-        </Button>
-      </form>
-
-      <div className="space-y-4">
+      <div className="space-y-4 flex-1 pb-32 md:pb-4">
           {activeTasks.length > 0 ? (
             activeTasks.map((task, index) => {
               const taskDateKey = task.dueDate ? format(parseLocalDate(task.dueDate), "yyyy-MM-dd") : "none";
@@ -449,6 +369,106 @@ export function Attivita() {
               )}
             </div>
           )}
+      </div>
+
+      <div className="fixed md:sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-4 left-0 right-0 md:left-auto md:right-auto z-30 pt-8 pb-4 md:pb-0 md:mt-auto px-4 md:px-0 bg-gradient-to-t from-background via-background/95 to-transparent md:bg-none pointer-events-none">
+        <form 
+          onSubmit={(e) => {
+            e.preventDefault();
+            const target = e.target as HTMLFormElement;
+            const titleInput = target.elements.namedItem("quickTitle") as HTMLInputElement;
+            const title = titleInput.value.trim();
+            const notesInput = target.elements.namedItem("quickNotes") as HTMLInputElement;
+            const notes = notesInput.value.trim();
+            if (title) {
+              addTask({ 
+                title,
+                notes: notes || "",
+                dueDate: quickDate ? format(quickDate, 'yyyy-MM-dd') : undefined
+              });
+              titleInput.value = "";
+              notesInput.value = "";
+              setQuickDate(undefined);
+            }
+          }}
+          className="pointer-events-auto flex flex-col sm:flex-row sm:items-center gap-2 bg-card/95 backdrop-blur-md p-2 sm:p-2 rounded-2xl sm:rounded-xl border border-border/60 shadow-elevated focus-within:ring-2 focus-within:ring-primary/30 transition-all max-w-4xl mx-auto"
+        >
+          <div className="flex items-center gap-2 w-full">
+            <div className="flex-1 relative">
+              <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
+              <Input 
+                name="quickTitle"
+                placeholder="Aggiungi un'attività..." 
+                className="pl-10 h-12 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70 text-base font-medium"
+                autoComplete="off"
+                required
+              />
+            </div>
+            
+            <div className="flex items-center gap-1 sm:hidden pr-1">
+              <Button 
+                type="submit" 
+                size="icon"
+                className="h-10 w-10 rounded-xl shrink-0 bg-primary text-primary-foreground shadow-sm"
+              >
+                <Plus className="w-5 h-5" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
+
+          <div className="flex items-center gap-2 sm:gap-2 w-full sm:w-auto px-2 pb-2 sm:p-0 sm:pb-0">
+            <div className="flex-1 relative sm:min-w-[150px]">
+              <Input 
+                name="quickNotes"
+                placeholder="Note (opzionale)" 
+                className="h-10 sm:h-11 border-0 focus-visible:ring-0 shadow-none bg-muted/40 sm:bg-transparent rounded-lg sm:rounded-none text-sm placeholder:text-muted-foreground/70"
+                autoComplete="off"
+              />
+            </div>
+            
+            <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
+            
+            <Popover open={quickDatePopoverOpen} onOpenChange={setQuickDatePopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant={"outline"}
+                  className={cn(
+                    "w-auto sm:w-[160px] h-10 sm:h-11 justify-start text-left font-normal border-0 shadow-none bg-muted/40 sm:bg-transparent focus:ring-0 rounded-lg sm:rounded-none shrink-0",
+                    !quickDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-0 sm:mr-2 h-4 w-4 opacity-50 shrink-0" />
+                  <span className="hidden sm:inline">{quickDate ? format(quickDate, "P", { locale: it }) : "Data"}</span>
+                  <span className="sm:hidden ml-2 text-xs">{quickDate ? format(quickDate, "dd/MM", { locale: it }) : "Data"}</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 border-none bg-transparent shadow-none mb-2" align="end" side="top">
+                <Calendar
+                  mode="single"
+                  selected={quickDate}
+                  onSelect={(date) => {
+                    setQuickDate(date);
+                    setQuickDatePopoverOpen(false);
+                  }}
+                  initialFocus
+                  className="bg-card rounded-xl border shadow-lg"
+                />
+              </PopoverContent>
+            </Popover>
+
+            <Button 
+              type="submit" 
+              variant="secondary" 
+              size="sm" 
+              className="hidden sm:flex h-11 px-6 sm:ml-auto font-semibold hover:scale-105 active:scale-95 transition-transform"
+            >
+              Aggiungi
+            </Button>
+          </div>
+        </form>
       </div>
 
       <Dialog open={!!deletingTask} onOpenChange={(open) => { if (!open) setDeletingTask(null); }}>

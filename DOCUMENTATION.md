@@ -648,3 +648,7 @@
 - [2026-05-25 11:10:00]: Feedback visivo stati vuoti nei Sinistri
   - *Details*: Resi meno leggibili (con opacità ridotta) i filtri di stato che non contengono alcun sinistro per il ramo attualmente selezionato. Questo migliora l'UX facendo capire a colpo d'occhio quali stati sono vuoti.
   - *Tech Notes*: Aggiunto conteggio dinamico per ogni `statusOptions` e applicate le classi Tailwind `opacity-40 saturate-50 hover:opacity-60` per attenuare visivamente i bottoni che hanno `count === 0` e non sono attualmente selezionati.
+
+- [2026-05-25 13:45:00]: Modulo Aggiunta Attività sempre visibile (Fixed)
+  - *Details*: A seguito di una revisione, il modulo di aggiunta rapida delle attività su mobile è stato modificato da `sticky` a `fixed`. Ora rimane sempre "ancorato" esattamente sopra la barra di navigazione inferiore dell'app, in sovrimpressione, garantendo che sia costantemente accessibile senza dover mai scorrere, offrendo un'esperienza 100% nativa.
+  - *Tech Notes*: Modificato il layout in `attivita.tsx`. Sostituito `sticky bottom-0` con `fixed md:sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))]` calcolando dinamicamente l'altezza esatta della bottom bar mobile. Aggiunto `pb-32` al contenitore principale delle liste su mobile per garantire che l'ultima card possa scorrere completamente fino a mostrarsi sopra il form fixed senza rimanere nascosta.
