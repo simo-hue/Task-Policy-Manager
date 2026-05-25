@@ -640,3 +640,7 @@
 - [2026-05-25 11:00:00]: Raggruppamento Sinistri per Stato e Data
   - *Details*: Rimosso il badge della data dalle singole card dei sinistri e introdotto un sistema di raggruppamento visivo. I sinistri sono ora ordinati prima per stato e poi per data, e raggruppati con un elegante separatore testuale in formato "STATO - DATA".
   - *Tech Notes*: Riscritto l'ordinamento in `activeClaims` per dare priorità a `statusOrder`. Modificato il loop `.map` dei claim in `sinistri.tsx` iniettando `React.Fragment` e un `div` con bordi superiori che renderizza `groupKey` come separatore visivo quando rileva un cambio rispetto all'elemento precedente.
+
+- [2026-05-25 11:05:00]: Rimozione opzione "Tutti gli stati"
+  - *Details*: Eliminato il pulsante "Tutti gli stati" dalla barra di filtro dei sinistri. I pulsanti di stato rimanenti funzionano ora come toggle (cliccando su uno stato attivo, questo viene deselezionato ripristinando la vista di tutti gli stati).
+  - *Tech Notes*: Aggiornato lo stato iniziale di `selectedStatus` a `null` e modificata la funzione `onClick` per alternare `null` e il valore selezionato.

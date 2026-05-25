@@ -198,19 +198,18 @@ export function Sinistri() {
   const [quickDatePopoverOpen, setQuickDatePopoverOpen] = useState(false);
   const [editDatePopoverOpen, setEditDatePopoverOpen] = useState(false);
   const [selectedRamo, setSelectedRamo] = useState<string | null>(null);
-  const [selectedStatus, setSelectedStatus] = useState<Claim["status"] | "tutti">("tutti");
+  const [selectedStatus, setSelectedStatus] = useState<Claim["status"] | null>(null);
 
   const uniqueRami = Array.from(new Set(activeClaims.map(c => c.ramo))).sort();
   const effectiveSelectedRamo = selectedRamo && uniqueRami.includes(selectedRamo) ? selectedRamo : (uniqueRami[0] || null);
   
   const filteredClaims = activeClaims.filter(c => {
     const matchRamo = effectiveSelectedRamo ? c.ramo === effectiveSelectedRamo : true;
-    const matchStatus = selectedStatus === "tutti" ? true : c.status === selectedStatus;
+    const matchStatus = selectedStatus === null ? true : c.status === selectedStatus;
     return matchRamo && matchStatus;
   });
 
-  const statusOptions: { value: Claim["status"] | "tutti", label: string }[] = [
-    { value: "tutti", label: "Tutti gli stati" },
+  const statusOptions: { value: Claim["status"], label: string }[] = [
     { value: "da_aprire", label: "Da aprire" },
     { value: "aperto", label: "Aperto" },
     { value: "incaricato", label: "Incaricato perito" },
@@ -583,7 +582,7 @@ export function Sinistri() {
                 return (
                   <button
                     key={status.value}
-                    onClick={() => setSelectedStatus(status.value)}
+                    onClick={() => setSelectedStatus(isSelected ? null : status.value)}
                     className={cn(
                       "relative px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-300 ease-out outline-none select-none",
                       isSelected
