@@ -781,3 +781,7 @@
 ### [2026-05-25 19:47]: Contatore Dinamico su Filtro Attività
 * *Details*: Aggiunto il conteggio dinamico dei task aperti ai filtri di ricerca rapida ('Oggi', 'Questa settimana', 'Scadute') presenti nella dashboard delle attività, mantenendo la coerenza grafica con la sezione preventivi.
 * *Tech Notes*: Aggiunta la funzione `getTasksCount` nel file `src/pages/attivita.tsx`.
+
+- [2026-05-25 19:50]: Fix preventivi counter discrepancy
+  - *Details*: The dashboard counted all preventivi that were not "accettato", while the preventivi page exclusively listed and counted those with status exactly equal to "da_fare". This caused older records or records with undefined status to be missing from the list.
+  - *Tech Notes*: Updated the `filteredPreventivi` and `filterOptions` logic in `preventivi.tsx` so that the "da_fare" tab acts as a fallback catching all items that are not "consegnato" and not "accettato", which mirrors the dashboard logic.

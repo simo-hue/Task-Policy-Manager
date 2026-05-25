@@ -318,7 +318,10 @@ export function Preventivi() {
     )
   );
 
-  const filteredPreventivi = preventivi.filter(p => p.status === selectedStatus);
+  const filteredPreventivi = preventivi.filter(p => {
+    if (selectedStatus === "consegnato") return p.status === "consegnato";
+    return p.status !== "consegnato" && p.status !== "accettato";
+  });
 
   const sortedPreventivi = [...filteredPreventivi].sort((a, b) => {
     const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
@@ -327,7 +330,7 @@ export function Preventivi() {
   });
 
   const filterOptions = [
-    { value: "da_fare" as const, label: `Da Fare (${preventivi.filter(p => p.status === "da_fare").length})` },
+    { value: "da_fare" as const, label: `Da Fare (${preventivi.filter(p => p.status !== "consegnato" && p.status !== "accettato").length})` },
     { value: "consegnato" as const, label: `Consegnati (${preventivi.filter(p => p.status === "consegnato").length})` }
   ];
 
