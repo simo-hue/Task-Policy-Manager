@@ -769,3 +769,7 @@
 ### [2026-05-25 19:43]: Ottimizzazione Interfaccia Card Preventivi
 * *Details*: Rimossi i badge informativi sullo stato dei preventivi dalle singole card, poiché ora lo stato si deduce logicamente dal filtro principale (segment) correntemente selezionato, garantendo un'interfaccia molto più pulita. Inoltre, il pulsante principale delle card ora si adatta in modo dinamico: se si sta visualizzando 'Da Fare', diventerà 'Consegnato' e servirà a far avanzare lo stato del documento; se si è su 'Consegnati', il pulsante mostrerà 'Accettato' ed eliminerà il preventivo.
 * *Tech Notes*: Modificato `src/pages/preventivi.tsx`: eliminato interamente `renderStatusBadge()` e applicato un operatore ternario al `<Button>` di accettazione/consegna, reattivo al `selectedStatus`.
+
+### [2026-05-25 19:45]: Riposizionamento e Restyling Filtro Polizze Personali
+* *Details*: Nella pagina delle polizze personali (desktop) ho eliminato i vecchi 'Tabs' nativi per la navigazione 'In scadenza' / 'Da emettere', sostituendoli con un selettore custom identico a quello elegante appena sviluppato per i preventivi.
+* *Tech Notes*: Ristrutturato il layout in `src/pages/polizze-personali.tsx`. Il componente `renderDesktopQuickAdd` (la barra di inserimento rapido) è stato spostato *sopra* al nuovo selettore, mentre l'alternanza della lista è ora gestita tramite un singolo stato `selectedTab`.

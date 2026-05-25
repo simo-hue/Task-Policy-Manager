@@ -78,6 +78,7 @@ export function PolizzePersonali() {
   const [editExpiryDatePopoverOpen, setEditExpiryDatePopoverOpen] = useState(false);
   const [editTargetDatePopoverOpen, setEditTargetDatePopoverOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [selectedTab, setSelectedTab] = useState<"in-scadenza" | "da-emettere">("in-scadenza");
 
   const editForm = useForm<PolicyFormValues>({
     resolver: zodResolver(policySchema),
@@ -744,23 +745,39 @@ export function PolizzePersonali() {
         </DialogContent>
       </Dialog>
 
-      <Tabs defaultValue="in-scadenza" className="w-full flex flex-col flex-1">
-        <div className="flex justify-center mb-6">
-          <TabsList>
-            <TabsTrigger value="in-scadenza" data-testid="tab-in-scadenza">
-              <ShieldAlert className="w-4 h-4 mr-2" />
+      <div className="w-full flex flex-col flex-1">
+        {selectedTab === "in-scadenza" ? renderDesktopQuickAdd("emessa") : renderDesktopQuickAdd("da_emettere")}
+
+        <div className="flex justify-center w-full mb-6 mt-2">
+          <div className="relative p-1.5 inline-flex flex-wrap justify-center gap-1.5 items-center bg-muted/30 backdrop-blur-lg border border-border/50 rounded-2xl shadow-inner">
+            <button
+              onClick={() => setSelectedTab("in-scadenza")}
+              className={cn(
+                "relative px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 ease-out outline-none select-none flex items-center gap-2",
+                selectedTab === "in-scadenza" ? "text-primary" : "text-muted-foreground hover:text-foreground hover:bg-background/40"
+              )}
+            >
+              {selectedTab === "in-scadenza" && <span className="absolute inset-0 bg-background border border-border/80 rounded-xl shadow-soft -z-10" />}
+              <ShieldAlert className="w-4 h-4" />
               In scadenza ({inScadenza.length})
-            </TabsTrigger>
-            <TabsTrigger value="da-emettere" data-testid="tab-da-emettere">
-              <FileSignature className="w-4 h-4 mr-2" />
+            </button>
+            <button
+              onClick={() => setSelectedTab("da-emettere")}
+              className={cn(
+                "relative px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 ease-out outline-none select-none flex items-center gap-2",
+                selectedTab === "da-emettere" ? "text-primary" : "text-muted-foreground hover:text-foreground hover:bg-background/40"
+              )}
+            >
+              {selectedTab === "da-emettere" && <span className="absolute inset-0 bg-background border border-border/80 rounded-xl shadow-soft -z-10" />}
+              <FileSignature className="w-4 h-4" />
               Da emettere ({daEmettere.length})
-            </TabsTrigger>
-          </TabsList>
+            </button>
+          </div>
         </div>
 
-        <TabsContent value="in-scadenza" className="space-y-4 flex flex-col flex-1 pb-32 md:pb-4 h-full">
-          {renderDesktopQuickAdd("emessa")}
-          {inScadenza.length > 0 ? (
+        <div className="space-y-4 flex flex-col flex-1 pb-32 md:pb-4 h-full">
+          {selectedTab === "in-scadenza" && (
+            inScadenza.length > 0 ? (
             <div className="flex flex-col gap-3 flex-1">
               {inScadenza.map((policy, index) => {
                 const dateKey = policy.expiryDate ? format(parseLocalDate(policy.expiryDate), "yyyy-MM-dd") : "none";
@@ -848,13 +865,10 @@ export function PolizzePersonali() {
             <div className="p-10 text-center bg-card/50 border border-dashed rounded-xl text-muted-foreground text-sm flex-1">
               Nessuna polizza in scadenza.
             </div>
-          )}
-          {renderQuickAdd("emessa")}
-        </TabsContent>
-
-        <TabsContent value="da-emettere" className="space-y-4 flex flex-col flex-1 pb-32 md:pb-4 h-full">
-          {renderDesktopQuickAdd("da_emettere")}
-          {daEmettere.length > 0 ? (
+          ))}
+          
+          {selectedTab === "da-emettere" && (
+            daEmettere.length > 0 ? (
             <div className="flex flex-col gap-3 flex-1">
               {daEmettere.map((policy, index) => {
                 const dateKey = policy.targetIssueDate ? format(parseLocalDate(policy.targetIssueDate), "yyyy-MM-dd") : "none";
@@ -941,10 +955,10 @@ export function PolizzePersonali() {
             <div className="p-10 text-center bg-card/50 border border-dashed rounded-xl text-muted-foreground text-sm flex-1">
               Nessuna polizza da emettere.
             </div>
-          )}
-          {renderQuickAdd("da_emettere")}
-        </TabsContent>
-      </Tabs>
+          ))}
+          {selectedTab === "in-scadenza" ? renderQuickAdd("emessa") : renderQuickAdd("da_emettere")}
+        </div>
+      </div>
 
       <Dialog open={!!payingPolicy} onOpenChange={(open) => { if (!open) setPayingPolicy(null); }}>
         <DialogContent className="max-w-md border-border/80 shadow-elevated">
