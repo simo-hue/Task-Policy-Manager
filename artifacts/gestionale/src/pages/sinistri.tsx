@@ -234,7 +234,7 @@ export function Sinistri() {
   }, [editingClaim, editForm]);
 
   const renderQuickAdd = () => (
-    <div className="fixed md:sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-6 left-0 right-0 px-4 md:px-0 z-40 pointer-events-none">
+    <div className="fixed md:static bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-auto left-0 right-0 px-4 md:px-0 z-40 pointer-events-none md:pointer-events-auto">
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -260,7 +260,7 @@ export function Sinistri() {
             setQuickStatus("da_aprire");
           }
         }}
-        className="pointer-events-auto flex flex-col md:flex-row gap-2 bg-card/95 backdrop-blur-md p-2 rounded-2xl border border-border/60 shadow-elevated transition-all max-w-7xl mx-auto"
+        className="pointer-events-auto flex flex-col md:flex-row gap-2 bg-card/95 md:bg-card backdrop-blur-md md:backdrop-blur-none p-2 rounded-2xl border border-border/60 shadow-elevated md:shadow-sm transition-all max-w-7xl mx-auto"
       >
         <div className="flex gap-1.5 w-full md:w-auto md:flex-1">
           <div className="flex-1 relative">
@@ -526,6 +526,8 @@ export function Sinistri() {
           <p className="text-muted-foreground text-sm sm:text-base">Visualizza ed inserisci i sinistri aperti del portafoglio clienti.</p>
         </div>
       </div>
+
+      {renderQuickAdd()}
 
       <Dialog open={!!editingClaim} onOpenChange={(open) => { if (!open) setEditingClaim(null); }}>
         <DialogContent className="max-w-md">
@@ -798,8 +800,6 @@ export function Sinistri() {
           </form>
         </DialogContent>
       </Dialog>
-      
-      {renderQuickAdd()}
     </div>
   );
 }

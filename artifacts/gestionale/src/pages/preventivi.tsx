@@ -164,7 +164,7 @@ export function Preventivi() {
   };
 
   const renderQuickAdd = (defaultStatus: "da_fare" | "trattativa_in_corso" | "fatto") => (
-    <div className="fixed md:sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-4 left-0 right-0 md:left-auto md:right-auto z-30 pt-6 pb-2 md:pb-0 md:mt-auto px-3 md:px-0 bg-gradient-to-t from-background via-background/95 to-transparent md:bg-none pointer-events-none">
+    <div className="fixed md:static bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-auto left-0 right-0 px-3 md:px-0 z-30 pt-6 pb-2 md:py-0 bg-gradient-to-t from-background via-background/95 to-transparent md:bg-none pointer-events-none md:pointer-events-auto">
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -192,7 +192,7 @@ export function Preventivi() {
             setQuickDate(undefined);
           }
         }}
-        className="pointer-events-auto flex flex-col md:flex-row gap-2 bg-card/95 backdrop-blur-md p-2 rounded-2xl border border-border/60 shadow-elevated transition-all max-w-7xl mx-auto"
+        className="pointer-events-auto flex flex-col md:flex-row gap-2 bg-card/95 md:bg-card backdrop-blur-md md:backdrop-blur-none p-2 rounded-2xl border border-border/60 shadow-elevated md:shadow-sm transition-all max-w-7xl mx-auto"
       >
         <div className="flex gap-1.5 w-full md:w-auto md:flex-1">
           <div className="flex-1 relative">
@@ -379,6 +379,8 @@ export function Preventivi() {
           <p className="text-muted-foreground text-sm sm:text-base">Gestisci le richieste di preventivo e le trattative in corso.</p>
         </div>
       </div>
+
+      {renderQuickAdd("da_fare")}
 
       <Dialog open={!!editingPreventivo} onOpenChange={(open) => { if (!open) setEditingPreventivo(null); }}>
         <DialogContent className="max-w-md">
@@ -620,7 +622,6 @@ export function Preventivi() {
 
       <div className="space-y-4 pb-32 md:pb-4 flex flex-col flex-1 h-full">
         {renderPreventivoList(sortedPreventivi, "Nessun preventivo presente al momento.")}
-        {renderQuickAdd("da_fare")}
       </div>
     </div>
   );

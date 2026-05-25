@@ -115,6 +115,106 @@ export function Attivita() {
         </div>
       </div>
 
+      <div className="fixed md:static bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-auto left-0 right-0 px-4 md:px-0 z-30 pt-8 pb-4 md:py-0 bg-gradient-to-t from-background via-background/95 to-transparent md:bg-none pointer-events-none md:pointer-events-auto">
+        <form 
+          onSubmit={(e) => {
+            e.preventDefault();
+            const target = e.target as HTMLFormElement;
+            const titleInput = target.elements.namedItem("quickTitle") as HTMLInputElement;
+            const title = titleInput.value.trim();
+            const notesInput = target.elements.namedItem("quickNotes") as HTMLInputElement;
+            const notes = notesInput.value.trim();
+            if (title) {
+              addTask({ 
+                title,
+                notes: notes || "",
+                dueDate: quickDate ? format(quickDate, 'yyyy-MM-dd') : undefined
+              });
+              titleInput.value = "";
+              notesInput.value = "";
+              setQuickDate(undefined);
+            }
+          }}
+          className="pointer-events-auto flex flex-col sm:flex-row sm:items-center gap-2 bg-card/95 md:bg-card backdrop-blur-md md:backdrop-blur-none p-2 sm:p-2 rounded-2xl sm:rounded-xl border border-border/60 shadow-elevated md:shadow-sm focus-within:ring-2 focus-within:ring-primary/30 transition-all max-w-4xl mx-auto"
+        >
+          <div className="flex items-center gap-2 w-full">
+            <div className="flex-1 relative">
+              <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
+              <Input 
+                name="quickTitle"
+                placeholder="Aggiungi un'attività..." 
+                className="pl-10 h-12 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70 text-base font-medium"
+                autoComplete="off"
+                required
+              />
+            </div>
+            
+            <div className="flex items-center gap-1 sm:hidden pr-1">
+              <Button 
+                type="submit" 
+                size="icon"
+                className="h-10 w-10 rounded-xl shrink-0 bg-primary text-primary-foreground shadow-sm"
+              >
+                <Plus className="w-5 h-5" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
+
+          <div className="flex items-center gap-2 sm:gap-2 w-full sm:w-auto px-2 pb-2 sm:p-0 sm:pb-0">
+            <div className="flex-1 relative sm:min-w-[150px]">
+              <Input 
+                name="quickNotes"
+                placeholder="Note (opzionale)" 
+                className="h-10 sm:h-11 border-0 focus-visible:ring-0 shadow-none bg-muted/40 sm:bg-transparent rounded-lg sm:rounded-none text-sm placeholder:text-muted-foreground/70"
+                autoComplete="off"
+              />
+            </div>
+            
+            <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
+            
+            <Popover open={quickDatePopoverOpen} onOpenChange={setQuickDatePopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant={"outline"}
+                  className={cn(
+                    "w-auto sm:w-[160px] h-10 sm:h-11 justify-start text-left font-normal border-0 shadow-none bg-muted/40 sm:bg-transparent focus:ring-0 rounded-lg sm:rounded-none shrink-0",
+                    !quickDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-0 sm:mr-2 h-4 w-4 opacity-50 shrink-0" />
+                  <span className="hidden sm:inline">{quickDate ? format(quickDate, "P", { locale: it }) : "Data"}</span>
+                  <span className="sm:hidden ml-2 text-xs">{quickDate ? format(quickDate, "dd/MM", { locale: it }) : "Data"}</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 border-none bg-transparent shadow-none mb-2" align="end" side="top">
+                <Calendar
+                  mode="single"
+                  selected={quickDate}
+                  onSelect={(date) => {
+                    setQuickDate(date);
+                    setQuickDatePopoverOpen(false);
+                  }}
+                  initialFocus
+                  className="bg-card rounded-xl border shadow-lg"
+                />
+              </PopoverContent>
+            </Popover>
+
+            <Button 
+              type="submit" 
+              variant="secondary" 
+              size="sm" 
+              className="hidden sm:flex h-11 px-6 sm:ml-auto font-semibold hover:scale-105 active:scale-95 transition-transform"
+            >
+              Aggiungi
+            </Button>
+          </div>
+        </form>
+      </div>
+
       <Dialog open={!!editingTask} onOpenChange={(open) => { if (!open) setEditingTask(null); }}>
         <DialogContent>
           <DialogHeader>
@@ -369,106 +469,6 @@ export function Attivita() {
               )}
             </div>
           )}
-      </div>
-
-      <div className="fixed md:sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-4 left-0 right-0 md:left-auto md:right-auto z-30 pt-8 pb-4 md:pb-0 md:mt-auto px-4 md:px-0 bg-gradient-to-t from-background via-background/95 to-transparent md:bg-none pointer-events-none">
-        <form 
-          onSubmit={(e) => {
-            e.preventDefault();
-            const target = e.target as HTMLFormElement;
-            const titleInput = target.elements.namedItem("quickTitle") as HTMLInputElement;
-            const title = titleInput.value.trim();
-            const notesInput = target.elements.namedItem("quickNotes") as HTMLInputElement;
-            const notes = notesInput.value.trim();
-            if (title) {
-              addTask({ 
-                title,
-                notes: notes || "",
-                dueDate: quickDate ? format(quickDate, 'yyyy-MM-dd') : undefined
-              });
-              titleInput.value = "";
-              notesInput.value = "";
-              setQuickDate(undefined);
-            }
-          }}
-          className="pointer-events-auto flex flex-col sm:flex-row sm:items-center gap-2 bg-card/95 backdrop-blur-md p-2 sm:p-2 rounded-2xl sm:rounded-xl border border-border/60 shadow-elevated focus-within:ring-2 focus-within:ring-primary/30 transition-all max-w-4xl mx-auto"
-        >
-          <div className="flex items-center gap-2 w-full">
-            <div className="flex-1 relative">
-              <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
-              <Input 
-                name="quickTitle"
-                placeholder="Aggiungi un'attività..." 
-                className="pl-10 h-12 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70 text-base font-medium"
-                autoComplete="off"
-                required
-              />
-            </div>
-            
-            <div className="flex items-center gap-1 sm:hidden pr-1">
-              <Button 
-                type="submit" 
-                size="icon"
-                className="h-10 w-10 rounded-xl shrink-0 bg-primary text-primary-foreground shadow-sm"
-              >
-                <Plus className="w-5 h-5" />
-              </Button>
-            </div>
-          </div>
-
-          <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
-
-          <div className="flex items-center gap-2 sm:gap-2 w-full sm:w-auto px-2 pb-2 sm:p-0 sm:pb-0">
-            <div className="flex-1 relative sm:min-w-[150px]">
-              <Input 
-                name="quickNotes"
-                placeholder="Note (opzionale)" 
-                className="h-10 sm:h-11 border-0 focus-visible:ring-0 shadow-none bg-muted/40 sm:bg-transparent rounded-lg sm:rounded-none text-sm placeholder:text-muted-foreground/70"
-                autoComplete="off"
-              />
-            </div>
-            
-            <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
-            
-            <Popover open={quickDatePopoverOpen} onOpenChange={setQuickDatePopoverOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  type="button"
-                  variant={"outline"}
-                  className={cn(
-                    "w-auto sm:w-[160px] h-10 sm:h-11 justify-start text-left font-normal border-0 shadow-none bg-muted/40 sm:bg-transparent focus:ring-0 rounded-lg sm:rounded-none shrink-0",
-                    !quickDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-0 sm:mr-2 h-4 w-4 opacity-50 shrink-0" />
-                  <span className="hidden sm:inline">{quickDate ? format(quickDate, "P", { locale: it }) : "Data"}</span>
-                  <span className="sm:hidden ml-2 text-xs">{quickDate ? format(quickDate, "dd/MM", { locale: it }) : "Data"}</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 border-none bg-transparent shadow-none mb-2" align="end" side="top">
-                <Calendar
-                  mode="single"
-                  selected={quickDate}
-                  onSelect={(date) => {
-                    setQuickDate(date);
-                    setQuickDatePopoverOpen(false);
-                  }}
-                  initialFocus
-                  className="bg-card rounded-xl border shadow-lg"
-                />
-              </PopoverContent>
-            </Popover>
-
-            <Button 
-              type="submit" 
-              variant="secondary" 
-              size="sm" 
-              className="hidden sm:flex h-11 px-6 sm:ml-auto font-semibold hover:scale-105 active:scale-95 transition-transform"
-            >
-              Aggiungi
-            </Button>
-          </div>
-        </form>
       </div>
 
       <Dialog open={!!deletingTask} onOpenChange={(open) => { if (!open) setDeletingTask(null); }}>

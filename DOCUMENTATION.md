@@ -679,3 +679,10 @@
 * *Tech Notes*:
   - Modificato `src/pages/preventivi.tsx`.
   - Aggiunta la prop `disabled={false}` ai due componenti `<Calendar>` (form di inserimento rapido e dialog di modifica) per bypassare la logica globale che disabilita le date antecedenti ad oggi.
+
+### [2026-05-25 16:00]: Ottimizzazione Layout Quick Add su Desktop
+* *Details*: Spostata la barra di aggiunta rapida (Quick Add) nella parte superiore della pagina per gli utenti Desktop in tutte le schermate (Sinistri, Preventivi, Attività). Precedentemente era fissa in basso, una scelta ottima per l'uso mobile ma scomoda su schermi ampi. Ora il layout si adatta dinamicamente in base al dispositivo utilizzato: in basso per gli smartphone, in alto (subito sotto il titolo) per i laptop.
+* *Tech Notes*:
+  - Modificati i file `src/pages/sinistri.tsx`, `src/pages/preventivi.tsx` e `src/pages/attivita.tsx`.
+  - Le classi CSS della barra sono state aggiornate da `fixed md:sticky md:bottom-6` a `fixed md:static md:bottom-auto` in modo che il contenitore fluisca naturalmente nel DOM su desktop, rimanendo fisso in basso (`bottom-[calc(...)]`) solo su mobile.
+  - Spostati i blocchi `{renderQuickAdd()}` e i rispettivi tag `<form>` subito dopo l'header testuale principale (`h1`) invece che in calce al componente.
