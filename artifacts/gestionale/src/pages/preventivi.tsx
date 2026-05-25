@@ -164,130 +164,138 @@ export function Preventivi() {
   };
 
   const renderQuickAdd = (defaultStatus: "da_fare" | "trattativa_in_corso" | "fatto") => (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        const target = e.target as HTMLFormElement;
-        const nameInput = target.elements.namedItem("quickName") as HTMLInputElement;
-        const clientName = nameInput.value.trim();
-        const notesInput = target.elements.namedItem("quickNotes") as HTMLInputElement;
-        const notes = notesInput.value.trim();
-        const premioInput = target.elements.namedItem("quickPremio") as HTMLInputElement;
-        const premioVal = premioInput?.value.trim();
-        const premio = premioVal ? Number(premioVal) : undefined;
+    <div className="fixed md:sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-4 left-0 right-0 md:left-auto md:right-auto z-30 pt-6 pb-2 md:pb-0 md:mt-auto px-3 md:px-0 bg-gradient-to-t from-background via-background/95 to-transparent md:bg-none pointer-events-none">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const target = e.target as HTMLFormElement;
+          const nameInput = target.elements.namedItem("quickName") as HTMLInputElement;
+          const clientName = nameInput.value.trim();
+          const notesInput = target.elements.namedItem("quickNotes") as HTMLInputElement;
+          const notes = notesInput.value.trim();
+          const premioInput = target.elements.namedItem("quickPremio") as HTMLInputElement;
+          const premioVal = premioInput?.value.trim();
+          const premio = premioVal ? Number(premioVal) : undefined;
 
-        if (clientName) {
-          addPreventivo({
-            clientName,
-            policyType: quickType,
-            status: defaultStatus,
-            notes: notes || "",
-            premio,
-            createdAt: quickDate ? quickDate.toISOString() : new Date().toISOString()
-          });
-          nameInput.value = "";
-          notesInput.value = "";
-          if (premioInput) premioInput.value = "";
-          setQuickDate(undefined);
-        }
-      }}
-      className="flex flex-col sm:flex-row sm:items-center gap-2 mb-6 bg-card p-2 rounded-xl border border-border/60 shadow-sm focus-within:ring-2 focus-within:ring-primary/30 transition-all"
-    >
-      <div className="flex-1 relative">
-        <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          name="quickName"
-          placeholder="Nome cliente..."
-          className="pl-9 h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent"
-          autoComplete="off"
-          required
-        />
-      </div>
-
-      <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
-
-      <Popover open={quickDatePopoverOpen} onOpenChange={setQuickDatePopoverOpen}>
-        <PopoverTrigger asChild>
+          if (clientName) {
+            addPreventivo({
+              clientName,
+              policyType: quickType,
+              status: defaultStatus,
+              notes: notes || "",
+              premio,
+              createdAt: quickDate ? quickDate.toISOString() : new Date().toISOString()
+            });
+            nameInput.value = "";
+            notesInput.value = "";
+            if (premioInput) premioInput.value = "";
+            setQuickDate(undefined);
+          }
+        }}
+        className="pointer-events-auto flex flex-col md:flex-row gap-2 bg-card/95 backdrop-blur-md p-2 rounded-2xl border border-border/60 shadow-elevated transition-all max-w-7xl mx-auto"
+      >
+        <div className="flex gap-1.5 w-full md:w-auto md:flex-1">
+          <div className="flex-1 relative">
+            <Plus className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              name="quickName"
+              placeholder="Nuovo preventivo..."
+              className="pl-8 h-10 border-0 bg-secondary/50 focus-visible:ring-1 focus-visible:ring-primary/30 rounded-xl w-full"
+              autoComplete="off"
+              required
+            />
+          </div>
           <Button
-            variant={"outline"}
-            className={cn(
-              "w-full sm:w-[140px] h-11 justify-start text-left font-normal border-0 shadow-none bg-transparent focus:ring-0",
-              !quickDate && "text-muted-foreground"
-            )}
+            type="submit"
+            size="sm"
+            className="md:hidden font-medium shrink-0 h-10 px-4 rounded-xl"
           >
-            <CalendarIcon className="mr-2 h-4 w-4 opacity-50 shrink-0" />
-            {quickDate ? format(quickDate, "P", { locale: it }) : <span>Data</span>}
+            Salva
           </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0 border-none bg-transparent shadow-none" align="start">
-          <Calendar
-            mode="single"
-            selected={quickDate}
-            onSelect={(date) => {
-              setQuickDate(date);
-              setQuickDatePopoverOpen(false);
-            }}
-            initialFocus
-          />
-        </PopoverContent>
-      </Popover>
-
-      <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
-
-      <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-        <Select value={quickType} onValueChange={setQuickType}>
-          <SelectTrigger className="h-11 border-0 bg-transparent shadow-none w-full sm:w-[140px] focus:ring-0 font-medium">
-            <SelectValue placeholder="Tipo polizza" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Auto">Auto</SelectItem>
-            <SelectItem value="Moto">Moto</SelectItem>
-            <SelectItem value="Furgone">Furgone</SelectItem>
-            <SelectItem value="Abitazione">Abitazione</SelectItem>
-            <SelectItem value="Infortuni">Infortuni</SelectItem>
-            <SelectItem value="Malattia">Malattia</SelectItem>
-            <SelectItem value="Vita">Vita</SelectItem>
-            <SelectItem value="TCM">TCM</SelectItem>
-            <SelectItem value="Commercio">Commercio</SelectItem>
-            <SelectItem value="RC Professionale">RC Professionale</SelectItem>
-            <SelectItem value="RC Terzi">RC Terzi</SelectItem>
-            <SelectItem value="RC Capofamiglia">RC Capofamiglia</SelectItem>
-            <SelectItem value="Animali">Animali</SelectItem>
-            <SelectItem value="Non specificata">Altro...</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
-        <div className="relative w-full sm:w-[110px]">
-          <Input
-            name="quickPremio"
-            type="number"
-            step="0.01"
-            placeholder="Premio"
-            className="h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
-            autoComplete="off"
-          />
         </div>
 
-        <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
-        <div className="flex-1 relative min-w-[150px]">
-          <Input
-            name="quickNotes"
-            placeholder="Note"
-            className="h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
-            autoComplete="off"
-          />
+        <div className="grid grid-cols-2 md:flex gap-1.5 w-full md:w-auto">
+          <Select value={quickType} onValueChange={setQuickType}>
+            <SelectTrigger className="h-10 md:w-[130px] border-0 bg-secondary/50 focus:ring-1 focus:ring-primary/30 rounded-xl text-xs sm:text-sm font-medium">
+              <SelectValue placeholder="Tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Auto">Auto</SelectItem>
+              <SelectItem value="Moto">Moto</SelectItem>
+              <SelectItem value="Furgone">Furgone</SelectItem>
+              <SelectItem value="Abitazione">Abitazione</SelectItem>
+              <SelectItem value="Infortuni">Infortuni</SelectItem>
+              <SelectItem value="Malattia">Malattia</SelectItem>
+              <SelectItem value="Vita">Vita</SelectItem>
+              <SelectItem value="TCM">TCM</SelectItem>
+              <SelectItem value="Commercio">Commercio</SelectItem>
+              <SelectItem value="RC Professionale">RC Professionale</SelectItem>
+              <SelectItem value="RC Terzi">RC Terzi</SelectItem>
+              <SelectItem value="RC Capofamiglia">RC Capofamiglia</SelectItem>
+              <SelectItem value="Animali">Animali</SelectItem>
+              <SelectItem value="Non specificata">Altro...</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Popover open={quickDatePopoverOpen} onOpenChange={setQuickDatePopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"secondary"}
+                className={cn(
+                  "h-10 md:w-[120px] px-3 bg-secondary/50 font-normal border-0 text-xs sm:text-sm rounded-xl justify-start",
+                  !quickDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-3.5 w-3.5 opacity-50 shrink-0" />
+                <span className="truncate">{quickDate ? format(quickDate, "d MMM", { locale: it }) : "Data"}</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 border-none bg-transparent shadow-none" align="start">
+              <Calendar
+                mode="single"
+                selected={quickDate}
+                onSelect={(date) => {
+                  setQuickDate(date);
+                  setQuickDatePopoverOpen(false);
+                }}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        <div className="grid grid-cols-3 md:flex gap-1.5 w-full md:w-auto md:flex-1">
+          <div className="col-span-1 relative md:w-[100px]">
+            <Input
+              name="quickPremio"
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              placeholder="Premio €"
+              className="h-10 border-0 bg-secondary/50 focus-visible:ring-1 focus-visible:ring-primary/30 rounded-xl text-xs sm:text-sm w-full"
+              autoComplete="off"
+            />
+          </div>
+
+          <div className="col-span-2 relative md:flex-1">
+            <Input
+              name="quickNotes"
+              placeholder="Note..."
+              className="h-10 border-0 bg-secondary/50 focus-visible:ring-1 focus-visible:ring-primary/30 rounded-xl text-xs sm:text-sm w-full"
+              autoComplete="off"
+            />
+          </div>
         </div>
 
         <Button
           type="submit"
           size="sm"
-          className="font-medium shrink-0 h-11 px-4"
+          className="hidden md:flex font-medium shrink-0 h-10 px-5 rounded-xl"
         >
           Aggiungi
         </Button>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 
   const renderPreventivoList = (list: Preventivo[], emptyMessage: string) => (
@@ -362,7 +370,7 @@ export function Preventivi() {
   });
 
   return (
-    <div className="space-y-6 sm:space-y-12">
+    <div className="space-y-6 sm:space-y-12 flex flex-col h-full min-h-[calc(100vh-120px)] relative">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
           <div className="text-xs uppercase tracking-[0.18em] text-gold/90 font-semibold mb-2">Vendite</div>
@@ -424,7 +432,7 @@ export function Preventivi() {
                   <FormItem>
                     <FormLabel>Premio</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" placeholder="Es. 250.50" {...field} value={field.value ?? ""} onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)} />
+                      <Input type="number" inputMode="decimal" step="0.01" placeholder="Es. 250.50" {...field} value={field.value ?? ""} onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -608,9 +616,9 @@ export function Preventivi() {
         </DialogContent>
       </Dialog>
 
-      <div className="space-y-4">
-        {renderQuickAdd("da_fare")}
+      <div className="space-y-4 pb-32 md:pb-4 flex flex-col flex-1 h-full">
         {renderPreventivoList(sortedPreventivi, "Nessun preventivo presente al momento.")}
+        {renderQuickAdd("da_fare")}
       </div>
     </div>
   );

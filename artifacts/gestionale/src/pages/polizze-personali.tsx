@@ -16,7 +16,7 @@ import { it } from "date-fns/locale";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { CalendarIcon, Plus, ShieldAlert, FileSignature, Trash2, ArrowRight, Pencil, Settings2, Check, ChevronDown, MessageSquare } from "lucide-react";
+import { CalendarIcon, Plus, ShieldAlert, FileSignature, Trash2, ArrowRight, Pencil, Settings2, Check, ChevronDown, MessageSquare, User, Shield, CreditCard, FileText, Landmark } from "lucide-react";
 import { cn, parseLocalDate } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -257,10 +257,15 @@ export function PolizzePersonali() {
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-xl p-0 border-border/80 shadow-elevated overflow-hidden">
-        <DialogHeader className="p-6 pb-2 border-b border-border/40">
-          <DialogTitle className="text-xl font-serif">Aggiungi Polizza</DialogTitle>
-          <DialogDescription>
-            Inserisci rapidamente una nuova polizza {defaultStatus === "emessa" ? "in scadenza" : "da emettere"}.
+        <DialogHeader className="p-6 pb-5 border-b border-border/40 bg-gradient-to-r from-primary/5 via-background to-background relative overflow-hidden">
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 ring-1 ring-primary/20">
+            <Plus className="w-6 h-6 text-primary" />
+          </div>
+          <DialogTitle className="text-2xl font-serif font-semibold tracking-tight text-primary">
+            Nuova Polizza
+          </DialogTitle>
+          <DialogDescription className="text-base">
+            {defaultStatus === "emessa" ? "Inserisci i dettagli della polizza in scadenza." : "Prepara una nuova polizza da emettere in futuro."}
           </DialogDescription>
         </DialogHeader>
         <form 
@@ -299,34 +304,37 @@ export function PolizzePersonali() {
             <div className="space-y-1.5">
               <label className="text-sm font-medium leading-none text-foreground/90">Nome Cliente</label>
               <div className="relative">
-                <Input name="quickName" placeholder="Es. Mario Rossi" required className="pl-9 h-11" autoComplete="off" />
-                <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input name="quickName" placeholder="Es. Mario Rossi" required className="pl-9 h-11 bg-muted/30 border-transparent focus-visible:bg-background focus-visible:ring-primary/30 transition-all" autoComplete="off" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/70" />
               </div>
             </div>
             
             <div className="space-y-1.5">
               <label className="text-sm font-medium leading-none text-foreground/90">Tipo Polizza</label>
-              <Select value={quickType} onValueChange={setQuickType}>
-                <SelectTrigger className="h-11">
-                  <SelectValue placeholder="Tipo polizza" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Auto">Auto</SelectItem>
-                  <SelectItem value="Moto">Moto</SelectItem>
-                  <SelectItem value="Furgone">Furgone</SelectItem>
-                  <SelectItem value="Abitazione">Abitazione</SelectItem>
-                  <SelectItem value="Infortuni">Infortuni</SelectItem>
-                  <SelectItem value="Malattia">Malattia</SelectItem>
-                  <SelectItem value="Vita">Vita</SelectItem>
-                  <SelectItem value="TCM">TCM</SelectItem>
-                  <SelectItem value="Commercio">Commercio</SelectItem>
-                  <SelectItem value="RC Professionale">RC Professionale</SelectItem>
-                  <SelectItem value="RC Terzi">RC Terzi</SelectItem>
-                  <SelectItem value="RC Capofamiglia">RC Capofamiglia</SelectItem>
-                  <SelectItem value="Animali">Animali</SelectItem>
-                  <SelectItem value="Non specificata">Altro...</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="relative">
+                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/70 z-10 pointer-events-none" />
+                <Select value={quickType} onValueChange={setQuickType}>
+                  <SelectTrigger className="h-11 pl-9 bg-muted/30 border-transparent focus:bg-background focus:ring-primary/30 transition-all">
+                    <SelectValue placeholder="Tipo polizza" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Auto">Auto</SelectItem>
+                    <SelectItem value="Moto">Moto</SelectItem>
+                    <SelectItem value="Furgone">Furgone</SelectItem>
+                    <SelectItem value="Abitazione">Abitazione</SelectItem>
+                    <SelectItem value="Infortuni">Infortuni</SelectItem>
+                    <SelectItem value="Malattia">Malattia</SelectItem>
+                    <SelectItem value="Vita">Vita</SelectItem>
+                    <SelectItem value="TCM">TCM</SelectItem>
+                    <SelectItem value="Commercio">Commercio</SelectItem>
+                    <SelectItem value="RC Professionale">RC Professionale</SelectItem>
+                    <SelectItem value="RC Terzi">RC Terzi</SelectItem>
+                    <SelectItem value="RC Capofamiglia">RC Capofamiglia</SelectItem>
+                    <SelectItem value="Animali">Animali</SelectItem>
+                    <SelectItem value="Non specificata">Altro...</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="space-y-1.5">
@@ -335,9 +343,9 @@ export function PolizzePersonali() {
                 <PopoverTrigger asChild>
                   <Button
                     variant={"outline"}
-                    className={cn("w-full h-11 justify-start text-left font-normal", !quickDate && "text-muted-foreground")}
+                    className={cn("w-full h-11 justify-start text-left font-normal bg-muted/30 border-transparent hover:bg-muted/50 focus-visible:ring-primary/30 transition-all", !quickDate && "text-muted-foreground")}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4 opacity-50 shrink-0" />
+                    <CalendarIcon className="mr-2 h-4 w-4 opacity-70 shrink-0" />
                     {quickDate ? format(quickDate, "P", { locale: it }) : "Seleziona data"}
                   </Button>
                 </PopoverTrigger>
@@ -348,28 +356,37 @@ export function PolizzePersonali() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium leading-none text-foreground/90">Premio (€)</label>
-              <Input name="quickPremio" type="number" step="0.01" placeholder="Es. 250.00" className="h-11" autoComplete="off" />
+              <label className="text-sm font-medium leading-none text-foreground/90">Premio Stimato</label>
+              <div className="relative">
+                <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/70" />
+                <Input name="quickPremio" type="number" inputMode="decimal" step="0.01" placeholder="Es. 250.00" className="pl-9 h-11 bg-muted/30 border-transparent focus-visible:bg-background focus-visible:ring-primary/30 transition-all" autoComplete="off" />
+              </div>
             </div>
 
             {defaultStatus === "emessa" && (
               <div className="space-y-1.5">
                 <label className="text-sm font-medium leading-none text-foreground/90">Stato Cassa</label>
-                <Select value={quickCassa} onValueChange={setQuickCassa}>
-                  <SelectTrigger className="h-11">
-                    <SelectValue placeholder="Stato cassa" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="regolare">Regolare</SelectItem>
-                    <SelectItem value="da_mettere">Da mettere a cassa</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="relative">
+                  <Landmark className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/70 z-10 pointer-events-none" />
+                  <Select value={quickCassa} onValueChange={setQuickCassa}>
+                    <SelectTrigger className="h-11 pl-9 bg-muted/30 border-transparent focus:bg-background focus:ring-primary/30 transition-all">
+                      <SelectValue placeholder="Stato cassa" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="regolare">Regolare</SelectItem>
+                      <SelectItem value="da_mettere">Da mettere a cassa</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             )}
 
             <div className={cn("space-y-1.5", defaultStatus === "emessa" ? "sm:col-span-1" : "sm:col-span-2")}>
-              <label className="text-sm font-medium leading-none text-foreground/90">Note</label>
-              <Input name="quickNotes" placeholder="Note aggiuntive..." className="h-11" autoComplete="off" />
+              <label className="text-sm font-medium leading-none text-foreground/90">Note Opzionali</label>
+              <div className="relative">
+                <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/70" />
+                <Input name="quickNotes" placeholder="Note aggiuntive..." className="pl-9 h-11 bg-muted/30 border-transparent focus-visible:bg-background focus-visible:ring-primary/30 transition-all" autoComplete="off" />
+              </div>
             </div>
           </div>
 
@@ -432,7 +449,7 @@ export function PolizzePersonali() {
           <FormItem>
             <FormLabel>Premio (€) (opzionale)</FormLabel>
             <FormControl>
-              <Input type="number" step="0.01" placeholder="Es. 250.50" {...field} value={field.value ?? ""} onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)} />
+              <Input type="number" inputMode="decimal" step="0.01" placeholder="Es. 250.50" {...field} value={field.value ?? ""} onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)} />
             </FormControl>
             <FormMessage />
           </FormItem>
