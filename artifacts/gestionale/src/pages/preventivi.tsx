@@ -253,6 +253,7 @@ export function Preventivi() {
             <PopoverContent className="w-auto p-0 border-none bg-transparent shadow-none" align="start">
               <Calendar
                 mode="single"
+                disabled={false}
                 selected={quickDate}
                 onSelect={(date) => {
                   setQuickDate(date);
@@ -484,6 +485,7 @@ export function Preventivi() {
                       <PopoverContent className="w-auto p-0 border-none bg-transparent shadow-none" align="start">
                         <Calendar
                           mode="single"
+                          disabled={false}
                           selected={field.value}
                           onSelect={(date) => {
                             field.onChange(date);

@@ -673,3 +673,9 @@
   - *Details*: Aggiornata la pagina dei Preventivi implementando un layout di aggiunta rapida fisso in basso (come in Attività) ma **estremamente ottimizzato per gli spazi ridotti**. Il modulo è stato riorganizzato in un blocco compatto che, su mobile, prevede una prima riga con il nome cliente e il tasto salva, seguita da una sottile barra scorrevole orizzontalmente (scroll invisibile) contenente i dettagli extra (Data, Tipo, Premio, Note). In questo modo occupa solo una frazione dello schermo mantenendo tutte le funzionalità!
   - *Tech Notes*: Modificato `preventivi.tsx`. Spostato `renderQuickAdd` fuori dal flusso normale (ora in fondo) e racchiuso nel container fixed glassmorphism. Il layout del form usa una combinazione di `flex-col` e `overflow-x-auto hide-scrollbar` per accomodare i vari `Select`, `Popover` e `Input` in una singola riga scrollabile sotto al campo "Nome Cliente". Aggiunto anche l'adattamento flex al container principale della pagina per permettere lo scorrimento della lista dietro il form fisso.
 
+
+### [2026-05-25 15:53]: Rimozione Limite Data Preventivi
+* *Details*: Rimossa la limitazione che impediva di selezionare una data passata (retro-datare) nel calendario dei preventivi. La data può ora essere impostata liberamente.
+* *Tech Notes*:
+  - Modificato `src/pages/preventivi.tsx`.
+  - Aggiunta la prop `disabled={false}` ai due componenti `<Calendar>` (form di inserimento rapido e dialog di modifica) per bypassare la logica globale che disabilita le date antecedenti ad oggi.
