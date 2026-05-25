@@ -609,3 +609,15 @@
   - Modificate le custom properties Tailwind `--cell-size` riducendole da 5rem a 4rem (schermo desktop) e da 4.2rem a 3.4rem (mobile).
   - Scalata proporzionalmente la tipografia del calendario: il titolo del mese passa a 32px (da 40px), l'intestazione dei giorni a 14px e i numeri da cliccare a 20px (da 24px).
   - Ridotti leggermente i padding generali del contorno glass e il raggio di smussamento per mantenere le proporzioni intatte (es. radius da 3rem a 2.5rem, padding da 10 a 8).
+- [2026-05-25 09:30:00]: Raggruppamento Attività per Data
+  - *Details*: È stato aggiunto un separatore visivo nella pagina 'Da Fare' (`attivita.tsx`) che raggruppa le attività in base alla loro data di scadenza. Questo migliora l'organizzazione visiva mostrando la data in maiuscolo (es. 'OGGI - 25 MAGGIO 2026') al posto del precedente testo generico.
+  - *Tech Notes*: Modificato `src/pages/attivita.tsx`. Aggiunto raggruppamento basato su `task.dueDate` sfruttando le date preesistenti (le attività erano già ordinate per data). Aggiunto l'uso di `React.Fragment`.
+
+- [2026-05-25 09:34:00]: Rimozione badge data
+  - *Details*: È stato rimosso il badge della data dalle singole card delle attività, in quanto ora le attività sono raggruppate visivamente per data tramite il separatore.
+  - *Tech Notes*: Modificato `src/pages/attivita.tsx`, rimosso il blocco di rendering della data all'interno del `CardContent`.
+
+- [2026-05-25 09:35:00]: Aggiornamento Stile Filtri Attività
+  - *Details*: Aggiornato lo stile dei pulsanti di filtro ('Oggi', 'Questa settimana', 'Scadute') nella pagina 'Da Fare' (`attivita.tsx`) per renderlo uniforme con il selettore dei filtri per ramo presente nella pagina dei sinistri.
+  - *Tech Notes*: Modificato il container dei filtri in `src/pages/attivita.tsx` per utilizzare uno stile a pillole (`rounded-xl`) con sfondo traslucido e ombreggiatura interna, rimuovendo lo stile precedente basato sui componenti standard Button.
+

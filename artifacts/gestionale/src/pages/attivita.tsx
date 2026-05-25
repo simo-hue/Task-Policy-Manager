@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTasks, type Task } from "@/lib/tasks-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -221,31 +221,38 @@ export function Attivita() {
             </button>
           )}
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
-          {filterButtons.map(f => (
-            <Button
-              key={f.value}
-              type="button"
-              size="sm"
-              variant={quickFilter === f.value ? "default" : "outline"}
-              onClick={() => setQuickFilter(quickFilter === f.value ? "all" : f.value)}
-              data-testid={`button-filter-${f.value}`}
-              className="shrink-0 active:scale-95 transition-transform"
-            >
-              {f.label}
-            </Button>
-          ))}
+        <div className="relative p-1.5 inline-flex flex-wrap gap-1.5 items-center bg-muted/30 backdrop-blur-lg border border-border/50 rounded-2xl shadow-inner max-w-full">
+          {filterButtons.map((f) => {
+            const isSelected = quickFilter === f.value;
+            return (
+              <button
+                key={f.value}
+                onClick={() => setQuickFilter(isSelected ? "all" : f.value)}
+                data-testid={`button-filter-${f.value}`}
+                className={cn(
+                  "relative px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 ease-out outline-none select-none",
+                  isSelected
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-background/40"
+                )}
+              >
+                {isSelected && (
+                  <span className="absolute inset-0 bg-background border border-border/80 rounded-xl shadow-soft -z-10" />
+                )}
+                {f.label}
+              </button>
+            );
+          })}
           {hasActiveFilters && (
-            <Button
+            <button
               type="button"
-              size="sm"
-              variant="ghost"
               onClick={() => { setSearch(""); setQuickFilter("all"); }}
               data-testid="button-reset-filters"
+              className="relative px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 ease-out outline-none select-none text-muted-foreground hover:text-foreground hover:bg-background/40 flex items-center"
             >
               <X className="w-4 h-4 mr-1" />
               Azzera filtri
-            </Button>
+            </button>
           )}
         </div>
       </div>
@@ -334,8 +341,36 @@ export function Attivita() {
 
       <div className="space-y-4">
           {activeTasks.length > 0 ? (
-            activeTasks.map(task => (
-              <Card key={task.id} className="overflow-hidden shadow-soft hover:shadow-card hover:border-primary/30 transition-all group">
+            activeTasks.map((task, index) => {
+              const taskDateKey = task.dueDate ? format(parseLocalDate(task.dueDate), "yyyy-MM-dd") : "none";
+              const prevTaskDateKey = index > 0 ? (activeTasks[index - 1].dueDate ? format(parseLocalDate(activeTasks[index - 1].dueDate!), "yyyy-MM-dd") : "none") : null;
+              
+              const showSeparator = taskDateKey !== prevTaskDateKey;
+              
+              let separatorLabel = "";
+              if (showSeparator) {
+                if (taskDateKey === "none") {
+                  separatorLabel = "NESSUNA SCADENZA";
+                } else {
+                  const d = parseLocalDate(task.dueDate!);
+                  separatorLabel = format(d, "d MMMM yyyy", { locale: it }).toUpperCase();
+                  if (isToday(d)) separatorLabel = "OGGI - " + separatorLabel;
+                  if (isYesterday(d)) separatorLabel = "IERI - " + separatorLabel;
+                }
+              }
+
+              return (
+                <React.Fragment key={task.id}>
+                  {showSeparator && (
+                    <div className={cn("relative flex items-center pb-2", index !== 0 && "pt-6")}>
+                      <div className="flex-grow border-t border-border/60"></div>
+                      <span className="mx-4 text-xs font-semibold tracking-[0.18em] text-primary/80 uppercase text-center">
+                        {separatorLabel}
+                      </span>
+                      <div className="flex-grow border-t border-border/60"></div>
+                    </div>
+                  )}
+                  <Card className="overflow-hidden shadow-soft hover:shadow-card hover:border-primary/30 transition-all group">
                 <CardContent className="p-3 sm:p-4 flex items-start gap-3 sm:gap-4">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
@@ -363,22 +398,6 @@ export function Attivita() {
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-lg">{task.title}</h3>
                     {task.notes && <p className="text-muted-foreground text-sm mt-1">{task.notes}</p>}
-                    {task.dueDate && (() => {
-                      const d = startOfDay(parseLocalDate(task.dueDate));
-                      const overdue = isBefore(d, today);
-                      const soon = isWithinInterval(d, { start: today, end: weekEnd });
-                      const cls = overdue
-                        ? "bg-destructive/10 text-destructive ring-destructive/20"
-                        : soon
-                        ? "bg-gold/10 text-gold ring-gold/20"
-                        : "bg-secondary text-secondary-foreground ring-border";
-                      return (
-                        <span className={cn("inline-flex items-center text-xs font-medium mt-3 px-2.5 py-1 rounded-md ring-1", cls)}>
-                          <Clock className="w-3 h-3 mr-1" />
-                          {format(parseLocalDate(task.dueDate), "d MMM yyyy", { locale: it })}
-                        </span>
-                      );
-                    })()}
                   </div>
                   <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity shrink-0">
                     <Button
@@ -411,7 +430,9 @@ export function Attivita() {
                   </div>
                 </CardContent>
               </Card>
-            ))
+                </React.Fragment>
+            );
+            })
           ) : (
             <div className="py-12 text-center bg-card border rounded-lg text-muted-foreground shadow-sm">
               <CheckSquare className="w-12 h-12 mx-auto mb-4 opacity-20" />
