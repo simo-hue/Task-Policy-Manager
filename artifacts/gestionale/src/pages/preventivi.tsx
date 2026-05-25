@@ -44,6 +44,7 @@ export function Preventivi() {
   const [completingPreventivo, setCompletingPreventivo] = useState<Preventivo | null>(null);
   const [editingNotePreventivo, setEditingNotePreventivo] = useState<Preventivo | null>(null);
   const [quickType, setQuickType] = useState("Auto");
+  const [selectedStatus, setSelectedStatus] = useState<"da_fare" | "consegnato">("da_fare");
   const [quickDate, setQuickDate] = useState<Date | undefined>(undefined);
   const [quickDatePopoverOpen, setQuickDatePopoverOpen] = useState(false);
   const [editDatePopoverOpen, setEditDatePopoverOpen] = useState(false);
@@ -386,11 +387,18 @@ export function Preventivi() {
     )
   );
 
-  const sortedPreventivi = [...preventivi].sort((a, b) => {
+  const filteredPreventivi = preventivi.filter(p => p.status === selectedStatus);
+
+  const sortedPreventivi = [...filteredPreventivi].sort((a, b) => {
     const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
     const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
     return dateA - dateB;
   });
+
+  const filterOptions = [
+    { value: "da_fare" as const, label: "Da Fare" },
+    { value: "consegnato" as const, label: "Consegnati" }
+  ];
 
   return (
     <div className="space-y-6 sm:space-y-12 flex flex-col h-full min-h-[calc(100vh-120px)] relative">
@@ -643,7 +651,31 @@ export function Preventivi() {
       </Dialog>
 
       <div className="space-y-4 pb-32 md:pb-4 flex flex-col flex-1 h-full">
-        {renderPreventivoList(sortedPreventivi, "Nessun preventivo presente al momento.")}
+        <div className="flex justify-center w-full mb-6">
+          <div className="relative p-1.5 inline-flex flex-wrap justify-center gap-1.5 items-center bg-muted/30 backdrop-blur-lg border border-border/50 rounded-2xl shadow-inner">
+            {filterOptions.map((opt) => {
+              const isSelected = selectedStatus === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => setSelectedStatus(opt.value)}
+                  className={cn(
+                    "relative px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 ease-out outline-none select-none",
+                    isSelected
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground hover:bg-background/40"
+                  )}
+                >
+                  {isSelected && (
+                    <span className="absolute inset-0 bg-background border border-border/80 rounded-xl shadow-soft -z-10" />
+                  )}
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        {renderPreventivoList(sortedPreventivi, "Nessun preventivo in questo stato.")}
       </div>
     </div>
   );

@@ -753,3 +753,15 @@
 * *Details*: Rimossa l'etichetta (badge) della data all'interno delle card dei preventivi. È stata invece implementata la tecnica dei "separatori di gruppo" (come sui Sinistri) che raggruppa dinamicamente i preventivi emessi nello stesso giorno sotto un'unica intestazione testuale con data in maiuscolo (es: '25 MAGGIO 2026'), pulendo ulteriormente l'interfaccia delle singole card.
 * *Tech Notes*:
   - Modificato `src/pages/preventivi.tsx`: implementato `React.Fragment` e inserita la logica di calcolo di `showSeparator` e `groupKey` per renderizzare i divisori grafici tra i gruppi di date.
+
+### [2026-05-25 19:37]: Aggiunta Filtro Stati sui Preventivi
+* *Details*: Aggiunto un selettore in alto (simile a quello per i rami nei sinistri) che permette di filtrare i preventivi visibili. Mostra esclusivamente le 2 voci: 'Da Fare' e 'Consegnati'. I preventivi 'Accettati' non sono in elenco, come previsto dalle direttive precedenti. Questo filtro segmentato migliora la ricerca e la visibilità globale dei documenti da gestire.
+* *Tech Notes*:
+  - Modificato `src/pages/preventivi.tsx`: aggiunta variabile di stato `selectedStatus` ('da_fare' | 'consegnato') e applicato il filter() sull'array dei `preventivi`. Aggiunto componente grafico a segmenti.
+
+### [2026-05-25 19:38]: Aumento Spaziatura Filtro Preventivi
+* *Details*: Aumentato lo spazio inferiore (margin-bottom) del selettore dei filtri nella pagina dei preventivi da `mb-1` a `mb-6` per renderlo più arioso e allineato con le proporzioni del resto dell'interfaccia.
+
+### [2026-05-25 19:40]: Fix Bug Grafico Header Mobile
+* *Details*: Risolto il bug di posizionamento dell'icona della dark mode (luna/sole) nella top bar mobile. A causa di una classe `mx-auto` sfuggita, l'icona risultava innaturalmente spostata verso il centro. Rimuovendo il margine automatico, ora l'icona si allinea correttamente all'estrema destra della barra, sfruttando il `justify-between`.
+* *Tech Notes*: Modificato `src/components/layout/shell.tsx`, aggiornando `ThemeToggle` per accettare `className` e isolando la classe `mx-auto` solo nella sidebar.

@@ -16,7 +16,7 @@ const navItems = [
   { path: "/sinistri", label: "Sinistri", icon: AlertOctagon },
 ];
 
-function ThemeToggle({ collapsed }: { collapsed: boolean }) {
+function ThemeToggle({ collapsed, className }: { collapsed: boolean; className?: string }) {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -34,7 +34,7 @@ function ThemeToggle({ collapsed }: { collapsed: boolean }) {
         disabled={!mounted}
         aria-label="Attiva/disattiva dark mode"
         data-testid="switch-theme"
-        className="flex items-center justify-center w-10 h-10 mx-auto rounded-md text-sidebar-foreground/60 hover:bg-white/5 hover:text-sidebar-foreground transition-colors"
+        className={cn("flex items-center justify-center w-10 h-10 rounded-md text-sidebar-foreground/60 hover:bg-white/5 hover:text-sidebar-foreground transition-colors", className)}
       >
         {isDark ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
       </button>
@@ -165,7 +165,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
           <div className={cn("mt-auto py-4 border-t border-sidebar-border/60", collapsed ? "px-2" : "px-4")}>
-            <ThemeToggle collapsed={collapsed} />
+            <ThemeToggle collapsed={collapsed} className={collapsed ? "mx-auto" : undefined} />
           </div>
         </aside>
 
