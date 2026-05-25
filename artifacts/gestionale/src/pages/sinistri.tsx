@@ -579,6 +579,10 @@ export function Sinistri() {
             <div className="relative p-1 inline-flex flex-wrap justify-center gap-1 items-center bg-muted/20 backdrop-blur-md border border-border/40 rounded-xl shadow-sm">
               {statusOptions.map((status) => {
                 const isSelected = selectedStatus === status.value;
+                const claimsForRamo = effectiveSelectedRamo ? activeClaims.filter(c => c.ramo === effectiveSelectedRamo) : activeClaims;
+                const count = claimsForRamo.filter(c => c.status === status.value).length;
+                const isEmpty = count === 0;
+
                 return (
                   <button
                     key={status.value}
@@ -587,7 +591,8 @@ export function Sinistri() {
                       "relative px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-300 ease-out outline-none select-none",
                       isSelected
                         ? "text-primary"
-                        : "text-muted-foreground hover:text-foreground hover:bg-background/40"
+                        : "text-muted-foreground hover:text-foreground hover:bg-background/40",
+                      isEmpty && !isSelected && "opacity-40 hover:opacity-60 saturate-50"
                     )}
                   >
                     {isSelected && (

@@ -644,3 +644,7 @@
 - [2026-05-25 11:05:00]: Rimozione opzione "Tutti gli stati"
   - *Details*: Eliminato il pulsante "Tutti gli stati" dalla barra di filtro dei sinistri. I pulsanti di stato rimanenti funzionano ora come toggle (cliccando su uno stato attivo, questo viene deselezionato ripristinando la vista di tutti gli stati).
   - *Tech Notes*: Aggiornato lo stato iniziale di `selectedStatus` a `null` e modificata la funzione `onClick` per alternare `null` e il valore selezionato.
+
+- [2026-05-25 11:10:00]: Feedback visivo stati vuoti nei Sinistri
+  - *Details*: Resi meno leggibili (con opacità ridotta) i filtri di stato che non contengono alcun sinistro per il ramo attualmente selezionato. Questo migliora l'UX facendo capire a colpo d'occhio quali stati sono vuoti.
+  - *Tech Notes*: Aggiunto conteggio dinamico per ogni `statusOptions` e applicate le classi Tailwind `opacity-40 saturate-50 hover:opacity-60` per attenuare visivamente i bottoni che hanno `count === 0` e non sono attualmente selezionati.
