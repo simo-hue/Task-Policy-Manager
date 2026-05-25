@@ -551,3 +551,35 @@
 * *Details*: Sostituita la stringa dell'intestazione principale "Polizze Personali" con "Personali" all'interno della pagina delle polizze personali per renderla coerente con le restanti etichette dell'applicazione (es. sidebar e dashboard).
 * *Tech Notes*:
   - Modificato `src/pages/polizze-personali.tsx` per cambiare `<h1>Polizze Personali</h1>` in `<h1>Personali</h1>`.
+
+### [2026-05-25 08:48]: Localizzazione Calendario in Italiano
+* *Details*: Tradotto e localizzato il calendario in lingua italiana per tutte le viste del gestionale (inserimento e scadenze polizze, aperture sinistri, compiti e preventivi), impostando i giorni della settimana, i mesi e il primo giorno della settimana (Lunedì) secondo gli standard italiani.
+* *Tech Notes*:
+  - Modificato `artifacts/gestionale/src/components/ui/calendar.tsx`: importato `it` da `date-fns/locale`, associata la prop `locale={it}` al componente `DayPicker`, e aggiornata la formattazione del menu a tendina dei mesi usando il locale italiano (`it-IT`).
+  - Modificato `artifacts/mockup-sandbox/src/components/ui/calendar.tsx`: eseguite le medesime modifiche per il pacchetto di mockup, importando `it` da `date-fns/locale`, aggiungendo `locale={it}` a `DayPicker` e impostando `"it-IT"` in `toLocaleString`.
+
+### [2026-05-25 06:49]: Ordinamento Cronologico Sinistri
+* *Details*: Aggiunto l'ordinamento cronologico per data di apertura (dal più vecchio al più recente) nella lista dei sinistri in `src/pages/sinistri.tsx`.
+
+### [2026-05-25 06:51]: Ordinamento e Data Automatica Preventivi
+* *Details*: Aggiunto l'ordinamento cronologico per data di emissione (dal più vecchio al più recente) nella lista dei preventivi in `src/pages/preventivi.tsx`. Ora la data viene assegnata automaticamente al momento dell'inserimento rapido se non specificata dall'utente.
+
+### [2026-05-25 06:55]: Filtri per Ramo sui Sinistri
+* *Details*: Aggiunto un selettore dinamico a `badge/pills` sotto la barra di inserimento rapido in `src/pages/sinistri.tsx`. Il selettore mostra automaticamente tutti (e solo) i rami in cui è presente almeno un sinistro attivo, permettendo di filtrare l'elenco. Rimosso il badge statico del ramo all'interno delle card dei sinistri per evitare ridondanze visive e migliorare il layout.
+
+### [2026-05-25 08:56]: Miglioramento Estetica Date Picker
+* *Details*: Aggiornato l'aspetto visivo del calendario (Date Picker) per renderlo più grande, leggibile e professionale.
+* *Tech Notes*:
+  - Modificato `artifacts/gestionale/src/components/ui/calendar.tsx` incrementando la dimensione delle celle (`--cell-size: 3.25rem`), l'altezza dei bottoni di navigazione, i font (titolo del mese, giorni della settimana e numeri dei giorni), oltre ad aumentare la smussatura dei bordi e la spaziatura generale.
+
+### [2026-05-25 06:57]: Rimozione opzione Tutti in filtri sinistri
+* *Details*: Rimossa la possibilità di selezionare l'opzione Tutti nei filtri dei sinistri. Ora viene automaticamente selezionato di default il primo ramo disponibile tra quelli attivi, in modo da avere sempre un contesto specifico visualizzato.
+
+### [2026-05-25 06:59]: Ridisegno Selettore Rami Sinistri
+* *Details*: Sostituito il layout a `badge/pills` del selettore dei rami dei sinistri con un componente `segmented control` dal design premium e moderno. Il nuovo componente sfrutta un contenitore in glassmorphism (backdrop-blur-lg) con angoli smussati e ombreggiature interne. Il ramo selezionato è evidenziato con uno sfondo solido tramite posizionamento assoluto negativo e ombre tenui, garantendo transizioni fluide e un'estetica all'avanguardia in linea con le interfacce iOS/macOS di ultima generazione.
+
+### [2026-05-25 09:00]: Risoluzione Layout Giorni Calendario
+* *Details*: Corretto l'allineamento e la leggibilità dei giorni della settimana nel calendario (Date Picker), risolvendo il problema dei testi sovrapposti e non incolonnati.
+* *Tech Notes*:
+  - Modificato `artifacts/gestionale/src/components/ui/calendar.tsx`: aggiunto il gap (`gap-1.5`) alla riga dei giorni (`weekdays`) per rispecchiare quello delle celle dei giorni, forzato la larghezza di ogni singola intestazione (`w-[--cell-size]`), e impostato l'iniziale singola (L, M, M, G, V, S, D) tramite `formatWeekdayName` per un look molto più pulito e professionale.
+  - Sincronizzate le modifiche su `artifacts/mockup-sandbox/src/components/ui/calendar.tsx`.

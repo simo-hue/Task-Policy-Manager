@@ -38,7 +38,15 @@ type ClaimFormValues = z.infer<typeof claimSchema>;
 
 export function Sinistri() {
   const { claims, addClaim, updateClaim, deleteClaim } = useClaims();
-  const activeClaims = claims.filter(c => c.status !== "liquidato");
+  const activeClaims = claims
+    .filter(c => c.status !== "liquidato")
+    .sort((a, b) => {
+      if (!a.openDate && !b.openDate) return 0;
+      if (!a.openDate) return 1;
+      if (!b.openDate) return -1;
+      return new Date(a.openDate).getTime() - new Date(b.openDate).getTime();
+    });
+
 
   const renderInteractiveBadge = (claim: Claim) => {
     const currentStatus = claim.status || "incaricato";
@@ -184,6 +192,11 @@ export function Sinistri() {
   const [quickStatus, setQuickStatus] = useState<Claim["status"]>("da_aprire");
   const [quickDatePopoverOpen, setQuickDatePopoverOpen] = useState(false);
   const [editDatePopoverOpen, setEditDatePopoverOpen] = useState(false);
+  const [selectedRamo, setSelectedRamo] = useState<string | null>(null);
+
+  const uniqueRami = Array.from(new Set(activeClaims.map(c => c.ramo))).sort();
+  const effectiveSelectedRamo = selectedRamo && uniqueRami.includes(selectedRamo) ? selectedRamo : (uniqueRami[0] || null);
+  const filteredClaims = effectiveSelectedRamo ? activeClaims.filter(c => c.ramo === effectiveSelectedRamo) : [];
 
   const editForm = useForm<ClaimFormValues>({
     resolver: zodResolver(claimSchema),
@@ -514,9 +527,34 @@ export function Sinistri() {
       <div className="space-y-4">
         {renderQuickAdd()}
 
-        {activeClaims.length > 0 ? (
+        {uniqueRami.length > 0 && (
+          <div className="relative mb-6 p-1.5 inline-flex flex-wrap gap-1.5 items-center bg-muted/30 backdrop-blur-lg border border-border/50 rounded-2xl shadow-inner">
+            {uniqueRami.map((ramo) => {
+              const isSelected = effectiveSelectedRamo === ramo;
+              return (
+                <button
+                  key={ramo}
+                  onClick={() => setSelectedRamo(ramo)}
+                  className={cn(
+                    "relative px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 ease-out outline-none select-none",
+                    isSelected
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground hover:bg-background/40"
+                  )}
+                >
+                  {isSelected && (
+                    <span className="absolute inset-0 bg-background border border-border/80 rounded-xl shadow-soft -z-10" />
+                  )}
+                  {ramo}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {filteredClaims.length > 0 ? (
           <div className="grid gap-3">
-            {activeClaims.map((claim) => (
+            {filteredClaims.map((claim) => (
               <Card key={claim.id} className="overflow-hidden group shadow-soft hover:shadow-card hover:border-primary/30 transition-all">
                 <CardContent className="p-0 flex flex-col sm:flex-row sm:items-center">
                   <div className="p-3 sm:p-5 flex-1 min-w-0">
@@ -525,7 +563,6 @@ export function Sinistri() {
                         <AlertOctagon className="w-4 h-4 text-destructive shrink-0" />
                         <span className="truncate max-w-[180px] sm:max-w-xs">{claim.clientName}</span>
                         {renderInteractiveBadge(claim)}
-                        <span className="bg-secondary px-2 py-0.5 rounded-md text-secondary-foreground font-medium text-xs">{claim.ramo}</span>
                       </h3>
                       <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground ring-1 ring-border whitespace-nowrap">
                         <CalendarIcon className="w-3 h-3 mr-1" />

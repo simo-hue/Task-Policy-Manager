@@ -183,7 +183,7 @@ export function Preventivi() {
             status: defaultStatus,
             notes: notes || "",
             premio,
-            createdAt: quickDate ? quickDate.toISOString() : undefined
+            createdAt: quickDate ? quickDate.toISOString() : new Date().toISOString()
           });
           nameInput.value = "";
           notesInput.value = "";
@@ -354,6 +354,12 @@ export function Preventivi() {
       </div>
     )
   );
+
+  const sortedPreventivi = [...preventivi].sort((a, b) => {
+    const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return dateA - dateB;
+  });
 
   return (
     <div className="space-y-6 sm:space-y-12">
@@ -604,7 +610,7 @@ export function Preventivi() {
 
       <div className="space-y-4">
         {renderQuickAdd("da_fare")}
-        {renderPreventivoList(preventivi, "Nessun preventivo presente al momento.")}
+        {renderPreventivoList(sortedPreventivi, "Nessun preventivo presente al momento.")}
       </div>
     </div>
   );
