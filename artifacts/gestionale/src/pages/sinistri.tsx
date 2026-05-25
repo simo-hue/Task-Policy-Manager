@@ -234,137 +234,137 @@ export function Sinistri() {
   }, [editingClaim, editForm]);
 
   const renderQuickAdd = () => (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        const target = e.target as HTMLFormElement;
-        const nameInput = target.elements.namedItem("quickName") as HTMLInputElement;
-        const clientName = nameInput.value.trim();
-        const notesInput = target.elements.namedItem("quickNotes") as HTMLInputElement;
-        const notes = notesInput.value.trim();
+    <div className="fixed md:sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-6 left-0 right-0 px-4 md:px-0 z-40 pointer-events-none">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const target = e.target as HTMLFormElement;
+          const nameInput = target.elements.namedItem("quickName") as HTMLInputElement;
+          const clientName = nameInput.value.trim();
+          const notesInput = target.elements.namedItem("quickNotes") as HTMLInputElement;
+          const notes = notesInput.value.trim();
 
-        const isDaAprire = quickStatus === "da_aprire";
-        if (clientName && quickRamo && (isDaAprire || quickDate)) {
-          addClaim({
-            clientName,
-            ramo: quickRamo,
-            status: quickStatus || "da_aprire",
-            openDate: isDaAprire ? undefined : (quickDate ? format(quickDate, 'yyyy-MM-dd') : undefined),
-            notes: notes || ""
-          });
-          nameInput.value = "";
-          notesInput.value = "";
-          setQuickRamo("");
-          setQuickDate(new Date());
-          setQuickStatus("da_aprire");
-        }
-      }}
-      className="flex flex-col sm:flex-row sm:items-center gap-2 mb-6 bg-card p-2 rounded-xl border border-border/60 shadow-sm focus-within:ring-2 focus-within:ring-primary/30 transition-all"
-    >
-      <div className="flex-1 relative">
-        <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          name="quickName"
-          placeholder="Nome cliente..."
-          className="pl-9 h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent"
-          autoComplete="off"
-          required
-        />
-      </div>
-
-      <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
-
-      <div className="w-full sm:w-[170px]">
-        <Select value={quickRamo} onValueChange={setQuickRamo}>
-          <SelectTrigger className="h-11 border-0 shadow-none bg-transparent focus:ring-0 text-sm font-medium w-full">
-            <SelectValue placeholder="Ramo..." />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="RC Auto">RC Auto</SelectItem>
-            <SelectItem value="Infortuni">Infortuni</SelectItem>
-            <SelectItem value="Vita">Vita</SelectItem>
-            <SelectItem value="Incendio">Incendio</SelectItem>
-            <SelectItem value="Furto">Furto</SelectItem>
-            <SelectItem value="Responsabilità Civile">Responsabilità Civile</SelectItem>
-            <SelectItem value="Tutela Legale">Tutela Legale</SelectItem>
-            <SelectItem value="Salute e Malattia">Salute e Malattia</SelectItem>
-            <SelectItem value="Fideiussioni e Cauzioni">Fideiussioni e Cauzioni</SelectItem>
-            <SelectItem value="Altri Danni ai Beni">Altri Danni ai Beni</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
-
-      {quickStatus === "da_aprire" ? (
-        <Button disabled variant="outline" className="w-full sm:w-[140px] h-11 justify-start text-left font-normal border-0 shadow-none bg-transparent opacity-50 cursor-not-allowed">
-          <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
-          <span>Da definire</span>
-        </Button>
-      ) : (
-        <Popover open={quickDatePopoverOpen} onOpenChange={setQuickDatePopoverOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant={"outline"}
-              className={cn(
-                "w-full sm:w-[140px] h-11 justify-start text-left font-normal border-0 shadow-none bg-transparent focus:ring-0",
-                !quickDate && "text-muted-foreground"
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4 opacity-50 shrink-0" />
-              {quickDate ? format(quickDate, "P", { locale: it }) : <span>Data</span>}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0 border-none bg-transparent shadow-none" align="start">
-            <Calendar
-              mode="single"
-              selected={quickDate}
-              onSelect={(date) => {
-                setQuickDate(date);
-                setQuickDatePopoverOpen(false);
-              }}
-              disabled={() => false}
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
-      )}
-
-      <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
-
-      <Select value={quickStatus} onValueChange={(val: any) => setQuickStatus(val)}>
-        <SelectTrigger className="w-full sm:w-[160px] h-11 border-0 shadow-none bg-transparent focus:ring-0 text-sm font-medium">
-          <SelectValue placeholder="Stato" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="da_aprire">Da aprire</SelectItem>
-          <SelectItem value="aperto">Aperto</SelectItem>
-          <SelectItem value="incaricato">Incaricato perito</SelectItem>
-          <SelectItem value="visita_medico_legale">Visita Medico Legale</SelectItem>
-        </SelectContent>
-      </Select>
-
-      <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
-
-      <div className="flex-1 relative min-w-[150px]">
-        <Input
-          name="quickNotes"
-          placeholder="Note"
-          className="h-11 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70"
-          autoComplete="off"
-        />
-      </div>
-
-      <Button
-        type="submit"
-        variant="secondary"
-        size="sm"
-        className="h-11 px-4 ml-auto font-semibold hover:scale-105 active:scale-95 transition-transform"
-        disabled={quickStatus === "da_aprire" ? !quickRamo : (!quickDate || !quickRamo)}
+          const isDaAprire = quickStatus === "da_aprire";
+          if (clientName && quickRamo && (isDaAprire || quickDate)) {
+            addClaim({
+              clientName,
+              ramo: quickRamo,
+              status: quickStatus || "da_aprire",
+              openDate: isDaAprire ? undefined : (quickDate ? format(quickDate, 'yyyy-MM-dd') : undefined),
+              notes: notes || ""
+            });
+            nameInput.value = "";
+            notesInput.value = "";
+            setQuickRamo("");
+            setQuickDate(new Date());
+            setQuickStatus("da_aprire");
+          }
+        }}
+        className="pointer-events-auto flex flex-col md:flex-row gap-2 bg-card/95 backdrop-blur-md p-2 rounded-2xl border border-border/60 shadow-elevated transition-all max-w-7xl mx-auto"
       >
-        Aggiungi
-      </Button>
-    </form>
+        <div className="flex gap-1.5 w-full md:w-auto md:flex-1">
+          <div className="flex-1 relative">
+            <Plus className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              name="quickName"
+              placeholder="Nome cliente..."
+              className="pl-8 h-10 border-0 bg-secondary/50 focus-visible:ring-1 focus-visible:ring-primary/30 rounded-xl w-full"
+              autoComplete="off"
+              required
+            />
+          </div>
+          <Button
+            type="submit"
+            size="sm"
+            className="md:hidden font-medium shrink-0 h-10 px-4 rounded-xl"
+            disabled={quickStatus === "da_aprire" ? !quickRamo : (!quickDate || !quickRamo)}
+          >
+            Salva
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-2 md:flex gap-1.5 w-full md:w-auto">
+          <Select value={quickStatus} onValueChange={(val: any) => setQuickStatus(val)}>
+            <SelectTrigger className="h-10 md:w-[130px] border-0 bg-secondary/50 focus:ring-1 focus:ring-primary/30 rounded-xl text-xs sm:text-sm font-medium w-full">
+              <SelectValue placeholder="Stato" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="da_aprire">Da aprire</SelectItem>
+              <SelectItem value="aperto">Aperto</SelectItem>
+              <SelectItem value="incaricato">Incaricato</SelectItem>
+              <SelectItem value="visita_medico_legale">Visita Medica</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {quickStatus === "da_aprire" ? (
+            <Button disabled variant="outline" className="h-10 w-full md:w-[120px] px-3 bg-secondary/50 border-0 text-xs sm:text-sm rounded-xl justify-start font-normal opacity-50">
+              <CalendarIcon className="mr-2 h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">Da definire</span>
+            </Button>
+          ) : (
+            <Popover open={quickDatePopoverOpen} onOpenChange={setQuickDatePopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button variant={"secondary"} className={cn("h-10 w-full md:w-[120px] px-3 bg-secondary/50 font-normal border-0 text-xs sm:text-sm rounded-xl justify-start", !quickDate && "text-muted-foreground")}>
+                  <CalendarIcon className="mr-2 h-3.5 w-3.5 opacity-50 shrink-0" />
+                  <span className="truncate">{quickDate ? format(quickDate, "d MMM", { locale: it }) : "Data"}</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 border-none bg-transparent shadow-none" align="start">
+                <Calendar
+                  mode="single"
+                  selected={quickDate}
+                  onSelect={(date) => {
+                    setQuickDate(date);
+                    setQuickDatePopoverOpen(false);
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          )}
+        </div>
+
+        <div className="flex gap-1.5 w-full md:w-auto md:flex-1">
+          <div className="relative shrink-0">
+            <Select value={quickRamo} onValueChange={setQuickRamo}>
+              <SelectTrigger className="h-10 w-[105px] md:w-[130px] border-0 bg-secondary/50 focus:ring-1 focus:ring-primary/30 rounded-xl text-xs sm:text-sm font-medium">
+                <SelectValue placeholder="Ramo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="RC Auto">RC Auto</SelectItem>
+                <SelectItem value="Infortuni">Infortuni</SelectItem>
+                <SelectItem value="Vita">Vita</SelectItem>
+                <SelectItem value="Incendio">Incendio</SelectItem>
+                <SelectItem value="Furto">Furto</SelectItem>
+                <SelectItem value="Responsabilità Civile">RC</SelectItem>
+                <SelectItem value="Tutela Legale">Tutela Legale</SelectItem>
+                <SelectItem value="Salute e Malattia">Malattia</SelectItem>
+                <SelectItem value="Fideiussioni e Cauzioni">Cauzioni</SelectItem>
+                <SelectItem value="Altri Danni ai Beni">Altri Danni</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="relative flex-1">
+            <Input
+              name="quickNotes"
+              placeholder="Note..."
+              className="h-10 border-0 bg-secondary/50 focus-visible:ring-1 focus-visible:ring-primary/30 rounded-xl text-xs sm:text-sm w-full"
+              autoComplete="off"
+            />
+          </div>
+        </div>
+
+        <Button
+          type="submit"
+          size="sm"
+          className="hidden md:flex font-medium shrink-0 h-10 px-5 rounded-xl"
+          disabled={quickStatus === "da_aprire" ? !quickRamo : (!quickDate || !quickRamo)}
+        >
+          Aggiungi
+        </Button>
+      </form>
+    </div>
   );
 
   function onEditSubmit(values: ClaimFormValues) {
@@ -518,7 +518,7 @@ export function Sinistri() {
   };
 
   return (
-    <div className="space-y-6 sm:space-y-12">
+    <div className="space-y-6 sm:space-y-12 pb-32 md:pb-0 relative min-h-[calc(100vh-6rem)] flex flex-col">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
           <div className="text-xs uppercase tracking-[0.18em] text-gold/90 font-semibold mb-2">Sinistri</div>
@@ -544,9 +544,7 @@ export function Sinistri() {
         </DialogContent>
       </Dialog>
 
-      <div className="space-y-4">
-        {renderQuickAdd()}
-
+      <div className="space-y-4 flex-1">
         {uniqueRami.length > 0 && (
           <div className="flex justify-center w-full mb-3">
             <div className="relative p-1.5 inline-flex flex-wrap justify-center gap-1.5 items-center bg-muted/30 backdrop-blur-lg border border-border/50 rounded-2xl shadow-inner">
@@ -800,6 +798,8 @@ export function Sinistri() {
           </form>
         </DialogContent>
       </Dialog>
+      
+      {renderQuickAdd()}
     </div>
   );
 }
