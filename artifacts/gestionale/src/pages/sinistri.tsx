@@ -193,10 +193,24 @@ export function Sinistri() {
   const [quickDatePopoverOpen, setQuickDatePopoverOpen] = useState(false);
   const [editDatePopoverOpen, setEditDatePopoverOpen] = useState(false);
   const [selectedRamo, setSelectedRamo] = useState<string | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<Claim["status"] | "tutti">("tutti");
 
   const uniqueRami = Array.from(new Set(activeClaims.map(c => c.ramo))).sort();
   const effectiveSelectedRamo = selectedRamo && uniqueRami.includes(selectedRamo) ? selectedRamo : (uniqueRami[0] || null);
-  const filteredClaims = effectiveSelectedRamo ? activeClaims.filter(c => c.ramo === effectiveSelectedRamo) : [];
+  
+  const filteredClaims = activeClaims.filter(c => {
+    const matchRamo = effectiveSelectedRamo ? c.ramo === effectiveSelectedRamo : true;
+    const matchStatus = selectedStatus === "tutti" ? true : c.status === selectedStatus;
+    return matchRamo && matchStatus;
+  });
+
+  const statusOptions: { value: Claim["status"] | "tutti", label: string }[] = [
+    { value: "tutti", label: "Tutti gli stati" },
+    { value: "da_aprire", label: "Da aprire" },
+    { value: "aperto", label: "Aperto" },
+    { value: "incaricato", label: "Incaricato perito" },
+    { value: "visita_medico_legale", label: "Visita Medico Legale" }
+  ];
 
   const editForm = useForm<ClaimFormValues>({
     resolver: zodResolver(claimSchema),
@@ -530,7 +544,7 @@ export function Sinistri() {
         {renderQuickAdd()}
 
         {uniqueRami.length > 0 && (
-          <div className="flex justify-center w-full mb-6">
+          <div className="flex justify-center w-full mb-3">
             <div className="relative p-1.5 inline-flex flex-wrap justify-center gap-1.5 items-center bg-muted/30 backdrop-blur-lg border border-border/50 rounded-2xl shadow-inner">
             {uniqueRami.map((ramo) => {
               const isSelected = effectiveSelectedRamo === ramo;
@@ -552,6 +566,33 @@ export function Sinistri() {
                 </button>
               );
             })}
+            </div>
+          </div>
+        )}
+
+        {uniqueRami.length > 0 && (
+          <div className="flex justify-center w-full mb-6">
+            <div className="relative p-1 inline-flex flex-wrap justify-center gap-1 items-center bg-muted/20 backdrop-blur-md border border-border/40 rounded-xl shadow-sm">
+              {statusOptions.map((status) => {
+                const isSelected = selectedStatus === status.value;
+                return (
+                  <button
+                    key={status.value}
+                    onClick={() => setSelectedStatus(status.value)}
+                    className={cn(
+                      "relative px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-300 ease-out outline-none select-none",
+                      isSelected
+                        ? "text-primary"
+                        : "text-muted-foreground hover:text-foreground hover:bg-background/40"
+                    )}
+                  >
+                    {isSelected && (
+                      <span className="absolute inset-0 bg-background border border-border/80 rounded-lg shadow-sm -z-10" />
+                    )}
+                    {status.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}

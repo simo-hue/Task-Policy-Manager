@@ -632,3 +632,7 @@
 - [2026-05-25 10:50:00]: Allineamento centrale filtro rami Sinistri
   - *Details*: Centrato orizzontalmente il selettore dei filtri per i rami nella pagina dei sinistri, per migliorare il layout visivo e mantenere l'armonia con il resto della pagina.
   - *Tech Notes*: Aggiunto un container wrapper con classi Tailwind `flex justify-center w-full mb-6` attorno al contenitore dei filtri in `src/pages/sinistri.tsx`.
+
+- [2026-05-25 10:55:00]: Aggiunta filtro stato Sinistri
+  - *Details*: Aggiunto un secondo livello di filtro per lo stato del sinistro (es. 'Da aprire', 'Incaricato', ecc.) sotto al filtro dei rami, garantendo un'interfaccia utente professionale e moderna.
+  - *Tech Notes*: Aggiunto lo stato `selectedStatus`, la logica di filtering in cascata e un componente UI compatto con stile a pillole in `src/pages/sinistri.tsx`.
