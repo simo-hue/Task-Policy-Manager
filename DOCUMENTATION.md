@@ -621,3 +621,10 @@
   - *Details*: Aggiornato lo stile dei pulsanti di filtro ('Oggi', 'Questa settimana', 'Scadute') nella pagina 'Da Fare' (`attivita.tsx`) per renderlo uniforme con il selettore dei filtri per ramo presente nella pagina dei sinistri.
   - *Tech Notes*: Modificato il container dei filtri in `src/pages/attivita.tsx` per utilizzare uno stile a pillole (`rounded-xl`) con sfondo traslucido e ombreggiatura interna, rimuovendo lo stile precedente basato sui componenti standard Button.
 
+- [2026-05-25 10:20:00]: Rinominazione 'Incendio e Scoppio' in 'Incendio'
+  - *Details*: Semplificata l'interfaccia utente nella pagina dei sinistri rimuovendo 'e Scoppio' dal ramo assicurativo.
+  - *Tech Notes*: Aggiornate le opzioni del componente `Select` in `src/pages/sinistri.tsx` modificando il valore e la label da 'Incendio e Scoppio' a 'Incendio'.
+
+- [2026-05-25 10:25:00]: Aggiunta ramo 'Furto'
+  - *Details*: Aggiunto il ramo 'Furto' nella pagina dei sinistri per completare le opzioni assicurative.
+  - *Tech Notes*: Aggiunte le opzioni `SelectItem` per 'Furto' nei menu a tendina in `src/pages/sinistri.tsx`.

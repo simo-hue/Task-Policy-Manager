@@ -265,7 +265,8 @@ export function Sinistri() {
             <SelectItem value="RC Auto">RC Auto</SelectItem>
             <SelectItem value="Infortuni">Infortuni</SelectItem>
             <SelectItem value="Vita">Vita</SelectItem>
-            <SelectItem value="Incendio e Scoppio">Incendio e Scoppio</SelectItem>
+            <SelectItem value="Incendio">Incendio</SelectItem>
+            <SelectItem value="Furto">Furto</SelectItem>
             <SelectItem value="Responsabilità Civile">Responsabilità Civile</SelectItem>
             <SelectItem value="Tutela Legale">Tutela Legale</SelectItem>
             <SelectItem value="Salute e Malattia">Salute e Malattia</SelectItem>
@@ -405,7 +406,8 @@ export function Sinistri() {
                   <SelectItem value="RC Auto">RC Auto</SelectItem>
                   <SelectItem value="Infortuni">Infortuni</SelectItem>
                   <SelectItem value="Vita">Vita</SelectItem>
-                  <SelectItem value="Incendio e Scoppio">Incendio e Scoppio</SelectItem>
+                  <SelectItem value="Incendio">Incendio</SelectItem>
+                  <SelectItem value="Furto">Furto</SelectItem>
                   <SelectItem value="Responsabilità Civile">Responsabilità Civile</SelectItem>
                   <SelectItem value="Tutela Legale">Tutela Legale</SelectItem>
                   <SelectItem value="Salute e Malattia">Salute e Malattia</SelectItem>
