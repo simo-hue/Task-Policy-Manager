@@ -107,7 +107,7 @@ export function Attivita() {
 
   return (
     <div className="flex flex-col h-full min-h-[calc(100vh-120px)] space-y-5 sm:space-y-8 relative">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
+    <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
           <div className="text-xs uppercase tracking-[0.18em] text-gold/90 font-semibold mb-2">Da fare</div>
           <h1 className="text-2xl sm:text-4xl font-serif font-semibold text-primary mb-1 sm:mb-2 tracking-tight">Da Fare</h1>
@@ -115,7 +115,7 @@ export function Attivita() {
         </div>
       </div>
 
-      <div className="fixed md:static bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-auto left-0 right-0 px-4 md:px-0 z-30 pt-8 pb-4 md:py-0 bg-gradient-to-t from-background via-background/95 to-transparent md:bg-none pointer-events-none md:pointer-events-auto">
+      <div className="fixed md:static bottom-[calc(48px+env(safe-area-inset-bottom))] md:bottom-auto left-0 right-0 px-4 md:px-0 z-30 pt-8 pb-0 md:py-0 bg-gradient-to-t from-background via-background/95 to-transparent md:bg-none pointer-events-none md:pointer-events-auto">
         <form 
           onSubmit={(e) => {
             e.preventDefault();

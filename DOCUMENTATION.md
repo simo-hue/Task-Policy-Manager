@@ -686,3 +686,14 @@
   - Modificati i file `src/pages/sinistri.tsx`, `src/pages/preventivi.tsx` e `src/pages/attivita.tsx`.
   - Le classi CSS della barra sono state aggiornate da `fixed md:sticky md:bottom-6` a `fixed md:static md:bottom-auto` in modo che il contenitore fluisca naturalmente nel DOM su desktop, rimanendo fisso in basso (`bottom-[calc(...)]`) solo su mobile.
   - Spostati i blocchi `{renderQuickAdd()}` e i rispettivi tag `<form>` subito dopo l'header testuale principale (`h1`) invece che in calce al componente.
+
+### [2026-05-25 16:01]: Aggiunta Spaziatura Barra Inserimento Rapido su Mobile (PWA)
+* *Details*: Perfezionato il posizionamento della barra di inserimento rapido sulle viste mobile (PWA) nelle schermate Sinistri, Preventivi e Attività. Inizialmente la barra presentava un gap troppo ampio che permetteva di intravedere i contenuti sottostanti, dovuto a una mancata risoluzione della funzione `calc` di Tailwind e al padding. Ora è stata incollata con precisione millimetrica.
+* *Tech Notes*:
+  - Modificati i wrapper in `sinistri.tsx`, `preventivi.tsx` e `attivita.tsx` per usare l'ancoraggio assoluto e garantito `bottom-[calc(64px+env(safe-area-inset-bottom))]`, corrispondente all'altezza precisa della navbar misurata in pixel, bypassando l'uso imperfetto dei `rem` in questo caso specifico.
+  - Rimosso qualsiasi padding inferiore (`pb-0`) dal container per posizionare il box di input letteralmente in appoggio immediato ("immediatamente sopra") alla navigation bar, creando un'esperienza solida e continua senza fastidiosi spazi intermedi.
+
+### [2026-05-25 16:13]: Fix Gap Bottom Sheet su Mobile
+* *Details*: Abbassato l'elemento floating di 'Quick Add' (inserimento rapido) nelle pagine Sinistri e Attività in modo che si appoggi perfettamente alla barra di navigazione inferiore (Bottom Navigation) sulle PWA, rimuovendo il gap antiestetico.
+* *Tech Notes*:
+  - Modificato `sinistri.tsx` e `attivita.tsx` riducendo il valore di `bottom-[calc()]` da 64px a 56px per compensare correttamente le spaziature della nav bar mobile.

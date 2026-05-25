@@ -164,7 +164,7 @@ export function Preventivi() {
   };
 
   const renderQuickAdd = (defaultStatus: "da_fare" | "trattativa_in_corso" | "fatto") => (
-    <div className="fixed md:static bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-auto left-0 right-0 px-3 md:px-0 z-30 pt-6 pb-2 md:py-0 bg-gradient-to-t from-background via-background/95 to-transparent md:bg-none pointer-events-none md:pointer-events-auto">
+    <div className="fixed md:static bottom-[calc(64px+env(safe-area-inset-bottom))] md:bottom-auto left-0 right-0 px-3 md:px-0 z-30 pt-6 pb-0 md:py-0 bg-gradient-to-t from-background via-background/95 to-transparent md:bg-none pointer-events-none md:pointer-events-auto">
       <form
         onSubmit={(e) => {
           e.preventDefault();

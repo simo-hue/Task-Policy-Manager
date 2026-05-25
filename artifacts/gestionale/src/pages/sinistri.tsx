@@ -234,7 +234,7 @@ export function Sinistri() {
   }, [editingClaim, editForm]);
 
   const renderQuickAdd = () => (
-    <div className="fixed md:static bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-auto left-0 right-0 px-4 md:px-0 z-40 pointer-events-none md:pointer-events-auto">
+    <div className="fixed md:static bottom-[calc(48px+env(safe-area-inset-bottom))] md:bottom-auto left-0 right-0 px-4 md:px-0 z-40 pt-6 pb-0 md:py-0 bg-gradient-to-t from-background via-background/95 to-transparent md:bg-none pointer-events-none md:pointer-events-auto">
       <form
         onSubmit={(e) => {
           e.preventDefault();
