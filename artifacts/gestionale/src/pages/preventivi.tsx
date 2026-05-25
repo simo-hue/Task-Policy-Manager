@@ -84,86 +84,6 @@ export function Preventivi() {
     setEditingPreventivo(null);
   }
 
-  const renderStatusBadge = (preventivo: Preventivo) => {
-    const statusConfig = {
-      da_fare: {
-        label: "Da Fare",
-        className: "bg-rose-500/10 text-rose-600 border-rose-500/20 hover:bg-rose-500/20",
-        dotColor: "bg-rose-500",
-        icon: ClipboardList
-      },
-      consegnato: {
-        label: "Consegnato",
-        className: "bg-amber-500/10 text-amber-600 border-amber-500/20 hover:bg-amber-500/20",
-        dotColor: "bg-amber-500",
-        icon: Briefcase
-      },
-      accettato: {
-        label: "Accettato",
-        className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20",
-        dotColor: "bg-emerald-500",
-        icon: CheckCircle2
-      }
-    };
-
-    const current = statusConfig[preventivo.status] || statusConfig.da_fare;
-
-    return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Badge
-            variant="outline"
-            className={cn(
-              "cursor-pointer text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-all duration-200 select-none flex items-center gap-1 hover:scale-105 active:scale-95 py-0.5 px-2 rounded-full border shadow-sm",
-              current.className
-            )}
-          >
-            <span>{current.label}</span>
-          </Badge>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-56 p-1.5 rounded-lg border shadow-lg bg-popover text-popover-foreground z-50">
-          <DropdownMenuLabel className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground px-2 py-1">
-            Cambia Stato
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator className="my-1" />
-
-          <DropdownMenuItem
-            onClick={() => updatePreventivo(preventivo.id, { status: "da_fare" })}
-            className="flex items-center justify-between cursor-pointer rounded-md px-2 py-1.5 text-xs hover:bg-accent focus:bg-accent"
-          >
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0" />
-              <span>Da Fare</span>
-            </div>
-            {preventivo.status === "da_fare" && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
-          </DropdownMenuItem>
-
-          <DropdownMenuItem
-            onClick={() => updatePreventivo(preventivo.id, { status: "consegnato" })}
-            className="flex items-center justify-between cursor-pointer rounded-md px-2 py-1.5 text-xs hover:bg-accent focus:bg-accent"
-          >
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
-              <span>Consegnato</span>
-            </div>
-            {preventivo.status === "consegnato" && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
-          </DropdownMenuItem>
-
-          <DropdownMenuItem
-            onClick={() => setCompletingPreventivo(preventivo)}
-            className="flex items-center justify-between cursor-pointer text-emerald-600 dark:text-emerald-400 rounded-md px-2 py-1.5 text-xs hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 focus:bg-emerald-50/50 focus:text-emerald-700"
-          >
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
-              <span className="font-semibold">Accettato (Elimina)</span>
-            </div>
-            {preventivo.status === "accettato" && <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    );
-  };
-
   const renderQuickAdd = (defaultStatus: "da_fare" | "consegnato" | "accettato") => (
     <div className="fixed md:static bottom-[calc(48px+env(safe-area-inset-bottom))] md:bottom-auto left-0 right-0 px-3 md:px-0 z-30 pt-6 pb-0 md:py-0 bg-gradient-to-t from-background via-background/95 to-transparent md:bg-none pointer-events-none md:pointer-events-auto">
       <form
@@ -333,7 +253,6 @@ export function Preventivi() {
                     <div className="flex justify-between items-start gap-3 mb-2 flex-wrap">
                       <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2 min-w-0 flex-wrap">
                         <span className="truncate max-w-[180px] sm:max-w-xs">{preventivo.clientName}</span>
-                        {renderStatusBadge(preventivo)}
                         <span className="bg-secondary px-2 py-0.5 rounded-md text-secondary-foreground font-medium text-xs">{preventivo.policyType}</span>
                         {preventivo.premio !== undefined && (
                           <span className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md font-medium text-xs whitespace-nowrap">
@@ -349,15 +268,27 @@ export function Preventivi() {
                     )}
                   </div>
                   <div className="px-3 sm:px-5 pb-3 sm:py-5 flex items-center justify-end sm:border-l sm:h-full gap-1.5 sm:gap-2 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity flex-wrap">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="font-medium text-xs gap-1.5 h-8 hover:bg-emerald-500/10 hover:text-emerald-600 hover:border-emerald-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                      onClick={() => setCompletingPreventivo(preventivo)}
-                    >
-                      <Check className="w-3.5 h-3.5 text-emerald-500" />
-                      Accettato
-                    </Button>
+                    {selectedStatus === "da_fare" ? (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="font-medium text-xs gap-1.5 h-8 hover:bg-amber-500/10 hover:text-amber-600 hover:border-amber-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        onClick={() => updatePreventivo(preventivo.id, { status: "consegnato" })}
+                      >
+                        <Check className="w-3.5 h-3.5 text-amber-500" />
+                        Consegnato
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="font-medium text-xs gap-1.5 h-8 hover:bg-emerald-500/10 hover:text-emerald-600 hover:border-emerald-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        onClick={() => setCompletingPreventivo(preventivo)}
+                      >
+                        <Check className="w-3.5 h-3.5 text-emerald-500" />
+                        Accettato
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"

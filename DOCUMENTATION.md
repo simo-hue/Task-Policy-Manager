@@ -765,3 +765,7 @@
 ### [2026-05-25 19:40]: Fix Bug Grafico Header Mobile
 * *Details*: Risolto il bug di posizionamento dell'icona della dark mode (luna/sole) nella top bar mobile. A causa di una classe `mx-auto` sfuggita, l'icona risultava innaturalmente spostata verso il centro. Rimuovendo il margine automatico, ora l'icona si allinea correttamente all'estrema destra della barra, sfruttando il `justify-between`.
 * *Tech Notes*: Modificato `src/components/layout/shell.tsx`, aggiornando `ThemeToggle` per accettare `className` e isolando la classe `mx-auto` solo nella sidebar.
+
+### [2026-05-25 19:43]: Ottimizzazione Interfaccia Card Preventivi
+* *Details*: Rimossi i badge informativi sullo stato dei preventivi dalle singole card, poiché ora lo stato si deduce logicamente dal filtro principale (segment) correntemente selezionato, garantendo un'interfaccia molto più pulita. Inoltre, il pulsante principale delle card ora si adatta in modo dinamico: se si sta visualizzando 'Da Fare', diventerà 'Consegnato' e servirà a far avanzare lo stato del documento; se si è su 'Consegnati', il pulsante mostrerà 'Accettato' ed eliminerà il preventivo.
+* *Tech Notes*: Modificato `src/pages/preventivi.tsx`: eliminato interamente `renderStatusBadge()` e applicato un operatore ternario al `<Button>` di accettazione/consegna, reattivo al `selectedStatus`.
