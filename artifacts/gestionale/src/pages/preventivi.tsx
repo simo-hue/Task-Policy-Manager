@@ -327,8 +327,8 @@ export function Preventivi() {
   });
 
   const filterOptions = [
-    { value: "da_fare" as const, label: "Da Fare" },
-    { value: "consegnato" as const, label: "Consegnati" }
+    { value: "da_fare" as const, label: `Da Fare (${preventivi.filter(p => p.status === "da_fare").length})` },
+    { value: "consegnato" as const, label: `Consegnati (${preventivi.filter(p => p.status === "consegnato").length})` }
   ];
 
   return (

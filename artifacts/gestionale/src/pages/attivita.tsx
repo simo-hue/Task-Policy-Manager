@@ -99,17 +99,37 @@ export function Attivita() {
 
   const hasActiveFilters = search.trim() !== "" || quickFilter !== "all";
 
+  const incompleteTasks = tasks.filter(t => !t.completedAt);
+  const getTasksCount = (filterValue: QuickFilter) => {
+    return incompleteTasks.filter(t => {
+      if (filterValue === "overdue") {
+        if (!t.dueDate) return false;
+        const d = startOfDay(parseLocalDate(t.dueDate));
+        return isBefore(d, today);
+      } else if (filterValue === "thisWeek") {
+        if (!t.dueDate) return false;
+        const d = startOfDay(parseLocalDate(t.dueDate));
+        return isWithinInterval(d, { start: today, end: weekEnd });
+      } else if (filterValue === "today") {
+        if (!t.dueDate) return false;
+        const d = startOfDay(parseLocalDate(t.dueDate));
+        return isToday(d);
+      }
+      return true;
+    }).length;
+  };
+
   const filterButtons: { value: QuickFilter; label: string }[] = [
-    { value: "today", label: "Oggi" },
-    { value: "thisWeek", label: "Questa settimana" },
-    { value: "overdue", label: "Scadute" },
+    { value: "today", label: `Oggi (${getTasksCount("today")})` },
+    { value: "thisWeek", label: `Questa settimana (${getTasksCount("thisWeek")})` },
+    { value: "overdue", label: `Scadute (${getTasksCount("overdue")})` },
   ];
 
   return (
     <div className="flex flex-col h-full min-h-[calc(100vh-120px)] space-y-5 sm:space-y-8 relative">
-    <div className="flex items-start justify-between gap-4 flex-wrap">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
-          <div className="text-xs uppercase tracking-[0.18em] text-gold/90 font-semibold mb-2">Da fare</div>
+          <div className="text-xs uppercase tracking-[0.18em] text-gold/90 font-semibold mb-2">ME TO DO</div>
           <h1 className="text-2xl sm:text-4xl font-serif font-semibold text-primary mb-1 sm:mb-2 tracking-tight">Da Fare</h1>
           <p className="text-muted-foreground text-sm sm:text-base">Gestisci le cose da fare e tieni traccia di quanto completato.</p>
         </div>
@@ -138,7 +158,7 @@ export function Attivita() {
       </div>
 
       <div className="fixed md:static bottom-[calc(48px+env(safe-area-inset-bottom))] md:bottom-auto left-0 right-0 px-4 md:px-0 z-30 pt-8 pb-0 md:py-0 bg-gradient-to-t from-background via-background/95 to-transparent md:bg-none pointer-events-none md:pointer-events-auto">
-        <form 
+        <form
           onSubmit={(e) => {
             e.preventDefault();
             const target = e.target as HTMLFormElement;
@@ -147,7 +167,7 @@ export function Attivita() {
             const notesInput = target.elements.namedItem("quickNotes") as HTMLInputElement;
             const notes = notesInput.value.trim();
             if (title) {
-              addTask({ 
+              addTask({
                 title,
                 notes: notes || "",
                 dueDate: quickDate ? format(quickDate, 'yyyy-MM-dd') : undefined
@@ -162,18 +182,18 @@ export function Attivita() {
           <div className="flex items-center gap-2 w-full">
             <div className="flex-1 relative">
               <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
-              <Input 
+              <Input
                 name="quickTitle"
-                placeholder="Aggiungi un'attività..." 
+                placeholder="Aggiungi un'attività..."
                 className="pl-10 h-12 border-0 focus-visible:ring-0 shadow-none bg-transparent placeholder:text-muted-foreground/70 text-base font-medium"
                 autoComplete="off"
                 required
               />
             </div>
-            
+
             <div className="flex items-center gap-1 sm:hidden pr-1">
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 size="icon"
                 className="h-10 w-10 rounded-xl shrink-0 bg-primary text-primary-foreground shadow-sm"
               >
@@ -186,16 +206,16 @@ export function Attivita() {
 
           <div className="flex items-center gap-2 sm:gap-2 w-full sm:w-auto px-2 pb-2 sm:p-0 sm:pb-0">
             <div className="flex-1 relative sm:min-w-[150px]">
-              <Input 
+              <Input
                 name="quickNotes"
-                placeholder="Note (opzionale)" 
+                placeholder="Note (opzionale)"
                 className="h-10 sm:h-11 border-0 focus-visible:ring-0 shadow-none bg-muted/40 sm:bg-transparent rounded-lg sm:rounded-none text-sm placeholder:text-muted-foreground/70"
                 autoComplete="off"
               />
             </div>
-            
+
             <div className="hidden sm:block w-[1px] h-6 bg-border/60 mx-1"></div>
-            
+
             <Popover open={quickDatePopoverOpen} onOpenChange={setQuickDatePopoverOpen}>
               <PopoverTrigger asChild>
                 <Button
@@ -225,10 +245,10 @@ export function Attivita() {
               </PopoverContent>
             </Popover>
 
-            <Button 
-              type="submit" 
-              variant="secondary" 
-              size="sm" 
+            <Button
+              type="submit"
+              variant="secondary"
+              size="sm"
               className="hidden sm:flex h-11 px-6 sm:ml-auto font-semibold hover:scale-105 active:scale-95 transition-transform"
             >
               Aggiungi
@@ -361,115 +381,115 @@ export function Attivita() {
 
 
       <div className="space-y-4 flex-1 pb-32 md:pb-4">
-          {activeTasks.length > 0 ? (
-            activeTasks.map((task, index) => {
-              const taskDateKey = task.dueDate ? format(parseLocalDate(task.dueDate), "yyyy-MM-dd") : "none";
-              const prevTaskDateKey = index > 0 ? (activeTasks[index - 1].dueDate ? format(parseLocalDate(activeTasks[index - 1].dueDate!), "yyyy-MM-dd") : "none") : null;
-              
-              const showSeparator = taskDateKey !== prevTaskDateKey;
-              
-              let separatorLabel = "";
-              if (showSeparator) {
-                if (taskDateKey === "none") {
-                  separatorLabel = "NESSUNA SCADENZA";
-                } else {
-                  const d = parseLocalDate(task.dueDate!);
-                  separatorLabel = format(d, "d MMMM yyyy", { locale: it }).toUpperCase();
-                  if (isToday(d)) separatorLabel = "OGGI - " + separatorLabel;
-                  if (isYesterday(d)) separatorLabel = "IERI - " + separatorLabel;
-                }
-              }
+        {activeTasks.length > 0 ? (
+          activeTasks.map((task, index) => {
+            const taskDateKey = task.dueDate ? format(parseLocalDate(task.dueDate), "yyyy-MM-dd") : "none";
+            const prevTaskDateKey = index > 0 ? (activeTasks[index - 1].dueDate ? format(parseLocalDate(activeTasks[index - 1].dueDate!), "yyyy-MM-dd") : "none") : null;
 
-              return (
-                <React.Fragment key={task.id}>
-                  {showSeparator && (
-                    <div className={cn("relative flex items-center pb-2", index !== 0 && "pt-6")}>
-                      <div className="flex-grow border-t border-border/60"></div>
-                      <span className="mx-4 text-xs font-semibold tracking-[0.18em] text-primary/80 uppercase text-center">
-                        {separatorLabel}
-                      </span>
-                      <div className="flex-grow border-t border-border/60"></div>
+            const showSeparator = taskDateKey !== prevTaskDateKey;
+
+            let separatorLabel = "";
+            if (showSeparator) {
+              if (taskDateKey === "none") {
+                separatorLabel = "NESSUNA SCADENZA";
+              } else {
+                const d = parseLocalDate(task.dueDate!);
+                separatorLabel = format(d, "d MMMM yyyy", { locale: it }).toUpperCase();
+                if (isToday(d)) separatorLabel = "OGGI - " + separatorLabel;
+                if (isYesterday(d)) separatorLabel = "IERI - " + separatorLabel;
+              }
+            }
+
+            return (
+              <React.Fragment key={task.id}>
+                {showSeparator && (
+                  <div className={cn("relative flex items-center pb-2", index !== 0 && "pt-6")}>
+                    <div className="flex-grow border-t border-border/60"></div>
+                    <span className="mx-4 text-xs font-semibold tracking-[0.18em] text-primary/80 uppercase text-center">
+                      {separatorLabel}
+                    </span>
+                    <div className="flex-grow border-t border-border/60"></div>
+                  </div>
+                )}
+                <Card className="overflow-hidden shadow-soft hover:shadow-card hover:border-primary/30 transition-all group">
+                  <CardContent className="p-3 sm:p-4 flex items-start gap-3 sm:gap-4">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button
+                          className="mt-1 text-muted-foreground hover:text-emerald-500 transition-colors"
+                          data-testid={`button-complete-task-${task.id}`}
+                          aria-label={`Segna come completata: ${task.title}`}
+                        >
+                          <Circle className="w-6 h-6" />
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Completare l'attività?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            L'attività verrà segnata come completata ed eliminata definitivamente. Vuoi procedere?
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Annulla</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => completeTask(task.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white">Completa</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-lg">{task.title}</h3>
+                      {task.notes && <p className="text-muted-foreground text-sm mt-1">{task.notes}</p>}
                     </div>
-                  )}
-                  <Card className="overflow-hidden shadow-soft hover:shadow-card hover:border-primary/30 transition-all group">
-                <CardContent className="p-3 sm:p-4 flex items-start gap-3 sm:gap-4">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <button 
-                        className="mt-1 text-muted-foreground hover:text-emerald-500 transition-colors"
-                        data-testid={`button-complete-task-${task.id}`}
-                        aria-label={`Segna come completata: ${task.title}`}
+                    <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn("hover:text-primary", task.notes ? "text-primary" : "text-muted-foreground")}
+                        onClick={() => setEditingNoteTask(task)}
+                        title="Aggiungi o modifica nota"
                       >
-                        <Circle className="w-6 h-6" />
-                      </button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Completare l'attività?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          L'attività verrà segnata come completata ed eliminata definitivamente. Vuoi procedere?
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Annulla</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => completeTask(task.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white">Completa</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-lg">{task.title}</h3>
-                    {task.notes && <p className="text-muted-foreground text-sm mt-1">{task.notes}</p>}
-                  </div>
-                  <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className={cn("hover:text-primary", task.notes ? "text-primary" : "text-muted-foreground")}
-                      onClick={() => setEditingNoteTask(task)}
-                      title="Aggiungi o modifica nota"
-                    >
-                      <MessageSquare className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-muted-foreground hover:text-primary"
-                      onClick={() => setEditingTask(task)}
-                      data-testid={`button-edit-task-${task.id}`}
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-muted-foreground hover:text-destructive"
-                      onClick={() => setDeletingTask(task)}
-                      data-testid={`button-delete-task-${task.id}`}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-                </React.Fragment>
+                        <MessageSquare className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-muted-foreground hover:text-primary"
+                        onClick={() => setEditingTask(task)}
+                        data-testid={`button-edit-task-${task.id}`}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-muted-foreground hover:text-destructive"
+                        onClick={() => setDeletingTask(task)}
+                        data-testid={`button-delete-task-${task.id}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </React.Fragment>
             );
-            })
-          ) : (
-            <div className="py-12 text-center bg-card border rounded-lg text-muted-foreground shadow-sm">
-              <CheckSquare className="w-12 h-12 mx-auto mb-4 opacity-20" />
-              {hasActiveFilters ? (
-                <>
-                  <p className="text-lg font-medium">Nessun risultato.</p>
-                  <p className="text-sm mt-1">Prova a modificare la ricerca o i filtri.</p>
-                </>
-              ) : (
-                <>
-                  <p className="text-lg font-medium">Nessuna attività da fare.</p>
-                  <p className="text-sm mt-1">Goditi il meritato riposo.</p>
-                </>
-              )}
-            </div>
-          )}
+          })
+        ) : (
+          <div className="py-12 text-center bg-card border rounded-lg text-muted-foreground shadow-sm">
+            <CheckSquare className="w-12 h-12 mx-auto mb-4 opacity-20" />
+            {hasActiveFilters ? (
+              <>
+                <p className="text-lg font-medium">Nessun risultato.</p>
+                <p className="text-sm mt-1">Prova a modificare la ricerca o i filtri.</p>
+              </>
+            ) : (
+              <>
+                <p className="text-lg font-medium">Nessuna attività da fare.</p>
+                <p className="text-sm mt-1">Goditi il meritato riposo.</p>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       <Dialog open={!!deletingTask} onOpenChange={(open) => { if (!open) setDeletingTask(null); }}>
@@ -521,7 +541,7 @@ export function Attivita() {
             }
           }}>
             <div className="pt-4 pb-6">
-              <Textarea 
+              <Textarea
                 name="notes"
                 defaultValue={editingNoteTask?.notes || ""}
                 placeholder="Scrivi qui i tuoi appunti, dettagli o numeri di telefono..."

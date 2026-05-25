@@ -773,3 +773,11 @@
 ### [2026-05-25 19:45]: Riposizionamento e Restyling Filtro Polizze Personali
 * *Details*: Nella pagina delle polizze personali (desktop) ho eliminato i vecchi 'Tabs' nativi per la navigazione 'In scadenza' / 'Da emettere', sostituendoli con un selettore custom identico a quello elegante appena sviluppato per i preventivi.
 * *Tech Notes*: Ristrutturato il layout in `src/pages/polizze-personali.tsx`. Il componente `renderDesktopQuickAdd` (la barra di inserimento rapido) è stato spostato *sopra* al nuovo selettore, mentre l'alternanza della lista è ora gestita tramite un singolo stato `selectedTab`.
+
+### [2026-05-25 19:46]: Contatore Dinamico su Filtro Preventivi
+* *Details*: Ho aggiunto il conteggio dinamico per ogni categoria all'interno del selettore della dashboard preventivi (es. 'Da Fare ( 10 )' e 'Consegnati ( 5 )'), consentendo così una visione immediata del carico di lavoro.
+* *Tech Notes*: Modificato `src/pages/preventivi.tsx` per interpolare dinamicamente le label del `filterOptions` sfruttando `preventivi.filter().length`.
+
+### [2026-05-25 19:47]: Contatore Dinamico su Filtro Attività
+* *Details*: Aggiunto il conteggio dinamico dei task aperti ai filtri di ricerca rapida ('Oggi', 'Questa settimana', 'Scadute') presenti nella dashboard delle attività, mantenendo la coerenza grafica con la sezione preventivi.
+* *Tech Notes*: Aggiunta la funzione `getTasksCount` nel file `src/pages/attivita.tsx`.
