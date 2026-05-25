@@ -785,3 +785,7 @@
 - [2026-05-25 19:50]: Fix preventivi counter discrepancy
   - *Details*: The dashboard counted all preventivi that were not "accettato", while the preventivi page exclusively listed and counted those with status exactly equal to "da_fare". This caused older records or records with undefined status to be missing from the list.
   - *Tech Notes*: Updated the `filteredPreventivi` and `filterOptions` logic in `preventivi.tsx` so that the "da_fare" tab acts as a fallback catching all items that are not "consegnato" and not "accettato", which mirrors the dashboard logic.
+
+- [2026-05-25 19:51]: Allow past dates in sinistri quick add calendar
+  - *Details*: Disabled the default restriction that prevented users from selecting dates before today in the Date Picker for the Sinistri quick add form.
+  - *Tech Notes*: Added the `disabled={() => false}` prop to the `Calendar` component in `/artifacts/gestionale/src/pages/sinistri.tsx` to override the `defaultDisabled` logic defined in the reusable `calendar.tsx` component.

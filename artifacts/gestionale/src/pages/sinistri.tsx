@@ -317,6 +317,7 @@ export function Sinistri() {
                     setQuickDate(date);
                     setQuickDatePopoverOpen(false);
                   }}
+                  disabled={() => false}
                   initialFocus
                 />
               </PopoverContent>
