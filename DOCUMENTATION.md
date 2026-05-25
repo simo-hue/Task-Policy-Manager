@@ -721,3 +721,16 @@
   - Aggiunto `min-w-0` al grid container principale in `dashboard.tsx` e al root div di `SectionList`.
   - Impostato `flex-wrap` e `min-w-0 flex-1` sull'header di `SectionList` per permettere al titolo lungo di troncarsi anziché forzare l'allargamento della pagina.
   - Modificato `shell.tsx`: il tag `<main>` usa ora `overflow-x-hidden overflow-y-auto` invece del generico `overflow-auto`, rendendo letteralmente impossibile lo scorrimento orizzontale dell'intera PWA e bloccando ogni comportamento anomalo su iOS/Android.
+
+### [2026-05-25 16:32]: Riorganizzazione Layout Desktop (Attività)
+* *Details*: Spostata la barra di ricerca e i filtri rapidi SOPRA la barra di 'Aggiunta Rapida' nella pagina delle Attività.
+* *Tech Notes*:
+  - Modificato l'ordine nel DOM di `attivita.tsx`: il blocco di ricerca è stato anticipato rispetto al form di inserimento. Su Desktop, questo fa apparire la ricerca in cima alla lista. Su Mobile, l'inserimento rimane ancorato in basso grazie alle classi `fixed bottom-...` preesistenti.
+
+### [2026-05-25 16:35]: Riorganizzazione Definitiva Layout Desktop (Attività)
+* *Details*: Aggiornata la disposizione degli elementi nella pagina Attività per rispettare l'ordine richiesto su Desktop.
+* *Tech Notes*:
+  - Separati i blocchi di Ricerca, Inserimento Rapido e Filtri in nodi distinti nel DOM.
+  - La Barra di Ricerca ora occupa il 100% della larghezza (`w-full`) ed è posizionata in cima.
+  - La Barra di Aggiunta si trova al centro, mantenendo il layout grafico preesistente (`max-w-4xl mx-auto`).
+  - Il Selettore dei Filtri si trova ora in basso, sotto l'inserimento rapido.

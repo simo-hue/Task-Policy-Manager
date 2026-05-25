@@ -115,6 +115,28 @@ export function Attivita() {
         </div>
       </div>
 
+      <div className="relative w-full">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Cerca attività..."
+          className="pl-9 pr-9 h-11 rounded-xl shadow-sm bg-background border-border/60 focus-visible:ring-primary/30 w-full"
+          data-testid="input-search-tasks"
+        />
+        {search && (
+          <button
+            type="button"
+            onClick={() => setSearch("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            data-testid="button-clear-search"
+            aria-label="Cancella ricerca"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+
       <div className="fixed md:static bottom-[calc(48px+env(safe-area-inset-bottom))] md:bottom-auto left-0 right-0 px-4 md:px-0 z-30 pt-8 pb-0 md:py-0 bg-gradient-to-t from-background via-background/95 to-transparent md:bg-none pointer-events-none md:pointer-events-auto">
         <form 
           onSubmit={(e) => {
@@ -215,6 +237,43 @@ export function Attivita() {
         </form>
       </div>
 
+      <div className="flex justify-center w-full">
+        <div className="relative p-1.5 inline-flex flex-wrap gap-1.5 items-center justify-center bg-muted/30 backdrop-blur-lg border border-border/50 rounded-2xl shadow-inner max-w-full">
+          {filterButtons.map((f) => {
+            const isSelected = quickFilter === f.value;
+            return (
+              <button
+                key={f.value}
+                onClick={() => setQuickFilter(isSelected ? "all" : f.value)}
+                data-testid={`button-filter-${f.value}`}
+                className={cn(
+                  "relative px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 ease-out outline-none select-none",
+                  isSelected
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-background/40"
+                )}
+              >
+                {isSelected && (
+                  <span className="absolute inset-0 bg-background border border-border/80 rounded-xl shadow-soft -z-10" />
+                )}
+                {f.label}
+              </button>
+            );
+          })}
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={() => { setSearch(""); setQuickFilter("all"); }}
+              data-testid="button-reset-filters"
+              className="relative px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 ease-out outline-none select-none text-muted-foreground hover:text-foreground hover:bg-background/40 flex items-center"
+            >
+              <X className="w-4 h-4 mr-1" />
+              Azzera filtri
+            </button>
+          )}
+        </div>
+      </div>
+
       <Dialog open={!!editingTask} onOpenChange={(open) => { if (!open) setEditingTask(null); }}>
         <DialogContent>
           <DialogHeader>
@@ -299,65 +358,7 @@ export function Attivita() {
         </DialogContent>
       </Dialog>
 
-      <div className="space-y-4">
-        <div className="relative max-w-md mx-auto">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cerca attività..."
-            className="pl-9 pr-9 h-11 rounded-xl shadow-sm bg-background border-border/60 focus-visible:ring-primary/30"
-            data-testid="input-search-tasks"
-          />
-          {search && (
-            <button
-              type="button"
-              onClick={() => setSearch("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              data-testid="button-clear-search"
-              aria-label="Cancella ricerca"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-        <div className="flex justify-center w-full">
-          <div className="relative p-1.5 inline-flex flex-wrap gap-1.5 items-center justify-center bg-muted/30 backdrop-blur-lg border border-border/50 rounded-2xl shadow-inner max-w-full">
-            {filterButtons.map((f) => {
-              const isSelected = quickFilter === f.value;
-              return (
-                <button
-                  key={f.value}
-                  onClick={() => setQuickFilter(isSelected ? "all" : f.value)}
-                  data-testid={`button-filter-${f.value}`}
-                  className={cn(
-                    "relative px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 ease-out outline-none select-none",
-                    isSelected
-                      ? "text-primary"
-                      : "text-muted-foreground hover:text-foreground hover:bg-background/40"
-                  )}
-                >
-                  {isSelected && (
-                    <span className="absolute inset-0 bg-background border border-border/80 rounded-xl shadow-soft -z-10" />
-                  )}
-                  {f.label}
-                </button>
-              );
-            })}
-            {hasActiveFilters && (
-              <button
-                type="button"
-                onClick={() => { setSearch(""); setQuickFilter("all"); }}
-                data-testid="button-reset-filters"
-                className="relative px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 ease-out outline-none select-none text-muted-foreground hover:text-foreground hover:bg-background/40 flex items-center"
-              >
-                <X className="w-4 h-4 mr-1" />
-                Azzera filtri
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+
 
       <div className="space-y-4 flex-1 pb-32 md:pb-4">
           {activeTasks.length > 0 ? (
