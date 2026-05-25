@@ -583,3 +583,29 @@
 * *Tech Notes*:
   - Modificato `artifacts/gestionale/src/components/ui/calendar.tsx`: aggiunto il gap (`gap-1.5`) alla riga dei giorni (`weekdays`) per rispecchiare quello delle celle dei giorni, forzato la larghezza di ogni singola intestazione (`w-[--cell-size]`), e impostato l'iniziale singola (L, M, M, G, V, S, D) tramite `formatWeekdayName` per un look molto più pulito e professionale.
   - Sincronizzate le modifiche su `artifacts/mockup-sandbox/src/components/ui/calendar.tsx`.
+
+### [2026-05-25 09:03]: Restyling Mega Premium del DatePicker
+* *Details*: Implementato un nuovo design super, mega, iper professionale per il componente Date Picker, utilizzando glassmorphism, gradienti interattivi per le selezioni, ombre colorate dinamiche, bordi luminosi e animazioni morbide al passaggio del mouse e al click. I contenitori popover (Dropdown) in tutta l'app sono stati aggiornati per permettere al calendario di mostrare il proprio layout arrotondato premium senza conflitti visivi.
+* *Tech Notes*:
+  - Riscritto completamente `src/components/ui/calendar.tsx` con classi Tailwind avanzate (`backdrop-blur-3xl`, gradienti, pseudo-elementi per glow effect decorativi).
+  - Sostituite dinamicamente le classi Tailwind in `attivita.tsx`, `polizze-personali.tsx`, `preventivi.tsx` e `sinistri.tsx` per inserire `border-none bg-transparent shadow-none` nel `PopoverContent` dedicato ai calendari.
+
+### [2026-05-25 09:19]: Ottimizzazione Dimensioni e Allineamento DatePicker
+* *Details*: Il Date Picker è stato ingrandito di oltre il doppio (le celle passano da 2.8rem a 5rem su schermi desktop) con tipografia maggiorata (testi fino a 40px) per una leggibilità e un colpo d'occhio estremo. Inoltre è stato risolto il difetto di disallineamento della griglia dei giorni della settimana, rimuovendo il flex-box forzato a favore di un perfetto table-layout nativo, così che ogni lettera corrisponda esattamente alla propria colonna numerica sottostante. Le frecce di navigazione non si sovrappongono più al mese, avendo definito un pointer-events corretto e un padding orizzontale al titolo.
+* *Tech Notes*:
+  - Modificato `calendar.tsx`: aumentate grandezze di cella `--cell-size`, `font-size` e raggio delle smussature.
+  - Rimosso `flex` dalle righe di intestazione (`weekdays`) e settimana (`week`) ripristinando il corretto allineamento tabellare (`table-row`).
+  - Aggiunto `pointer-events-none` al container di navigazione con `pointer-events-auto` sui bottoni per evitare overlap fisici con il click del mese.
+
+### [2026-05-25 09:23]: Fix Bordo Quadrato Giorno Odierno
+* *Details*: Corretto un difetto visivo in cui il giorno corrente (today) veniva evidenziato con un bordo quadrato. Il problema derivava dal fatto che react-day-picker applicava la classe direttamente alla cella della tabella (td) anziché al bottone circolare interno.
+* *Tech Notes*:
+  - Modificato `calendar.tsx` per rimuovere le classi estetiche dal selettore `today` di default.
+  - Spostata la logica condizionale all'interno di `CalendarDayButton` intercettando `modifiers.today` e applicando un selettore custom `data-[today=true]` al componente `<Button>`, assicurando che il bordo e i glow seguano perfettamente il `rounded-full` del bottone stesso.
+
+### [2026-05-25 09:25]: Riduzione Dimensioni DatePicker del 20%
+* *Details*: Il cliente ha richiesto una lieve riduzione delle dimensioni complessive per non occupare eccessivo spazio visivo, mantenendo però l'esperienza di utilizzo premium.
+* *Tech Notes*:
+  - Modificate le custom properties Tailwind `--cell-size` riducendole da 5rem a 4rem (schermo desktop) e da 4.2rem a 3.4rem (mobile).
+  - Scalata proporzionalmente la tipografia del calendario: il titolo del mese passa a 32px (da 40px), l'intestazione dei giorni a 14px e i numeri da cliccare a 20px (da 24px).
+  - Ridotti leggermente i padding generali del contorno glass e il raggio di smussamento per mantenere le proporzioni intatte (es. radius da 3rem a 2.5rem, padding da 10 a 8).

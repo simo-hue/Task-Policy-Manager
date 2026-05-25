@@ -296,7 +296,7 @@ export function Sinistri() {
               {quickDate ? format(quickDate, "P", { locale: it }) : <span>Data</span>}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
+          <PopoverContent className="w-auto p-0 border-none bg-transparent shadow-none" align="start">
             <Calendar
               mode="single"
               selected={quickDate}
@@ -439,7 +439,7 @@ export function Sinistri() {
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
+                  <PopoverContent className="w-auto p-0 border-none bg-transparent shadow-none" align="start">
                     <Calendar
                       mode="single"
                       selected={field.value}

@@ -219,7 +219,7 @@ export function Preventivi() {
             {quickDate ? format(quickDate, "P", { locale: it }) : <span>Data</span>}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent className="w-auto p-0 border-none bg-transparent shadow-none" align="start">
           <Calendar
             mode="single"
             selected={quickDate}
@@ -473,7 +473,7 @@ export function Preventivi() {
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent className="w-auto p-0 border-none bg-transparent shadow-none" align="start">
                         <Calendar
                           mode="single"
                           selected={field.value}
