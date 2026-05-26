@@ -789,3 +789,11 @@
 - [2026-05-25 19:51]: Allow past dates in sinistri quick add calendar
   - *Details*: Disabled the default restriction that prevented users from selecting dates before today in the Date Picker for the Sinistri quick add form.
   - *Tech Notes*: Added the `disabled={() => false}` prop to the `Calendar` component in `/artifacts/gestionale/src/pages/sinistri.tsx` to override the `defaultDisabled` logic defined in the reusable `calendar.tsx` component.
+
+- [2026-05-26 18:00]: Aggiornamento README con Screenshot e Riorganizzazione Sezioni
+  - *Details*: Aggiornato il file `README.md` principale introducendo i link relativi agli screenshot per ciascuna delle 5 pagine principali del gestionale e per la pagina di login. Riorganizzate le sezioni delle funzionalità principali per rispecchiare fedelmente la struttura attuale dell'applicazione (Dashboard, Polizze Personali, Preventivi, Sinistri, Attività) e creato il supporto alla cartella centralizzata per gli screenshot.
+  - *Tech Notes*:
+    - Modificato `README.md` per referenziare le immagini all'interno della cartella `docs/screenshots/`.
+    - Creata la cartella fisica `docs/screenshots/` alla radice della repository.
+    - Aggiornato il file `TO_SIMO_DO.md` per istruire l'utente sul corretto salvataggio manuale dei file delle immagini.
+
