@@ -18,15 +18,27 @@ Il lavoro di un assicuratore richiede la costante attenzione su molteplici front
 
 ### 📊 Dashboard Intelligente
 Una schermata principale che restituisce il polso della situazione in tempo reale:
-- **Contatori riassuntivi** per Attività, Polizze (Personali e Agenzia) e Sinistri attivi.
+- **Contatori riassuntivi** per Attività, Polizze Personali, Preventivi e Sinistri attivi.
 - Box **Urgenze** che raggruppa dinamicamente le attività scadute e le polizze in scadenza a brevissimo termine, garantendo che nulla sfugga.
 
-### 📑 Gestione Polizze (Personali e Agenzia)
-Il cuore del portafoglio, fisicamente separato per una gestione indipendente:
+![Dashboard](docs/screenshots/dashboard.png)
+
+### 📑 Gestione Polizze Personali
+Il cuore del portafoglio clienti per una gestione reattiva delle scadenze:
 - **In Scadenza**: Elenco completo delle polizze attive emesse, ordinate cronologicamente.
-- **Da Emettere**: Una "to-do list" dedicata per tenere traccia delle polizze in fase di preventivazione o in attesa di emissione. Segnare una polizza come emessa la processa immediatamente.
-- **Badge di Cassa Interattivi**: Modifica istantanea dello stato contabile (*Da mettere a cassa, In cassa, Regolare, Pagata*) tramite bellissimi menu a tendina integrati nelle card. Contrassegnare una polizza come *Pagata* ne confermerà l'eliminazione definitiva, mantenendo lo spazio di lavoro pulito.
-- **Inserimento Intelligente (Quick Add)**: Inserisci le polizze digitando semplicemente "Nome Cliente - Tipo Polizza". Il sistema compilerà automaticamente i campi, offrendo suggerimenti per i rami più comuni.
+- **Da Emettere**: Una "to-do list" dedicata per tenere traccia delle polizze in fase di preventivazione o in attesa di emissione. Segnare una polizza come emessa la archivia/elimina istantaneamente dopo conferma.
+- **Badge di Cassa Interattivi**: Modifica istantanea dello stato contabile (*Da mettere a cassa, In cassa, Regolare, Pagata*) tramite menu a tendina integrati nelle card. Contrassegnare una polizza come *Pagata* ne confermerà l'eliminazione definitiva, mantenendo lo spazio di lavoro pulito.
+- **Inserimento Intelligente (Quick Add)**: Inserisci le polizze digitando semplicemente "Nome Cliente - Tipo Polizza". Il sistema compilerà automaticamente i campi, offrendo suggerimenti per i rami più comuni e gestendo anche le note.
+
+![Polizze Personali](docs/screenshots/polizze.png)
+
+### 💼 Gestione Preventivi e Vendite
+Un modulo dedicato per tracciare le trattative in corso e le offerte presentate ai clienti:
+- **Flusso a Fasi**: Classificazione tra preventivi *Da Fare* e preventivi *Consegnati*. I preventivi *Accettati* vengono convertiti ed eliminati definitivamente per mantenere pulito lo spazio di lavoro.
+- **Raggruppamento Dinamico**: I preventivi sono raggruppati cronologicamente per giorno di creazione con divisori grafici.
+- **Quick Add Multifunzionale**: Inserimento istantaneo con Tipo Polizza, Premio, Data personalizzata e Note in un'unica barra veloce.
+
+![Preventivi](docs/screenshots/preventivi.png)
 
 ### 🚗 Gestione Sinistri Avanzata
 Un intero modulo per seguire il ciclo di vita dei sinistri:
@@ -34,10 +46,21 @@ Un intero modulo per seguire il ciclo di vita dei sinistri:
 - Automazione intelligente: la data di apertura si autocompila istantaneamente nel momento in cui il sinistro passa dallo stato di pre-apertura ad uno stato attivo.
 - Liquidazione sicura: marcare un sinistro come *Liquidato* chiude la pratica rimuovendola in totale sicurezza (previo popup di conferma).
 
-### ✅ Attività e Promemoria (To-Do List)
+![Sinistri](docs/screenshots/sinistri.png)
+
+### ✅ Attività e Promemoria (Da Fare)
 - Barra di "Quick Add" per l'aggiunta rapida con invio diretto e possibilità di specificare date di scadenza.
-- Gestione distruttiva sicura: segnare un'attività come completata la cancella dall'elenco.
+- Gestione distruttiva sicura: segnare un'attività come completata la cancella dall'elenco (previo popup di conferma).
 - Possibilità di aggiungere note rapide alle attività direttamente in lista.
+
+![Da Fare](docs/screenshots/attivita.png)
+
+### 🔒 Accesso Sicuro (Login)
+Ogni agente dispone di un account protetto per tutelare la privacy e la sicurezza delle informazioni dei clienti:
+- **Autenticazione Firebase**: Login sicuro basato su email e password.
+- **Isolamento dei Dati**: I dati salvati su Cloud Firestore sono vincolati all'identificativo univoco (`uid`) dell'agente, garantendo che nessuno possa accedere alle informazioni altrui.
+
+![Login](docs/screenshots/login.png)
 
 ### ☁️ Sincronizzazione in Cloud (Firebase)
 - **Zero perdite di dati**: Addio salvataggi in locale. Il sistema si basa ora su Firestore, garantendo che ogni aggiornamento avvenga in tempo reale sui server cloud.
