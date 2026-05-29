@@ -157,6 +157,38 @@ export function Dashboard() {
 
       <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 min-w-0">
         <SectionList
+          title="Attività urgenti"
+          href="/attivita"
+          empty="Nessuna attività urgente. Ottimo lavoro."
+        >
+          {topUrgentTasks.length > 0 && (
+            <div className="divide-y divide-border">
+              {topUrgentTasks.map(t => {
+                const due = t.dueDate ? parseLocalDate(t.dueDate) : null;
+                const tone =
+                  due === null ? "muted" :
+                    isBefore(due, now) ? "danger" :
+                      isToday(due) ? "gold" : "neutral";
+                return (
+                  <Link key={t.id} href="/attivita" className="block">
+                    <div
+                      className="flex justify-between items-center gap-3 px-3 py-3 sm:px-5 sm:py-4 transition-all duration-200 active:scale-[0.98] active:bg-muted/60 sm:hover:bg-muted/40"
+                      data-testid={`dashboard-task-${t.id}`}
+                    >
+                      <div className="min-w-0 flex-1 pr-2">
+                        <div className="font-medium truncate">{t.title}</div>
+                        {t.notes && <div className="text-sm text-muted-foreground truncate">{t.notes}</div>}
+                      </div>
+                      <DatePill date={due} tone={tone} />
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </SectionList>
+
+        <SectionList
           title="Prossime scadenze"
           href="/polizze-personali"
           empty="Nessuna polizza in scadenza a breve."
@@ -185,38 +217,6 @@ export function Dashboard() {
                         </div>
                       </div>
                       <DatePill date={exp} tone={tone} />
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-        </SectionList>
-
-        <SectionList
-          title="Attività urgenti"
-          href="/attivita"
-          empty="Nessuna attività urgente. Ottimo lavoro."
-        >
-          {topUrgentTasks.length > 0 && (
-            <div className="divide-y divide-border">
-              {topUrgentTasks.map(t => {
-                const due = t.dueDate ? parseLocalDate(t.dueDate) : null;
-                const tone =
-                  due === null ? "muted" :
-                    isBefore(due, now) ? "danger" :
-                      isToday(due) ? "gold" : "neutral";
-                return (
-                  <Link key={t.id} href="/attivita" className="block">
-                    <div
-                      className="flex justify-between items-center gap-3 px-3 py-3 sm:px-5 sm:py-4 transition-all duration-200 active:scale-[0.98] active:bg-muted/60 sm:hover:bg-muted/40"
-                      data-testid={`dashboard-task-${t.id}`}
-                    >
-                      <div className="min-w-0 flex-1 pr-2">
-                        <div className="font-medium truncate">{t.title}</div>
-                        {t.notes && <div className="text-sm text-muted-foreground truncate">{t.notes}</div>}
-                      </div>
-                      <DatePill date={due} tone={tone} />
                     </div>
                   </Link>
                 );
