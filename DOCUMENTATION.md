@@ -797,3 +797,7 @@
     - Creata la cartella fisica `docs/screenshots/` alla radice della repository.
     - Aggiornato il file `TO_SIMO_DO.md` per istruire l'utente sul corretto salvataggio manuale dei file delle immagini.
 
+
+- [2026-06-04 22:47]: Filtro "Tutte" nella pagina Sinistri
+  - *Details*: Aggiunto un pulsante "Tutte" nella gestione dei sinistri che permette di vedere tutti i tipi di sinistro contemporaneamente. Quando selezionato, l'elenco dei sinistri viene raggruppato esclusivamente per Tipologia di Sinistro (Ramo) ignorando i raggruppamenti per Data/Stato utilizzati nelle singole viste ramo.
+  - *Tech Notes*: Modificati i criteri di ordinamento di `activeClaims` in `sinistri.tsx` per eseguire un raggruppamento per ramo quando `selectedRamo` corrisponde a "Tutte". Aggiunta opzione "Tutte" all'array dei bottoni.

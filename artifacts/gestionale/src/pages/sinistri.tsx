@@ -38,19 +38,47 @@ type ClaimFormValues = z.infer<typeof claimSchema>;
 
 export function Sinistri() {
   const { claims, addClaim, updateClaim, deleteClaim } = useClaims();
-  const activeClaims = claims
-    .filter(c => c.status !== "liquidato")
-    .sort((a, b) => {
-      const statusOrder: Record<string, number> = { da_aprire: 1, aperto: 2, incaricato: 3, visita_medico_legale: 4 };
-      const statusA = statusOrder[a.status || "incaricato"] || 99;
-      const statusB = statusOrder[b.status || "incaricato"] || 99;
-      if (statusA !== statusB) return statusA - statusB;
 
-      if (!a.openDate && !b.openDate) return 0;
-      if (!a.openDate) return 1;
-      if (!b.openDate) return -1;
-      return new Date(a.openDate).getTime() - new Date(b.openDate).getTime();
-    });
+  const [editingClaim, setEditingClaim] = useState<Claim | null>(null);
+  const [liquidatingClaim, setLiquidatingClaim] = useState<Claim | null>(null);
+  const [deletingClaim, setDeletingClaim] = useState<Claim | null>(null);
+  const [editingNoteClaim, setEditingNoteClaim] = useState<Claim | null>(null);
+  const [quickDate, setQuickDate] = useState<Date | undefined>(new Date());
+  const [quickRamo, setQuickRamo] = useState<string>("");
+  const [quickStatus, setQuickStatus] = useState<Claim["status"]>("da_aprire");
+  const [quickDatePopoverOpen, setQuickDatePopoverOpen] = useState(false);
+  const [editDatePopoverOpen, setEditDatePopoverOpen] = useState(false);
+  const [selectedRamo, setSelectedRamo] = useState<string>("Tutte");
+  const [selectedStatus, setSelectedStatus] = useState<Claim["status"] | null>(null);
+
+  const baseActiveClaims = claims.filter(c => c.status !== "liquidato");
+  const uniqueRami = Array.from(new Set(baseActiveClaims.map(c => c.ramo))).sort();
+  const ramiOptions = ["Tutte", ...uniqueRami];
+  
+  const isTutteSelected = selectedRamo === "Tutte";
+  const effectiveSelectedRamo = isTutteSelected ? null : (uniqueRami.includes(selectedRamo) ? selectedRamo : (uniqueRami.length > 0 ? "Tutte" : null));
+
+  const activeClaims = [...baseActiveClaims].sort((a, b) => {
+    if (isTutteSelected || effectiveSelectedRamo === null) {
+      if (a.ramo !== b.ramo) return a.ramo.localeCompare(b.ramo);
+    }
+    
+    const statusOrder: Record<string, number> = { da_aprire: 1, aperto: 2, incaricato: 3, visita_medico_legale: 4 };
+    const statusA = statusOrder[a.status || "incaricato"] || 99;
+    const statusB = statusOrder[b.status || "incaricato"] || 99;
+    if (statusA !== statusB) return statusA - statusB;
+
+    if (!a.openDate && !b.openDate) return 0;
+    if (!a.openDate) return 1;
+    if (!b.openDate) return -1;
+    return new Date(a.openDate).getTime() - new Date(b.openDate).getTime();
+  });
+
+  const filteredClaims = activeClaims.filter(c => {
+    const matchRamo = (isTutteSelected || effectiveSelectedRamo === null) ? true : c.ramo === effectiveSelectedRamo;
+    const matchStatus = selectedStatus === null ? true : c.status === selectedStatus;
+    return matchRamo && matchStatus;
+  });
 
 
   const renderInteractiveBadge = (claim: Claim) => {
@@ -188,26 +216,7 @@ export function Sinistri() {
     );
   };
 
-  const [editingClaim, setEditingClaim] = useState<Claim | null>(null);
-  const [liquidatingClaim, setLiquidatingClaim] = useState<Claim | null>(null);
-  const [deletingClaim, setDeletingClaim] = useState<Claim | null>(null);
-  const [editingNoteClaim, setEditingNoteClaim] = useState<Claim | null>(null);
-  const [quickDate, setQuickDate] = useState<Date | undefined>(new Date());
-  const [quickRamo, setQuickRamo] = useState<string>("");
-  const [quickStatus, setQuickStatus] = useState<Claim["status"]>("da_aprire");
-  const [quickDatePopoverOpen, setQuickDatePopoverOpen] = useState(false);
-  const [editDatePopoverOpen, setEditDatePopoverOpen] = useState(false);
-  const [selectedRamo, setSelectedRamo] = useState<string | null>(null);
-  const [selectedStatus, setSelectedStatus] = useState<Claim["status"] | null>(null);
 
-  const uniqueRami = Array.from(new Set(activeClaims.map(c => c.ramo))).sort();
-  const effectiveSelectedRamo = selectedRamo && uniqueRami.includes(selectedRamo) ? selectedRamo : (uniqueRami[0] || null);
-  
-  const filteredClaims = activeClaims.filter(c => {
-    const matchRamo = effectiveSelectedRamo ? c.ramo === effectiveSelectedRamo : true;
-    const matchStatus = selectedStatus === null ? true : c.status === selectedStatus;
-    return matchRamo && matchStatus;
-  });
 
   const statusOptions: { value: Claim["status"], label: string }[] = [
     { value: "da_aprire", label: "Da aprire" },
@@ -551,8 +560,8 @@ export function Sinistri() {
         {uniqueRami.length > 0 && (
           <div className="flex justify-center w-full mb-3">
             <div className="relative p-1.5 inline-flex flex-wrap justify-center gap-1.5 items-center bg-muted/30 backdrop-blur-lg border border-border/50 rounded-2xl shadow-inner">
-            {uniqueRami.map((ramo) => {
-              const isSelected = effectiveSelectedRamo === ramo;
+            {ramiOptions.map((ramo) => {
+              const isSelected = (ramo === "Tutte" && isTutteSelected) || (effectiveSelectedRamo === ramo);
               return (
                 <button
                   key={ramo}
@@ -580,7 +589,7 @@ export function Sinistri() {
             <div className="relative p-1 inline-flex flex-wrap justify-center gap-1 items-center bg-muted/20 backdrop-blur-md border border-border/40 rounded-xl shadow-sm">
               {statusOptions.map((status) => {
                 const isSelected = selectedStatus === status.value;
-                const claimsForRamo = effectiveSelectedRamo ? activeClaims.filter(c => c.ramo === effectiveSelectedRamo) : activeClaims;
+                const claimsForRamo = (isTutteSelected || effectiveSelectedRamo === null) ? activeClaims : activeClaims.filter(c => c.ramo === effectiveSelectedRamo);
                 const count = claimsForRamo.filter(c => c.status === status.value).length;
                 const isEmpty = count === 0;
 
@@ -622,7 +631,9 @@ export function Sinistri() {
               const currentStatusLabel = statusLabels[currentStatus] || "INCARICATO PERITO";
               const currentDateKey = claim.openDate ? format(parseLocalDate(claim.openDate), "d MMMM yyyy", { locale: it }).toUpperCase() : "DA DEFINIRE";
               
-              const groupKey = `${currentStatusLabel} - ${currentDateKey}`;
+              const groupKey = (isTutteSelected || effectiveSelectedRamo === null) 
+                ? claim.ramo.toUpperCase() 
+                : `${currentStatusLabel} - ${currentDateKey}`;
               
               let showSeparator = false;
               if (index === 0) {
@@ -632,7 +643,11 @@ export function Sinistri() {
                 const prevStatus = prevClaim.status || "incaricato";
                 const prevStatusLabel = statusLabels[prevStatus] || "INCARICATO PERITO";
                 const prevDateKey = prevClaim.openDate ? format(parseLocalDate(prevClaim.openDate), "d MMMM yyyy", { locale: it }).toUpperCase() : "DA DEFINIRE";
-                const prevGroupKey = `${prevStatusLabel} - ${prevDateKey}`;
+                
+                const prevGroupKey = (isTutteSelected || effectiveSelectedRamo === null)
+                  ? prevClaim.ramo.toUpperCase()
+                  : `${prevStatusLabel} - ${prevDateKey}`;
+                  
                 showSeparator = groupKey !== prevGroupKey;
               }
 
