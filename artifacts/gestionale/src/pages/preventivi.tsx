@@ -48,6 +48,14 @@ export function Preventivi() {
   const [quickDate, setQuickDate] = useState<Date | undefined>(undefined);
   const [quickDatePopoverOpen, setQuickDatePopoverOpen] = useState(false);
   const [editDatePopoverOpen, setEditDatePopoverOpen] = useState(false);
+  const [selectedPolicyType, setSelectedPolicyType] = useState<string>("Tutti");
+
+  const baseActivePreventivi = preventivi.filter(p => p.status !== "accettato");
+  const uniquePolicyTypes = Array.from(new Set(baseActivePreventivi.map(p => p.policyType))).sort();
+  const policyTypeOptions = ["Tutti", ...uniquePolicyTypes];
+
+  const isTutteSelected = selectedPolicyType === "Tutti";
+  const effectiveSelectedPolicyType = isTutteSelected ? null : (uniquePolicyTypes.includes(selectedPolicyType) ? selectedPolicyType : (uniquePolicyTypes.length > 0 ? "Tutte" : null));
 
   const editForm = useForm<PreventivoFormValues>({
     resolver: zodResolver(preventivoSchema),
@@ -225,7 +233,10 @@ export function Preventivi() {
       <div className="grid gap-3">
         {list.map((preventivo, index) => {
           const currentDateKey = preventivo.createdAt ? format(new Date(preventivo.createdAt), "d MMMM yyyy", { locale: it }).toUpperCase() : "DATA SCONOSCIUTA";
-          const groupKey = currentDateKey;
+
+          const groupKey = (isTutteSelected || effectiveSelectedPolicyType === null)
+            ? preventivo.policyType.toUpperCase()
+            : currentDateKey;
 
           let showSeparator = false;
           if (index === 0) {
@@ -233,7 +244,12 @@ export function Preventivi() {
           } else {
             const prevPreventivo = list[index - 1];
             const prevDateKey = prevPreventivo.createdAt ? format(new Date(prevPreventivo.createdAt), "d MMMM yyyy", { locale: it }).toUpperCase() : "DATA SCONOSCIUTA";
-            showSeparator = groupKey !== prevDateKey;
+
+            const prevGroupKey = (isTutteSelected || effectiveSelectedPolicyType === null)
+              ? prevPreventivo.policyType.toUpperCase()
+              : prevDateKey;
+
+            showSeparator = groupKey !== prevGroupKey;
           }
 
           return (
@@ -319,19 +335,27 @@ export function Preventivi() {
   );
 
   const filteredPreventivi = preventivi.filter(p => {
-    if (selectedStatus === "consegnato") return p.status === "consegnato";
-    return p.status !== "consegnato" && p.status !== "accettato";
+    const matchStatus = selectedStatus === "consegnato" ? p.status === "consegnato" : (p.status !== "consegnato" && p.status !== "accettato");
+    const matchType = (isTutteSelected || effectiveSelectedPolicyType === null) ? true : p.policyType === effectiveSelectedPolicyType;
+    return matchStatus && matchType;
   });
 
   const sortedPreventivi = [...filteredPreventivi].sort((a, b) => {
+    if (isTutteSelected || effectiveSelectedPolicyType === null) {
+      if (a.policyType !== b.policyType) return a.policyType.localeCompare(b.policyType);
+    }
     const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
     const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
     return dateA - dateB;
   });
 
+  const preventiviForType = (isTutteSelected || effectiveSelectedPolicyType === null)
+    ? preventivi
+    : preventivi.filter(p => p.policyType === effectiveSelectedPolicyType);
+
   const filterOptions = [
-    { value: "da_fare" as const, label: `Da Fare (${preventivi.filter(p => p.status !== "consegnato" && p.status !== "accettato").length})` },
-    { value: "consegnato" as const, label: `Consegnati (${preventivi.filter(p => p.status === "consegnato").length})` }
+    { value: "da_fare" as const, label: `Da Fare (${preventiviForType.filter(p => p.status !== "consegnato" && p.status !== "accettato").length})` },
+    { value: "consegnato" as const, label: `Consegnati (${preventiviForType.filter(p => p.status === "consegnato").length})` }
   ];
 
   return (
@@ -585,30 +609,59 @@ export function Preventivi() {
       </Dialog>
 
       <div className="space-y-4 pb-32 md:pb-4 flex flex-col flex-1 h-full">
-        <div className="flex justify-center w-full mb-6">
-          <div className="relative p-1.5 inline-flex flex-wrap justify-center gap-1.5 items-center bg-muted/30 backdrop-blur-lg border border-border/50 rounded-2xl shadow-inner">
-            {filterOptions.map((opt) => {
-              const isSelected = selectedStatus === opt.value;
-              return (
-                <button
-                  key={opt.value}
-                  onClick={() => setSelectedStatus(opt.value)}
-                  className={cn(
-                    "relative px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 ease-out outline-none select-none",
-                    isSelected
-                      ? "text-primary"
-                      : "text-muted-foreground hover:text-foreground hover:bg-background/40"
-                  )}
-                >
-                  {isSelected && (
-                    <span className="absolute inset-0 bg-background border border-border/80 rounded-xl shadow-soft -z-10" />
-                  )}
-                  {opt.label}
-                </button>
-              );
-            })}
+        {uniquePolicyTypes.length > 0 && (
+          <div className="flex justify-center w-full mb-3">
+            <div className="relative p-1.5 inline-flex flex-wrap justify-center gap-1.5 items-center bg-muted/30 backdrop-blur-lg border border-border/50 rounded-2xl shadow-inner">
+              {policyTypeOptions.map((type) => {
+                const isSelected = (type === "Tutte" && isTutteSelected) || (effectiveSelectedPolicyType === type);
+                return (
+                  <button
+                    key={type}
+                    onClick={() => setSelectedPolicyType(type)}
+                    className={cn(
+                      "relative px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 ease-out outline-none select-none",
+                      isSelected
+                        ? "text-primary"
+                        : "text-muted-foreground hover:text-foreground hover:bg-background/40"
+                    )}
+                  >
+                    {isSelected && (
+                      <span className="absolute inset-0 bg-background border border-border/80 rounded-xl shadow-soft -z-10" />
+                    )}
+                    {type}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
+
+        {uniquePolicyTypes.length > 0 && (
+          <div className="flex justify-center w-full mb-6">
+            <div className="relative p-1 inline-flex flex-wrap justify-center gap-1 items-center bg-muted/20 backdrop-blur-md border border-border/40 rounded-xl shadow-sm">
+              {filterOptions.map((opt) => {
+                const isSelected = selectedStatus === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => setSelectedStatus(opt.value)}
+                    className={cn(
+                      "relative px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-300 ease-out outline-none select-none",
+                      isSelected
+                        ? "text-primary"
+                        : "text-muted-foreground hover:text-foreground hover:bg-background/40"
+                    )}
+                  >
+                    {isSelected && (
+                      <span className="absolute inset-0 bg-background border border-border/80 rounded-lg shadow-sm -z-10" />
+                    )}
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
         {renderPreventivoList(sortedPreventivi, "Nessun preventivo in questo stato.")}
       </div>
     </div>

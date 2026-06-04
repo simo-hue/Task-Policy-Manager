@@ -801,3 +801,7 @@
 - [2026-06-04 22:47]: Filtro "Tutte" nella pagina Sinistri
   - *Details*: Aggiunto un pulsante "Tutte" nella gestione dei sinistri che permette di vedere tutti i tipi di sinistro contemporaneamente. Quando selezionato, l'elenco dei sinistri viene raggruppato esclusivamente per Tipologia di Sinistro (Ramo) ignorando i raggruppamenti per Data/Stato utilizzati nelle singole viste ramo.
   - *Tech Notes*: Modificati i criteri di ordinamento di `activeClaims` in `sinistri.tsx` per eseguire un raggruppamento per ramo quando `selectedRamo` corrisponde a "Tutte". Aggiunta opzione "Tutte" all'array dei bottoni.
+
+- [2026-06-04 22:52]: Filtro "Tutte" nella pagina Preventivi
+  - *Details*: Applicata la medesima logica implementata per la pagina Sinistri. Ora nella pagina Preventivi è presente un filtro dinamico per "Ramo" (Tipo di Polizza), con l'opzione "Tutte" impostata di default. Quando selezionata, i preventivi vengono raggruppati unicamente per tipo di polizza, rimuovendo il separatore per data. Selezionando un ramo specifico, il raggruppamento per data viene ripristinato.
+  - *Tech Notes*: Aggiunti gli stati `selectedPolicyType` e il raggruppamento condizionale del `groupKey` in `preventivi.tsx`. Allineato anche lo stile grafico del filtro di stato a quello della pagina sinistri.
